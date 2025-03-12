@@ -1,0 +1,1131 @@
+[{
+  "_id": {
+    "$oid": "67c5254ba1b1e8601f322d12"
+  },
+  "name": "Super Administrador",
+  "value": "super",
+  "permissions": {
+    "all": [
+      "manage"
+    ]
+  },
+  "created_at": {
+    "$date": "2025-03-03T03:43:07.113Z"
+  },
+  "updated_at": {
+    "$date": "2025-03-07T14:38:07.359Z"
+  },
+  "status": 1
+},
+{
+  "_id": {
+    "$oid": "67c528dea1b1e8601f322d21"
+  },
+  "name": "Administrador",
+  "value": "admin",
+  "permissions": {
+    "CliVS": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "CliPE": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "CliContactos": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "VSPrototipos": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "VSVolumetria": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "VSODs": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "PE": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "PEPlantillas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Proveedores": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Materiales": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "MatEquipamiento": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "AlmInventario": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "AlmEntradas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "AlmSalidas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "OC": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "RQM": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Facturas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Cuentas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "EC": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "CatBancos": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "AdmUsuarios": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "AdmRoles": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Historial": [
+      "read"
+    ],
+    "AdminDashboard": [
+      "read"
+    ],
+    "UserDashboard": [
+      "read"
+    ],
+    "AdmSecciones": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ]
+  },
+  "created_at": {
+    "$date": "2025-03-03T03:58:22.900Z"
+  },
+  "updated_at": {
+    "$date": "2025-03-07T14:38:17.907Z"
+  },
+  "status": 1
+},
+{
+  "_id": {
+    "$oid": "67c5296ba1b1e8601f322d2a"
+  },
+  "name": "Dirección",
+  "value": "ceo",
+  "permissions": {
+    "CliVS": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "CliPE": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "CliContactos": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "VSPrototipos": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "VSVolumetria": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "VSODs": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "PE": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "PEPlantillas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Proveedores": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Materiales": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "MatEquipamiento": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "AlmInventario": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "AlmEntradas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "AlmSalidas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "OC": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "RQM": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Facturas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Cuentas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "EC": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "CatBancos": [
+      "read"
+    ],
+    "Historial": [
+      "read"
+    ],
+    "AdminDashboard": [
+      "read"
+    ]
+  },
+  "created_at": {
+    "$date": "2025-03-03T04:00:43.424Z"
+  },
+  "updated_at": {
+    "$date": "2025-03-11T15:06:38.145Z"
+  },
+  "status": 1
+},
+{
+  "_id": {
+    "$oid": "67c529a0a1b1e8601f322d2d"
+  },
+  "name": "Gerente de Operaciones",
+  "value": "coo",
+  "permissions": {
+    "CliVS": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "CliPE": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "CliContactos": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "VSPrototipos": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "VSVolumetria": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "VSODs": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "PE": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "PEPlantillas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Proveedores": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Materiales": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "MatEquipamiento": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "AlmInventario": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "AlmEntradas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "AlmSalidas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "OC": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "RQM": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Facturas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Cuentas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "EC": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "CatBancos": [
+      "read"
+    ],
+    "Historial": [
+      "read"
+    ],
+    "AdminDashboard": [
+      "read"
+    ]
+  },
+  "created_at": {
+    "$date": "2025-03-03T04:01:36.211Z"
+  },
+  "updated_at": {
+    "$date": "2025-03-11T15:05:14.267Z"
+  },
+  "status": 1
+},
+{
+  "_id": {
+    "$oid": "67c529ada1b1e8601f322d30"
+  },
+  "name": "Gerente Financiero",
+  "value": "cfo",
+  "permissions": {
+    "CliVS": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "CliPE": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "CliContactos": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "VSPrototipos": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "VSVolumetria": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "VSODs": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "PE": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "PEPlantillas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Proveedores": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Materiales": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "MatEquipamiento": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "AlmInventario": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "AlmEntradas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "AlmSalidas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "OC": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "RQM": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Facturas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Cuentas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "EC": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "CatBancos": [
+      "read"
+    ],
+    "Historial": [
+      "read"
+    ],
+    "AdminDashboard": [
+      "read"
+    ]
+  },
+  "created_at": {
+    "$date": "2025-03-03T04:01:49.274Z"
+  },
+  "updated_at": {
+    "$date": "2025-03-11T16:23:47.827Z"
+  },
+  "status": 1
+},
+{
+  "_id": {
+    "$oid": "67c529cda1b1e8601f322d33"
+  },
+  "name": "Almacenista",
+  "value": "storer",
+  "permissions": {
+    "CliVS": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "CliPE": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "CliContactos": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "VSPrototipos": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "VSVolumetria": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "VSODs": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "PE": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "PEPlantillas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Proveedores": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Materiales": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "MatEquipamiento": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "AlmInventario": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "AlmEntradas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "AlmSalidas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "OC": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "RQM": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Facturas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Cuentas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "EC": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "UserDashboard": [
+      "read"
+    ]
+  },
+  "created_at": {
+    "$date": "2025-03-03T04:02:21.953Z"
+  },
+  "updated_at": {
+    "$date": "2025-03-07T14:39:24.443Z"
+  },
+  "status": 1
+},
+{
+  "_id": {
+    "$oid": "67c529e6a1b1e8601f322d36"
+  },
+  "name": "Diseño",
+  "value": "design",
+  "permissions": {
+    "CliVS": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "CliPE": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "CliContactos": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "VSPrototipos": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "VSVolumetria": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "VSODs": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "PE": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "PEPlantillas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Proveedores": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Materiales": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "MatEquipamiento": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "AlmInventario": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "AlmEntradas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "AlmSalidas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "OC": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "RQM": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Facturas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Cuentas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "EC": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "UserDashboard": [
+      "read"
+    ]
+  },
+  "created_at": {
+    "$date": "2025-03-03T04:02:46.092Z"
+  },
+  "updated_at": {
+    "$date": "2025-03-11T22:05:34.743Z"
+  },
+  "status": 1
+},
+{
+  "_id": {
+    "$oid": "67c52a03a1b1e8601f322d39"
+  },
+  "name": "Recursos Humanos",
+  "value": "rh",
+  "permissions": {
+    "CliVS": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "CliPE": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "CliContactos": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "VSPrototipos": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "VSVolumetria": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "VSODs": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "PE": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "PEPlantillas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Proveedores": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Materiales": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "MatEquipamiento": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "AlmInventario": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "AlmEntradas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "AlmSalidas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "OC": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "RQM": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Facturas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Cuentas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "EC": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "UserDashboard": [
+      "read"
+    ]
+  },
+  "created_at": {
+    "$date": "2025-03-03T04:03:15.886Z"
+  },
+  "updated_at": {
+    "$date": "2025-03-07T14:40:40.807Z"
+  },
+  "status": 1
+},
+{
+  "_id": {
+    "$oid": "67c52a0fa1b1e8601f322d3c"
+  },
+  "name": "Compras",
+  "value": "cop",
+  "permissions": {
+    "CliVS": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "CliPE": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "CliContactos": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "VSPrototipos": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "VSVolumetria": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "VSODs": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "PE": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "PEPlantillas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Proveedores": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Materiales": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "MatEquipamiento": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "AlmInventario": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "AlmEntradas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "AlmSalidas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "OC": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "RQM": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Facturas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "Cuentas": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "EC": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "UserDashboard": [
+      "read"
+    ]
+  },
+  "created_at": {
+    "$date": "2025-03-03T04:03:27.286Z"
+  },
+  "updated_at": {
+    "$date": "2025-03-07T14:41:05.785Z"
+  },
+  "status": 1
+}]
