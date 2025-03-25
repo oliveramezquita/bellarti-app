@@ -22,7 +22,7 @@ const passwordRequirements = [
 
 const changePassword = async () => {
   try {
-    const response = await $api(`api/change_password/${props.userData._id}`, {
+    const response = await $api(`api/change-password/${props.userData._id}`, {
       method: 'PATCH',
       body: {
         'old_password': currentPassword.value,
@@ -31,7 +31,6 @@ const changePassword = async () => {
       },
     })
 
-    console.log(response)
     resetForm()
   } catch (err) {
     console.error(err)

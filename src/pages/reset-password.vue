@@ -11,19 +11,63 @@ definePage({
   },
 })
 
-const form = ref({ email: null })
+const form = ref({
+  newPassword: null,
+  confirmPassword: null,
+})
+
 const refVForm = ref()
 const requestResponse = ref()
 const isAlertVisible = ref(false)
 const isLoadingDialogVisible = ref(false)
 
-const passwordRequest = async () => {
-  isLoadingDialogVisible.value = true
+const isPasswordVisible = ref(false)
+const isConfirmPasswordVisible = ref(false)
+const router = useRouter()
+const route = useRoute()
+const requestToken = route.query.rt
 
+if (!requestToken)
+  await router.push('*')
+
+const decodeHex = hexString => {
+  const decode = hexString.match(/.{1,2}/g)
+    .map(byte => String.fromCharCode(parseInt(byte, 16)))
+    .join("")
+
+  
+  return JSON.parse(decode)
+}
+
+const decodedToken = decodeHex(requestToken)
+
+if (!decodedToken.hasOwnProperty('id') || !decodedToken.hasOwnProperty('datetime'))
+  await router.push('*')
+
+const tokenDate = new Date(decodedToken.datetime)
+const now = new Date()
+const busyHours = (now - tokenDate) / (1000 * 60 * 60)
+
+if (busyHours > 24)
+  await router.push('*')
+
+const onSubmit = () => {
+  refVForm.value?.validate().then(({ valid: isValid }) => {
+    if (isValid) resetPassword()
+  })
+}
+
+const resetPassword = async () => {
   try {
-    await $api('api/password-request', {
+    await $api('api/restore-password', {
       method: 'POST',
-      body: { email: form.value.email },
+      body: {
+        // eslint-disable-next-line camelcase
+        hash_request: requestToken,
+        password: form.value.newPassword,
+        // eslint-disable-next-line camelcase
+        confirm_password: form.value.confirmPassword,
+      },
       onResponse({ response }) {
         requestResponse.value = response
         isAlertVisible.value = true
@@ -35,12 +79,6 @@ const passwordRequest = async () => {
     if (requestResponse.value.status === 200) refVForm.value?.reset()
     isLoadingDialogVisible.value = false
   }
-}
-
-const onSubmit = () => {
-  refVForm.value?.validate().then(({ valid: isValid }) => {
-    if (isValid) passwordRequest()
-  })
 }
 </script>
 
@@ -59,11 +97,11 @@ const onSubmit = () => {
         class="text-primary auth-v1-bottom-shape d-none d-sm-block"
       />
 
-      <!-- 👉 Auth card -->
+      <!-- 👉 Auth Card -->
       <VCard
         class="auth-card"
         max-width="460"
-        :class="$vuetify.display.smAndUp ? 'pa-6' : 'pa-0'"
+        :class="$vuetify.display.smAndUp ? 'pa-6' : 'pa-2'"
       >
         <VCardItem class="justify-center">
           <VCardTitle>
@@ -77,10 +115,10 @@ const onSubmit = () => {
 
         <VCardText>
           <h4 class="text-h4 mb-1">
-            ¿Has olvidado tu contraseña?
+            Restablecer contraseña
           </h4>
           <p class="mb-0">
-            Ingresa tu correo electrónico y te enviaremos instrucciones para restablecer tu contraseña.
+            Su nueva contraseña debe ser diferente a las contraseñas utilizadas anteriormente.
           </p>
         </VCardText>
 
@@ -90,14 +128,32 @@ const onSubmit = () => {
             @submit.prevent="onSubmit"
           >
             <VRow>
-              <!-- email -->
+              <!-- password -->
               <VCol cols="12">
                 <AppTextField
-                  v-model="form.email"
+                  v-model="form.newPassword"
                   autofocus
-                  label="Correo electrónico"
-                  type="email"
-                  :rules="[requiredValidator, emailValidator]"
+                  label="New Password"
+                  placeholder="············"
+                  :type="isPasswordVisible ? 'text' : 'password'"
+                  autocomplete="password"
+                  :append-inner-icon="isPasswordVisible ? 'tabler-eye-off' : 'tabler-eye'"
+                  :rules="[requiredValidator]"
+                  @click:append-inner="isPasswordVisible = !isPasswordVisible"
+                />
+              </VCol>
+
+              <!-- Confirm Password -->
+              <VCol cols="12">
+                <AppTextField
+                  v-model="form.confirmPassword"
+                  label="Confirm Password"
+                  autocomplete="confirm-password"
+                  placeholder="············"
+                  :type="isConfirmPasswordVisible ? 'text' : 'password'"
+                  :append-inner-icon="isConfirmPasswordVisible ? 'tabler-eye-off' : 'tabler-eye'"
+                  :rules="[requiredValidator]"
+                  @click:append-inner="isConfirmPasswordVisible = !isConfirmPasswordVisible"
                 />
               </VCol>
 
@@ -107,7 +163,7 @@ const onSubmit = () => {
                   block
                   type="submit"
                 >
-                  Enviar enlace
+                  Establecer nueva contraseña
                 </VBtn>
                 <ResponseHandler
                   v-model:is-alert-visible="isAlertVisible"

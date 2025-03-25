@@ -56,6 +56,7 @@ declare global {
   const effectScope: typeof import('vue')['effectScope']
   const emailValidator: typeof import('./src/@core/utils/validators.js')['emailValidator']
   const extendRef: typeof import('@vueuse/core')['extendRef']
+  const extractStoragePermissions: typeof import('./src/@core/composable/useCookie.js')['extractStoragePermissions']
   const formatDate: typeof import('./src/@core/utils/formatters.js')['formatDate']
   const formatDateToMonthShort: typeof import('./src/@core/utils/formatters.js')['formatDateToMonthShort']
   const getActivePinia: typeof import('pinia')['getActivePinia']
@@ -137,6 +138,7 @@ declare global {
   const resolveUnref: typeof import('@vueuse/core')['resolveUnref']
   const resolveVuetifyTheme: typeof import('./src/@core/utils/vuetify.js')['resolveVuetifyTheme']
   const rgbaToHex: typeof import('./src/@core/utils/colorConverter.js')['rgbaToHex']
+  const saveStoragePermissions: typeof import('./src/@core/composable/useCookie.js')['saveStoragePermissions']
   const setActivePinia: typeof import('pinia')['setActivePinia']
   const setMapStoreSuffix: typeof import('pinia')['setMapStoreSuffix']
   const shallowReactive: typeof import('vue')['shallowReactive']
@@ -378,10 +380,7 @@ declare module 'vue' {
     readonly $api: UnwrapRef<typeof import('./src/utils/api.js')['$api']>
     readonly COMMON_STATUS: UnwrapRef<typeof import('./src/utils/constants.js')['COMMON_STATUS']>
     readonly COOKIE_MAX_AGE_1_YEAR: UnwrapRef<typeof import('./src/utils/constants.js')['COOKIE_MAX_AGE_1_YEAR']>
-    readonly EXTRACT_STORAGE_PERMISSIONS: UnwrapRef<typeof import('./src/@core/composable/useCookie.js')['EXTRACT_STORAGE_PERMISSIONS']>
     readonly EffectScope: UnwrapRef<typeof import('vue')['EffectScope']>
-    readonly SAVE_STORAGE_PERMISSIONS: UnwrapRef<typeof import('./src/@core/composable/useCookie.js')['SAVE_STORAGE_PERMISSIONS']>
-    readonly USER_ROLE_VARIANT: UnwrapRef<typeof import('./src/utils/constants.js')['USER_ROLE_VARIANT']>
     readonly USER_STATUS: UnwrapRef<typeof import('./src/utils/constants.js')['USER_STATUS']>
     readonly acceptHMRUpdate: UnwrapRef<typeof import('pinia')['acceptHMRUpdate']>
     readonly alphaDashValidator: UnwrapRef<typeof import('./src/@core/utils/validators.js')['alphaDashValidator']>
@@ -422,6 +421,7 @@ declare module 'vue' {
     readonly effectScope: UnwrapRef<typeof import('vue')['effectScope']>
     readonly emailValidator: UnwrapRef<typeof import('./src/@core/utils/validators.js')['emailValidator']>
     readonly extendRef: UnwrapRef<typeof import('@vueuse/core')['extendRef']>
+    readonly extractStoragePermissions: UnwrapRef<typeof import('./src/@core/composable/useCookie.js')['extractStoragePermissions']>
     readonly formatDate: UnwrapRef<typeof import('./src/@core/utils/formatters.js')['formatDate']>
     readonly formatDateToMonthShort: UnwrapRef<typeof import('./src/@core/utils/formatters.js')['formatDateToMonthShort']>
     readonly getActivePinia: UnwrapRef<typeof import('pinia')['getActivePinia']>
@@ -503,6 +503,7 @@ declare module 'vue' {
     readonly resolveUnref: UnwrapRef<typeof import('@vueuse/core')['resolveUnref']>
     readonly resolveVuetifyTheme: UnwrapRef<typeof import('./src/@core/utils/vuetify.js')['resolveVuetifyTheme']>
     readonly rgbaToHex: UnwrapRef<typeof import('./src/@core/utils/colorConverter.js')['rgbaToHex']>
+    readonly saveStoragePermissions: UnwrapRef<typeof import('./src/@core/composable/useCookie.js')['saveStoragePermissions']>
     readonly setActivePinia: UnwrapRef<typeof import('pinia')['setActivePinia']>
     readonly setMapStoreSuffix: UnwrapRef<typeof import('pinia')['setMapStoreSuffix']>
     readonly shallowReactive: UnwrapRef<typeof import('vue')['shallowReactive']>

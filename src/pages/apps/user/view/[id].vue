@@ -24,6 +24,7 @@ const tabs = [
 ]
 
 const { data: userData } = await useApi(`/api/user/${ route.params.id }`)
+const { data: rolesList } = await useApi('api/roles?itemsPerPage=100')
 </script>
 
 <template>
@@ -54,7 +55,10 @@ const { data: userData } = await useApi(`/api/user/${ route.params.id }`)
       md="5"
       lg="4"
     >
-      <UserBioPanel :user-data="userData" />
+      <UserBioPanel
+        v-model:roles-list="rolesList.data"
+        :user-data="userData"
+      />
     </VCol>
 
     <VCol

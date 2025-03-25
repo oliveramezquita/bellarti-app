@@ -369,6 +369,8 @@
     "SAVE_COOKIE_PERMISSIONS": true,
     "EXTRACT_COOKIE_PERMISSIONS": true,
     "SAVE_STORAGE_PERMISSIONS": true,
-    "EXTRACT_STORAGE_PERMISSIONS": true
+    "EXTRACT_STORAGE_PERMISSIONS": true,
+    "saveStoragePermissions": true,
+    "extractStoragePermissions": true
   }
 }

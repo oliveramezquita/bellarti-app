@@ -8,8 +8,6 @@ export const $api = ofetch.create({
       options.headers.append('Authorization', `Bearer ${accessToken}`)
   },
   async onResponse(response) {
-    console.log(response)
-    
     return response
   },
 })

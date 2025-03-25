@@ -9,8 +9,10 @@ definePage({
 const route = useRoute('apps-roles-view-id')
 const permissions = ref({})
 const { data: roleData } = await useApi(`/api/role/${ route.params.id }`)
-const { data: sections }= await useApi('/api/tree_view_sections')
+const { data: sections }= await useApi('/api/tree-view-sections')
 const isConfirmDialogVisible = ref(false)
+const isNotificationVisible = ref(false)
+const notificationMessage = ref('')
 
 for (const key in sections.value) {
   const data = sections.value
@@ -43,11 +45,15 @@ for (const [key, value] of Object.entries(roleData.value.permissions)) {
   }
 }
 
-const update = () => {
+const update = async id => {
   isConfirmDialogVisible.value = false
-  $api(`/api/update_permissions/${roleData.value._id}`, {
+  await $api(`/api/update-permissions/${id}`, {
     method: 'PATCH',
     body: permissions.value,
+    onResponse({ response }) {
+      isNotificationVisible.value = true
+      notificationMessage.value = response._data
+    },
   })
 }
 </script>
@@ -266,10 +272,14 @@ const update = () => {
       </VCardText>
 
       <VCardText class="d-flex justify-end">
-        <VBtn @click="update">
+        <VBtn @click="update(roleData._id)">
           De acuerdo
         </VBtn>
       </VCardText>
     </VCard>
   </VDialog>
+  <Notification
+    v-model:is-notification-visible="isNotificationVisible"
+    :message="notificationMessage"
+  />
 </template>

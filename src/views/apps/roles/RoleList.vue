@@ -1,9 +1,17 @@
 <script setup>
+import AddNewRoleDrawer from '@/views/apps/roles/AddNewRoleDrawer.vue'
+import EditRoleDrawer from '@/views/apps/roles/EditRoleDrawer.vue'
+
 const itemsPerPage = ref(10)
 const page = ref(1)
 const sortBy = ref()
 const orderBy = ref()
 const selectedStatus = ref()
+const isAddNewRoleDrawerVisible = ref(false)
+const isEditRoleDrawerVisible = ref(false)
+const isDisabledRoleDialogVisible = ref(false)
+const isDeleteRoleDialogVisible = ref(false)
+const selectedRole = ref()
 
 const updateOptions = options => {
   sortBy.value = options.sortBy[0]?.key
@@ -47,6 +55,17 @@ const headers = [
   },
 ]
 
+const status = [
+  {
+    title: 'Activado',
+    value: 1,
+  },
+  {
+    title: 'Desactivado',
+    value: 0,
+  },
+]
+
 // 👉 search filters
 const resolveUserStatusVariant = stat => {
   if (stat === 1)
@@ -59,6 +78,63 @@ const resolveStatusLabel = stat => {
   const s = COMMON_STATUS.find(u => u.value === stat)
   
   return s ? s.title : 'Desactivado'
+}
+
+const addNewRole = async roleData => {
+  await $api('/api/roles', {
+    method: 'POST',
+    body: {
+      "name": roleData.name,
+      "value": roleData.value,
+      "icon": roleData.icon,
+      "permissions": {},
+    },
+  })
+  fetchRoles()
+}
+
+const editRole = async roleData => {
+  await $api(`/api/role/${roleData.id}`, {
+    method: 'PATCH',
+    body: {
+      "name": roleData.name,
+      "value": roleData.value,
+      "icon": roleData.icon,
+    },
+  })
+  fetchRoles()
+}
+
+const changeStatus = async (id, status) => {
+  await $api(`/api/role/${id}`, {
+    method: 'PATCH',
+    body: {
+      "status": status,
+    },
+  })
+  isDisabledRoleDialogVisible.value = false
+  fetchRoles()
+}
+
+const deleteRole = async id => {
+  await $api(`/api/role/${id}`, { method: 'DELETE' })
+  isDeleteRoleDialogVisible.value = false
+  fetchRoles()
+}
+
+const viewEditRoleDrawer = role => {
+  selectedRole.value = role
+  isEditRoleDrawerVisible.value = true
+}
+
+const viewConfirmDisabledRoleDialog = role => {
+  selectedRole.value = role
+  isDisabledRoleDialogVisible.value = true
+}
+
+const viewDeleteRoleDialog = role => {
+  selectedRole.value = role
+  isDeleteRoleDialogVisible.value = true
 }
 </script>
 
@@ -95,6 +171,13 @@ const resolveStatusLabel = stat => {
             clear-icon="tabler-x"
             style="inline-size: 10rem;"
           />
+          <!-- 👉 Add role button -->
+          <VBtn
+            prepend-icon="tabler-plus"
+            @click="isAddNewRoleDrawerVisible = true"
+          >
+            Agregar nueva función
+          </VBtn>
         </div>
       </VCardText>
 
@@ -121,8 +204,7 @@ const resolveStatusLabel = stat => {
           <div class="d-flex align-center gap-x-2">
             <VIcon
               :size="22"
-              :icon="USER_ROLE_VARIANT(item.value).icon"
-              :color="USER_ROLE_VARIANT(item.value).color"
+              :icon="item.hasOwnProperty('icon') ? `tabler-${item.icon}` : tabler-user"
             />
 
             <div class="text-capitalize text-high-emphasis text-body-1">
@@ -192,18 +274,41 @@ const resolveStatusLabel = stat => {
             <VIcon icon="tabler-dots-vertical" />
             <VMenu activator="parent">
               <VList>
-                <VListItem link>
+                <VListItem @click="viewEditRoleDrawer(item)">
                   <template #prepend>
                     <VIcon icon="tabler-pencil" />
                   </template>
                   <VListItemTitle>Modificar</VListItemTitle>
                 </VListItem>
 
-                <VListItem>
+                <VListItem
+                  v-if="item.status === 1"
+                  @click="viewConfirmDisabledRoleDialog(item)"
+                >
                   <template #prepend>
                     <VIcon icon="tabler-ban" />
                   </template>
                   <VListItemTitle>Deshabilitar</VListItemTitle>
+                </VListItem>
+
+                <VListItem
+                  v-if="item.status === 0"
+                  @click="changeStatus(item._id, 1)"
+                >
+                  <template #prepend>
+                    <VIcon icon="tabler-check" />
+                  </template>
+                  <VListItemTitle>Habilitar</VListItemTitle>
+                </VListItem>
+
+                <VListItem
+                  v-if="item.users.length === 0"
+                  @click="viewDeleteRoleDialog(item)"
+                >
+                  <template #prepend>
+                    <VIcon icon="tabler-trash" />
+                  </template>
+                  <VListItemTitle>Eliminar</VListItemTitle>
                 </VListItem>
               </VList>
             </VMenu>
@@ -220,6 +325,55 @@ const resolveStatusLabel = stat => {
       </VDataTableServer>
       <!-- SECTION -->
     </VCard>
+    <AddNewRoleDrawer
+      v-model:is-drawer-open="isAddNewRoleDrawerVisible"
+      @role-data="addNewRole"
+    />
+    <EditRoleDrawer
+      v-model:is-drawer-open="isEditRoleDrawerVisible"
+      v-model:role-info="selectedRole"
+      @role-data="editRole"
+    />
+    <VDialog
+      v-model="isDisabledRoleDialogVisible"
+      width="500"
+    >
+      <!-- Dialog close btn -->
+      <DialogCloseBtn @click="isDisabledRoleDialogVisible = !isDisabledRoleDialogVisible" />
+
+      <!-- Dialog Content -->
+      <VCard title="Deshabilitar Función">
+        <VCardText>
+          Deshabilitar la función <b>{{ selectedRole.name }}</b> impedirá el acceso al sistema a los usuarios asignados.
+        </VCardText>
+
+        <VCardText class="d-flex justify-end">
+          <VBtn @click="changeStatus(selectedRole._id, 0)">
+            De acuerdo
+          </VBtn>
+        </VCardText>
+      </VCard>
+    </VDialog>
+    <VDialog
+      v-model="isDeleteRoleDialogVisible"
+      width="500"
+    >
+      <!-- Dialog close btn -->
+      <DialogCloseBtn @click="isDeleteRoleDialogVisible = !isDeleteRoleDialogVisible" />
+
+      <!-- Dialog Content -->
+      <VCard title="Eliminar Función">
+        <VCardText>
+          ¿Estás seguro de eliminar la función <b>{{ selectedRole.name }}</b>?
+        </VCardText>
+
+        <VCardText class="d-flex justify-end">
+          <VBtn @click="deleteRole(selectedRole._id)">
+            Eliminar
+          </VBtn>
+        </VCardText>
+      </VCard>
+    </VDialog>
   </section>
 </template>
 
@@ -230,5 +384,11 @@ const resolveStatusLabel = stat => {
 
 .user-list-name:not(:hover) {
   color: rgba(var(--v-theme-on-background), var(--v-medium-emphasis-opacity));
+}
+
+.app-select {
+  .v-input {
+    min-inline-size: 180px;
+  }
 }
 </style>

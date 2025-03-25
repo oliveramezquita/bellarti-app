@@ -1,4 +1,5 @@
 <script setup>
+import ResponseHandler from '@/components/ResponseHandler.vue'
 import authV1BottomShape from '@images/svg/auth-v1-bottom-shape.svg?raw'
 import authV1TopShape from '@images/svg/auth-v1-top-shape.svg?raw'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
@@ -12,20 +13,29 @@ definePage({
 })
 
 const credentials = ref({
-  email: '',
-  password: '',
+  email: null,
+  password: null,
 })
 
 const rememberMe = ref(false)
 
-const refVForm = ref()
+const errors = ref({
+  email: undefined,
+  password: undefined,
+})
 
+const refVForm = ref()
 const isPasswordVisible = ref(false)
 const route = useRoute()
 const router = useRouter()
 const ability = useAbility()
+const requestResponse = ref()
+const isAlertVisible = ref(false)
+const isLoadingDialogVisible = ref(false)
 
 const login = async () => {
+  isLoadingDialogVisible.value = true
+
   try {
     const response = await $api('api/login', {
       method: 'POST',
@@ -33,16 +43,21 @@ const login = async () => {
         email: credentials.value.email,
         password: credentials.value.password,
       },
+      onResponseError({ response }) {
+        requestResponse.value = response
+        isAlertVisible.value = true
+      },
     })
 
     const { accessToken, userData, userAbilityRules, home } = response
 
-    SAVE_STORAGE_PERMISSIONS(userAbilityRules)
+    saveStoragePermissions(userAbilityRules)
     ability.update(userAbilityRules)
     useCookie('userData').value = userData
     useCookie('accessToken').value = accessToken
     useCookie('home').value = home
     await nextTick(() => { 
+      isLoadingDialogVisible.value = false
       router.replace(route.query.to ? String(route.query.to) : '/')
     })
   } catch (err) {
@@ -110,7 +125,8 @@ const onSubmit = () => {
                   autofocus
                   label="Correo electrónico"
                   type="email"
-                  placeholder="johndoe@email.com"
+                  :rules="[requiredValidator, emailValidator]"
+                  :error-messages="errors.email"
                 />
               </VCol>
 
@@ -119,10 +135,11 @@ const onSubmit = () => {
                 <AppTextField
                   v-model="credentials.password"
                   label="Contraseña"
-                  placeholder="············"
                   :type="isPasswordVisible ? 'text' : 'password'"
                   autocomplete="password"
                   :append-inner-icon="isPasswordVisible ? 'tabler-eye-off' : 'tabler-eye'"
+                  :rules="[requiredValidator]"
+                  :error-messages="errors.password"
                   @click:append-inner="isPasswordVisible = !isPasswordVisible"
                 />
 
@@ -135,7 +152,7 @@ const onSubmit = () => {
 
                   <RouterLink
                     class="text-primary"
-                    :to="{ name: 'pages-authentication-forgot-password-v1' }"
+                    :to="{ name: 'forgot-password' }"
                   >
                     ¿Has olvidado tu contraseña?
                   </RouterLink>
@@ -148,6 +165,10 @@ const onSubmit = () => {
                 >
                   Acceder
                 </VBtn>
+                <ResponseHandler
+                  v-model:is-alert-visible="isAlertVisible"
+                  :response="requestResponse"
+                />
               </VCol>              
             </VRow>
           </VForm>
@@ -155,6 +176,7 @@ const onSubmit = () => {
       </VCard>
     </div>
   </div>
+  <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
 </template>
 
 <style lang="scss">

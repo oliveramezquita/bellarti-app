@@ -27,13 +27,13 @@ function serializeCookie(name, value, opts = {}) {
   return serialize(name, value, { ...opts, maxAge: 60 * 60 * 24 * 30 })
 }
 
-export const SAVE_STORAGE_PERMISSIONS = permissions => {
+export const saveStoragePermissions = permissions => {
   const encryptedPermissions = btoa(JSON.stringify(permissions))
 
   localStorage.setItem('userAbilityRules', encryptedPermissions)
 }
 
-export const EXTRACT_STORAGE_PERMISSIONS = () => {
+export const extractStoragePermissions = () => {
   const encryptedPermissions = localStorage.getItem('userAbilityRules')
   if (!encryptedPermissions) {
     return null

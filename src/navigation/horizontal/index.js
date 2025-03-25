@@ -4,13 +4,13 @@ export default [
     icon: { icon: 'tabler-smart-home' },
     children: [
       {
-        title: 'Analytics',
+        title: 'Usuarios',
         to: 'dashboards-analytics',
         action: 'read',
         subject: 'UserDashboard',
       },
       {
-        title: 'CRM',
+        title: 'Dirección',
         to: 'dashboards-crm',
         action: 'read',
         subject: 'AdminDashboard',

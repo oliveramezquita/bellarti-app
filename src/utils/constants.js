@@ -9,7 +9,7 @@ export const USER_STATUS = [
     value: 1,
   },
   {
-    title: 'Inactivo',
+    title: 'Desactivado',
     value: 2,
   },
 ]
@@ -23,46 +23,3 @@ export const COMMON_STATUS = [
     value: 0,
   },
 ]
-export const USER_ROLE_VARIANT = role => {
-  const roleLowerCase = role.toLowerCase()
-  if (roleLowerCase === 'ceo')
-    return {
-      color: 'success',
-      icon: 'tabler-user-star',
-    }
-  if (roleLowerCase === 'coo')
-    return {
-      color: 'warning',
-      icon: 'tabler-user-cog',
-    }
-  if (roleLowerCase === 'cfo' || roleLowerCase === 'cop')
-    return {
-      color: 'info',
-      icon: 'tabler-user-dollar',
-    }
-  if (roleLowerCase === 'storer')
-    return {
-      color: 'grey-900',
-      icon: 'tabler-package',
-    }
-  if (roleLowerCase === 'design')
-    return {
-      color: 'on-background',
-      icon: 'tabler-user-edit',
-    }
-  if (roleLowerCase === 'rh')
-    return {
-      color: 'error',
-      icon: 'tabler-user-heart',
-    }
-  if (roleLowerCase === 'admin')
-    return {
-      color: 'primary',
-      icon: 'tabler-crown',
-    }
-    
-  return {
-    color: 'primary',
-    icon: 'tabler-user',
-  }
-}

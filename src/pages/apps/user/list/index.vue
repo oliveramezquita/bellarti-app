@@ -5,14 +5,16 @@ definePage({
     subject: 'AdmUsuarios',
   },
 })
+import EditUserDrawer from '@/views/apps/user/EditUserDrawer.vue'
 import AddNewUserDrawer from '@/views/apps/user/list/AddNewUserDrawer.vue'
-
 
 // 👉 Store
 const searchQuery = ref('')
 const selectedRole = ref()
 const selectedPlan = ref()
 const selectedStatus = ref()
+const selectedUser = ref()
+const userData = useCookie('userData')
 
 // Data table options
 const itemsPerPage = ref(10)
@@ -43,6 +45,21 @@ const headers = [
     title: 'Acciones',
     key: 'actions',
     sortable: false,
+  },
+]
+
+const status = [
+  {
+    title: 'Pendiente',
+    value: 0,
+  },
+  {
+    title: 'Activado',
+    value: 1,
+  },
+  {
+    title: 'Desactivado',
+    value: 2,
   },
 ]
 
@@ -98,16 +115,56 @@ const addNewUser = async userData => {
   fetchUsers()
 }
 
-const deleteUser = async id => {
-  await $api(`/apps/users/${ id }`, { method: 'DELETE' })
+const isEditUserDrawerVisible = ref(false)
 
-  // Delete from selectedRows
-  //const index = selectedRows.value.findIndex(row => row === id)
-  //if (index !== -1)
-  //  selectedRows.value.splice(index, 1)
-
-  // Refetch User
+const editUser = async userData => {
+  await $api(`/api/user/${userData.id}`, {
+    method: 'PATCH',
+    body: {
+      name: userData.name,
+      lastname: userData.lastname,
+      email: userData.email,
+      // eslint-disable-next-line camelcase
+      role_id: userData.role_id,
+    },
+  })
   fetchUsers()
+}
+
+const changeStatus = async (id, status) => {
+  await $api(`/api/user/${id}`, {
+    method: 'PATCH',
+    body: {
+      "status": status,
+    },
+  })
+  isDisabledUserDialogVisible.value = false
+  fetchUsers()
+} 
+
+const deleteUser = async id => {
+  await $api(`/api/user/${id}`, { method: 'DELETE' })
+  isDeleteUserDialogVisible.value = false
+  fetchUsers()
+}
+
+const viewEditUserDrawer = user => {
+  selectedUser.value = user
+  isEditUserDrawerVisible.value = true
+}
+
+const isDisabledUserDialogVisible = ref(false)
+
+const viewConfirmDisabledUserDialog = user => {
+  selectedUser.value = user
+  isDisabledUserDialogVisible.value = true
+}
+
+const isDeleteUserDialogVisible = ref(false)
+
+const viewDeleteUserDialog = user => {
+  selectedUser.value = user
+  isDeleteUserDialogVisible.value = true
 }
 </script>
 
@@ -211,7 +268,6 @@ const deleteUser = async id => {
             <VAvatar
               size="34"
               :variant="!item.avatar ? 'tonal' : undefined"
-              :color="!item.avatar ? USER_ROLE_VARIANT(item.role.value).color : undefined"
             >
               <VImg
                 v-if="item.avatar"
@@ -240,8 +296,7 @@ const deleteUser = async id => {
           <div class="d-flex align-center gap-x-2">
             <VIcon
               :size="22"
-              :icon="USER_ROLE_VARIANT(item.role.value).icon"
-              :color="USER_ROLE_VARIANT(item.role.value).color"
+              :icon="item.role.hasOwnProperty('icon') ? `tabler-${item.role.icon}` : tabler-user"
             />
 
             <div class="text-capitalize text-high-emphasis text-body-1">
@@ -276,14 +331,37 @@ const deleteUser = async id => {
             <VIcon icon="tabler-dots-vertical" />
             <VMenu activator="parent">
               <VList>
-                <VListItem link>
+                <VListItem @click="viewEditUserDrawer(item)">
                   <template #prepend>
                     <VIcon icon="tabler-pencil" />
                   </template>
                   <VListItemTitle>Modificar</VListItemTitle>
                 </VListItem>
 
-                <VListItem @click="deleteUser(item._id)">
+                <VListItem
+                  v-if="item.status === 1 && item._id !== userData._id"
+                  @click="viewConfirmDisabledUserDialog(item)"
+                >
+                  <template #prepend>
+                    <VIcon icon="tabler-ban" />
+                  </template>
+                  <VListItemTitle>Deshabilitar</VListItemTitle>
+                </VListItem>
+
+                <VListItem
+                  v-if="item.status === 2"
+                  @click="changeStatus(item._id, 1)"
+                >
+                  <template #prepend>
+                    <VIcon icon="tabler-check" />
+                  </template>
+                  <VListItemTitle>Habilitar</VListItemTitle>
+                </VListItem>
+
+                <VListItem
+                  v-if="item._id !== userData._id"
+                  @click="viewDeleteUserDialog(item)"
+                >
                   <template #prepend>
                     <VIcon icon="tabler-trash" />
                   </template>
@@ -311,5 +389,51 @@ const deleteUser = async id => {
       v-model:roles-list="rolesList.data"
       @user-data="addNewUser"
     />
+    <EditUserDrawer
+      v-model:is-drawer-open="isEditUserDrawerVisible"
+      v-model:roles-list="rolesList.data"
+      v-model:user-info="selectedUser"
+      @user-data="editUser"
+    />
+    <VDialog
+      v-model="isDisabledUserDialogVisible"
+      width="500"
+    >
+      <!-- Dialog close btn -->
+      <DialogCloseBtn @click="isDisabledUserDialogVisible = !isDisabledUserDialogVisible" />
+
+      <!-- Dialog Content -->
+      <VCard title="Deshabilitar Usuario">
+        <VCardText>
+          ¿Estás seguro de deshabilitar al usuario <b>{{ selectedUser.full_name }}</b>?
+        </VCardText>
+
+        <VCardText class="d-flex justify-end">
+          <VBtn @click="changeStatus(selectedUser._id, 2)">
+            Deshabilitar
+          </VBtn>
+        </VCardText>
+      </VCard>
+    </VDialog>
+    <VDialog
+      v-model="isDeleteUserDialogVisible"
+      width="500"
+    >
+      <!-- Dialog close btn -->
+      <DialogCloseBtn @click="isDeleteUserDialogVisible = !isDeleteUserDialogVisible" />
+
+      <!-- Dialog Content -->
+      <VCard title="Eliminar Usuario">
+        <VCardText>
+          ¿Estás seguro de eliminar al usuario <b>{{ selectedUser.full_name }}</b>?
+        </VCardText>
+
+        <VCardText class="d-flex justify-end">
+          <VBtn @click="deleteUser(selectedUser._id)">
+            Eliminar
+          </VBtn>
+        </VCardText>
+      </VCard>
+    </VDialog>
   </section>
 </template>

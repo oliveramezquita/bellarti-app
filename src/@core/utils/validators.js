@@ -3,7 +3,7 @@ import { isEmpty, isEmptyArray, isNullOrUndefined } from './helpers'
 // 👉 Required Validator
 export const requiredValidator = value => {
   if (isNullOrUndefined(value) || isEmptyArray(value) || value === false)
-    return 'This field is required'
+    return 'Este campo es obligatorio'
   
   return !!String(value).trim().length || 'Este campo es obligatorio'
 }
