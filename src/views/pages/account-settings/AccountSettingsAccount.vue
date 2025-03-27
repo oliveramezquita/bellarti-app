@@ -7,6 +7,10 @@ const props = defineProps({
 })
 
 const refVForm = ref()
+const isNotificationVisible = ref(false)
+const isLoadingDialogVisible = ref(false)
+const notificationMessage = ref('')
+const isBtnEnabled = ref(false)
 
 const userData = ref({
   name: props.userData.name,
@@ -15,13 +19,22 @@ const userData = ref({
 })
 
 const updateUser = async () => {
+  isLoadingDialogVisible.value = true
+  isBtnEnabled.value = true
   try {
-    const response = await $api(`api/user/${props.userData._id}`, {
+    await $api(`api/user/${props.userData._id}`, {
       method: 'PATCH',
       body: userData.value,
+      onResponse({ response }) {
+        isNotificationVisible.value = true
+        notificationMessage.value = response.status !== 200 ? response._data : 'Datos actualizados correctamente.'
+      },
     })
   } catch (err) {
     console.error(err)
+  } finally {
+    isLoadingDialogVisible.value = false
+    isBtnEnabled.value = false
   }
 }
 
@@ -88,7 +101,10 @@ const onSubmit = () => {
                 cols="12"
                 class="d-flex flex-wrap gap-4"
               >
-                <VBtn type="submit">
+                <VBtn
+                  type="submit"
+                  :disabled="isBtnEnabled"
+                >
                   Guardar cambios
                 </VBtn>
               </VCol>
@@ -98,4 +114,9 @@ const onSubmit = () => {
       </VCard>
     </VCol>
   </VRow>
+  <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
+  <Notification
+    v-model:is-notification-visible="isNotificationVisible"
+    :message="notificationMessage"
+  />
 </template>

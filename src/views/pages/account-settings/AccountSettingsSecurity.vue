@@ -13,6 +13,10 @@ const isConfirmPasswordVisible = ref(false)
 const currentPassword = ref('')
 const newPassword = ref('')
 const confirmPassword = ref('')
+const isNotificationVisible = ref(false)
+const isLoadingDialogVisible = ref(false)
+const notificationMessage = ref('')
+const isBtnEnabled = ref(false)
 
 const passwordRequirements = [
   'Mínimo 8 caracteres: cuanto más, mejor.',
@@ -21,19 +25,28 @@ const passwordRequirements = [
 ]
 
 const changePassword = async () => {
+  isLoadingDialogVisible.value = true
+  isBtnEnabled.value = true
   try {
-    const response = await $api(`api/change-password/${props.userData._id}`, {
+    await $api(`api/change-password/${props.userData._id}`, {
       method: 'PATCH',
       body: {
         'old_password': currentPassword.value,
         'new_password': newPassword.value,
         'confirm_password': confirmPassword.value,
       },
+      onResponse({ response }) {
+        isNotificationVisible.value = true
+        notificationMessage.value = response._data
+      },
     })
 
     resetForm()
   } catch (err) {
     console.error(err)
+  } finally {
+    isLoadingDialogVisible.value = false
+    isBtnEnabled.value = false
   }
 }
 
@@ -158,6 +171,11 @@ const resetForm = () => {
     </VCol>
     <!-- !SECTION -->
   </vrow>
+  <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
+  <Notification
+    v-model:is-notification-visible="isNotificationVisible"
+    :message="notificationMessage"
+  />
 </template>
 
 <style lang="scss" scoped>
