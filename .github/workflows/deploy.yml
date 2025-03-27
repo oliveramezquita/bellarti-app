@@ -26,7 +26,7 @@ jobs:
 
       # Paso 4: Subir carpeta 'dist' al servidor
       - name: Deploy dist folder
-        uses: burnett01/rsync-deployments@v5.0
+        uses: burnett01/rsync-deployments@v7.0.2
         with:
           switches: -avz
           path: ./dist/
