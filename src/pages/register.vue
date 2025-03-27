@@ -66,6 +66,7 @@ const register = async () => {
   } finally {
     if (requestResponse.value.status === 200) refVForm.value?.reset()
     isLoadingDialogVisible.value = false
+    await router.push('/login')
   }
 }
 </script>
