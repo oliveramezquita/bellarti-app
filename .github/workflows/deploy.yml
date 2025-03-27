@@ -48,6 +48,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      # Configurar variables de entorno
+      - name: Configure environment variables
+        env:
+          VITE_API_BASE_URL: "https://api.bellarti.art/"
+        run: |
+          echo "VITE_API_BASE_URL=$VITE_API_BASE_URL" >> $GITHUB_ENV
+
       # Construir la aplicación
       - name: Build Vue.js application
         run: pnpm run build
