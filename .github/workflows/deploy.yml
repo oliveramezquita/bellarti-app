@@ -10,21 +10,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Paso 1: Clonar el repositorio
+      # Paso 1: Configurar Node.js (versión 23)
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '23'  # Aquí se especifica la versión de Node.js
+
+      # Paso 2: Clonar el repositorio
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Paso 2: Instalar dependencias
+      # Paso 3: Instalar dependencias
       - name: Install dependencies
         run: |
           npm install
 
-      # Paso 3: Construir la aplicación
+      # Paso 4: Construir la aplicación
       - name: Build Vue.js application
         run: |
-          npm install || npm cache clean --force && npm install
+          npm cache clean --force && npm install
 
-      # Paso 4: Subir carpeta 'dist' al servidor
+      # Paso 5: Subir carpeta 'dist' al servidor
       - name: Deploy dist folder
         uses: burnett01/rsync-deployments@7.0.2
         with:
