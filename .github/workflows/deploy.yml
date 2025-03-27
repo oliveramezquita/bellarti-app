@@ -63,18 +63,18 @@ jobs:
       - name: Desplegar en AWS Lightsail
         uses: appleboy/scp-action@v0.1.4
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.REMOTE_KEY }}
           source: "dist"
           target: "~/temp_dist"
 
       - name: Mover archivos a la carpeta de despliegue
         uses: appleboy/ssh-action@v0.1.10
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.REMOTE_KEY }}
           script: |
             sudo rm -rf /var/www/bellarti-app/*
             sudo mv ~/temp_dist/* /var/www/bellarti-app/
