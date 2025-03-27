@@ -15,6 +15,7 @@ const selectedPlan = ref()
 const selectedStatus = ref()
 const selectedUser = ref()
 const userData = useCookie('userData')
+const breadcrumbItems = ref([{ title: 'Administración', class: 'text-primary' }, { title: 'Usuarios' }])
 
 // Data table options
 const itemsPerPage = ref(10)
@@ -169,6 +170,11 @@ const viewDeleteUserDialog = user => {
 </script>
 
 <template>
+  <Breadcrumb
+    :items="breadcrumbItems"
+    :return="false"
+    icon="settings"
+  />
   <section>
     <VCard class="mb-6">
       <VCardItem class="pb-4">

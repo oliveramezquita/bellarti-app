@@ -12,6 +12,7 @@ const isEditRoleDrawerVisible = ref(false)
 const isDisabledRoleDialogVisible = ref(false)
 const isDeleteRoleDialogVisible = ref(false)
 const selectedRole = ref()
+const breadcrumbItems = ref([{ title: 'Administración', class: 'text-primary' }, { title: 'Funciones' }])
 
 const updateOptions = options => {
   sortBy.value = options.sortBy[0]?.key
@@ -139,6 +140,11 @@ const viewDeleteRoleDialog = role => {
 </script>
 
 <template>
+  <Breadcrumb
+    :items="breadcrumbItems"
+    :return="false"
+    icon="settings"
+  />
   <section>
     <VCard>
       <VCardText class="d-flex flex-wrap gap-4">

@@ -13,7 +13,7 @@ export const redirects = [
       
       
       if (home.value === 'admin')
-        return { name: 'dashboards-crm' }
+        return { name: 'dashboards-admin' }
       else if(home.value)
         return { name: 'dashboards-analytics' }
       

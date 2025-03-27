@@ -3,6 +3,7 @@ definePage({
   meta: {
     action: 'read',
     subject: 'AdmUsuarios',
+    navActiveLink: 'apps-user-list',
   },
 })
 import UserBioPanel from '@/views/apps/user/view/UserBioPanel.vue'
@@ -28,28 +29,11 @@ const { data: rolesList } = await useApi('api/roles?itemsPerPage=100')
 </script>
 
 <template>
+  <Breadcrumb
+    :items="[{ title: 'Administración', class: 'text-primary' }, { title: 'Usuarios', to: { name: 'apps-user-list' }, class: 'text-underline' }, { title: userData.full_name }]"
+    icon="settings"
+  />
   <VRow v-if="userData">
-    <VCol cols="12">
-      <VCard>
-        <VCardText class="d-flex align-center justify-space-between py-3">
-          <VBreadcrumbs
-            class="px-0 pb-0 pt-0 help-center-breadcrumbs"
-            :items="[{ title: 'Usuarios', to: { name: 'apps-user-list' }, class: 'text-primary' }, { title: userData.full_name }]"
-          />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="$router.go(-1)"
-          >
-            <VIcon
-              start
-              icon="tabler-arrow-left"
-            />
-            Regresar
-          </VBtn>
-        </VCardText>
-      </VCard>
-    </VCol>
     <VCol
       cols="12"
       md="5"
