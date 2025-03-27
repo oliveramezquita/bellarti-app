@@ -3,6 +3,7 @@ definePage({
   meta: {
     action: 'read',
     subject: 'AdmRoles',
+    navActiveLink: 'apps-roles-list',
   },
 })
 
@@ -59,28 +60,11 @@ const update = async id => {
 </script>
 
 <template>
+  <Breadcrumb
+    :items="[{ title: 'Administración', class: 'text-primary' }, { title: 'Funciones', to: { name: 'apps-roles-list' }, class: 'text-underline' }, { title: roleData.name }]"
+    icon="settings"
+  />
   <VRow v-if="roleData">
-    <VCol cols="12">
-      <VCard>
-        <VCardText class="d-flex align-center justify-space-between py-3">
-          <VBreadcrumbs
-            class="px-0 pb-0 pt-0 help-center-breadcrumbs"
-            :items="[{ title: 'Funciones', to: { name: 'apps-roles-list' }, class: 'text-primary' }, { title: roleData.name }]"
-          />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="$router.go(-1)"
-          >
-            <VIcon
-              start
-              icon="tabler-arrow-left"
-            />
-            Regresar
-          </VBtn>
-        </VCardText>
-      </VCard>
-    </VCol>
     <VCol cols="12">
       <VCard>
         <VCardText>

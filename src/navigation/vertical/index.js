@@ -4,16 +4,16 @@ export default [
     icon: { icon: 'tabler-smart-home' },
     children: [
       {
+        title: 'Dirección',
+        to: 'dashboards-admin',
+        action: 'read',
+        subject: 'AdminDashboard',
+      },
+      {
         title: 'Usuarios',
         to: 'dashboards-analytics',
         action: 'read',
         subject: 'UserDashboard',
-      },
-      {
-        title: 'Dirección',
-        to: 'dashboards-crm',
-        action: 'read',
-        subject: 'AdminDashboard',
       },
     ],
   },
@@ -23,19 +23,19 @@ export default [
     children: [
       {
         title: 'Vivienda en Serie',
-        to: null,
+        to: 'apps-townhouses-list',
         action: 'read',
         subject: 'CliVS',
       },
       {
         title: 'Proyectos Especiales',
-        to: null,
+        to: 'apps-special-projects-list',
         action: 'read',
         subject: 'CliPE',
       },
       {
         title: 'Contactos',
-        to: null,
+        to: 'apps-contacts-list',
         action: 'read',
         subject: 'CliContactos',
       },
@@ -47,19 +47,19 @@ export default [
     children: [
       {
         title: 'Prototipos',
-        to: null,
+        to: 'apps-prototypes-list',
         action: 'read',
         subject: 'VSPrototipos',
       },
       {
         title: 'Volumetría',
-        to: null,
+        to: 'apps-volumetry-list',
         action: 'read',
         subject: 'VSVolumetria',
       },
       {
         title: 'OD\'s',
-        to: null,
+        to: 'apps-ods-list',
         action: 'read',
         subject: 'VSODs',
       },
@@ -71,13 +71,13 @@ export default [
     children: [
       {
         title: 'Proyectos',
-        to: null,
+        to: 'apps-projects-list',
         action: 'read',
         subject: 'PE',
       },
       {
         title: 'Plantillas',
-        to: null,
+        to: 'apps-templates-list',
         action: 'read',
         subject: 'PEPlantillas',
       },
@@ -86,7 +86,7 @@ export default [
   {
     title: 'Proveedores',
     icon: { icon: 'tabler-users' },
-    to: null,
+    to: 'apps-suppliers-list',
     action: 'read',
     subject: 'Proveedores',
   },
@@ -96,13 +96,13 @@ export default [
     children: [
       {
         title: 'Materiales',
-        to: null,
+        to: 'apps-materials-list',
         action: 'read',
         subject: 'Materiales',
       },
       {
         title: 'Equipamiento y Accesorios',
-        to: null,
+        to: 'apps-equipment-list',
         action: 'read',
         subject: 'MatEquipamiento',
       },
@@ -114,19 +114,19 @@ export default [
     children: [
       {
         title: 'Inventario',
-        to: null,
+        to: 'apps-inventory-list',
         action: 'read',
         subject: 'AlmInventario',
       },
       {
         title: 'Entradas',
-        to: null,
+        to: 'apps-inputs-list',
         action: 'read',
         subject: 'AlmEntradas',
       },
       {
         title: 'Salidas',
-        to: null,
+        to: 'apps-outputs-list',
         action: 'read',
         subject: 'AlmSalidas',
       },
@@ -135,35 +135,35 @@ export default [
   {
     title: 'Órdenes de Compra',
     icon: { icon: 'tabler-credit-card-pay' },
-    to: null,
+    to: 'apps-purchase-orders-list',
     action: 'read',
     subject: 'OC',
   },
   {
     title: 'RQM',
     icon: { icon: 'tabler-checkup-list' },
-    to: null,
+    to: 'apps-rqm-list',
     action: 'read',
     subject: 'RQM',
   },
   {
     title: 'Facturas',
     icon: { icon: 'tabler-file-invoice' },
-    to: null,
+    to: 'apps-invoices-list',
     action: 'read',
     subject: 'Facturas',
   },
   {
     title: 'Cuentas',
     icon: { icon: 'tabler-cash-register' },
-    to: null,
+    to: 'apps-accounts-list',
     action: 'read',
     subject: 'Cuentas',
   },
   {
     title: 'Empleados y Colaboradores',
     icon: { icon: 'tabler-users-group' },
-    to: null,
+    to: 'apps-employees-list',
     action: 'read',
     subject: 'EC',
   },
@@ -173,7 +173,7 @@ export default [
     children: [
       {
         title: 'Bancos',
-        to: null,
+        to: 'apps-banks-list',
         action: 'read',
         subject: 'CatBancos',
       },
@@ -197,7 +197,7 @@ export default [
       },
       {
         title: 'Secciones',
-        to: null,
+        to: 'apps-sections',
         action: 'read',
         subject: 'AdmSecciones',
       },
