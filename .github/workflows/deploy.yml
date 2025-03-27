@@ -3,7 +3,7 @@ name: Deploy Bellarti App Dist Folder
 on:
   push:
     branches:
-      - main  # Desencadenar acciones solo en el branch principal
+      - main
 
 jobs:
   build:
@@ -28,6 +28,7 @@ jobs:
       - name: Suppress Experimental Warnings
         run: export NODE_NO_WARNINGS=1
 
+      # Remueve archivo problematico
       - name: Remove existing pnpm file
         run: rm -f /opt/hostedtoolcache/node/18.20.7/x64/bin/pnpm
 
