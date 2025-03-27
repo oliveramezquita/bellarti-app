@@ -52,7 +52,7 @@ const register = async () => {
     await $api(`api/register/${decodedToken.id}`, {
       method: 'POST',
       body: {
-        password: form.value.newPassword,
+        password: form.value.password,
         // eslint-disable-next-line camelcase
         confirm_password: form.value.confirmPassword,
       },
