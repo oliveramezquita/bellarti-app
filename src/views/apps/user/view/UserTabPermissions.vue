@@ -7,7 +7,7 @@ const props = defineProps({
 })
 
 const isLoadingDialogVisible = ref(false)
-const { data: sections }= await useApi('/api/tree-view-sections')
+const { data: sections }= await useApi('api/tree-view-sections')
 const permissions = ref({})
 
 for (const key in sections.value) {
@@ -45,7 +45,7 @@ const onSubmit = async () => {
   isLoadingDialogVisible.value = true
   
   try {
-    await $api(`/api/user/${props.userData._id}`, {
+    await $api(`api/user/${props.userData._id}`, {
       method: 'PATCH',
       body: { 'permissions': permissions.value },
     })

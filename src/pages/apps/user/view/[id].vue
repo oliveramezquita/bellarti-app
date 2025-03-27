@@ -23,7 +23,7 @@ const tabs = [
   },
 ]
 
-const { data: userData } = await useApi(`/api/user/${ route.params.id }`)
+const { data: userData } = await useApi(`api/user/${ route.params.id }`)
 const { data: rolesList } = await useApi('api/roles?itemsPerPage=100')
 </script>
 
