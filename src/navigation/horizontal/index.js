@@ -11,7 +11,7 @@ export default [
       },
       {
         title: 'Usuarios',
-        to: 'dashboards-analytics',
+        to: 'dashboards-user',
         action: 'read',
         subject: 'UserDashboard',
       },
