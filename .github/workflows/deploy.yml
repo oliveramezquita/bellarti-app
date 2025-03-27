@@ -14,7 +14,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '23.3.0'
+          node-version: '18'
 
       # Habilitar Corepack
       - name: Enable Corepack
@@ -23,6 +23,10 @@ jobs:
       # Limpiar cache de node
       - name: Clear npm cache
         run: npm cache clean --force
+
+      # Desactivar todas las advertencias
+      - name: Suppress Experimental Warnings
+        run: export NODE_NO_WARNINGS=1
 
       # Instalar pnpm
       - name: Install pnpm
