@@ -12,19 +12,31 @@ const props = defineProps({
 
 const emit = defineEmits(['update:isNotificationVisible'])
 
-const parseReponse = response => {
+const parseResponse = response => {
   if (typeof(response) === 'object')
     return response[0]
   else if (typeof(response) === 'string')
     return response
+}
+
+const closeNotification = () => {
+  emit('update:isNotificationVisible', false)
 }
 </script>
 
 <template>
   <VSnackbar
     :model-value="props.isNotificationVisible"
-    :timeout="3000"
+    multi-line
   >
-    {{ parseReponse(props.message) }}
+    {{ parseResponse(props.message) }}
+    <template #actions>
+      <VBtn
+        color="error"
+        @click="closeNotification"
+      >
+        Cerrar
+      </VBtn>
+    </template>
   </VSnackbar>
 </template>

@@ -58,6 +58,7 @@ const onSubmit = () => {
 }
 
 const resetPassword = async () => {
+  isLoadingDialogVisible.value = true
   try {
     await $api('api/restore-password', {
       method: 'POST',

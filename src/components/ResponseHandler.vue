@@ -25,7 +25,7 @@ const typeAlert = status => {
     return 'error'
 }
 
-const parseReponse = response => {
+const parseResponse = response => {
   if (typeof(response) === 'object')
     return response[0]
   else if (typeof(response) === 'string')
@@ -42,7 +42,7 @@ const parseReponse = response => {
     class="mt-5"
     @update:model-value="alertVisibleUpdate"
   >
-    {{ parseReponse(response._data) }}
+    {{ parseResponse(response._data) }}
   </VAlert>
 </template>
 
