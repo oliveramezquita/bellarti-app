@@ -57,11 +57,12 @@ const login = async () => {
     useCookie('accessToken').value = accessToken
     useCookie('home').value = home
     await nextTick(() => { 
-      isLoadingDialogVisible.value = false
       router.replace(route.query.to ? String(route.query.to) : '/')
     })
   } catch (err) {
     console.error(err)
+  } finally {
+    isLoadingDialogVisible.value = false
   }
 }
 
