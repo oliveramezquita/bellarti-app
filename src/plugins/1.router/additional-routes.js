@@ -15,7 +15,7 @@ export const redirects = [
       if (home.value === 'admin')
         return { name: 'dashboards-admin' }
       else if(home.value)
-        return { name: 'dashboards-analytics' }
+        return { name: 'dashboards-user' }
       
       return { name: 'login', query: to.query }
     },
