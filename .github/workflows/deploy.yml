@@ -60,12 +60,23 @@ jobs:
         run: pnpm run build
 
       # Subir carpeta 'dist' al servidor
-      - name: Deploy dist folder
-        uses: burnett01/rsync-deployments@7.0.2
+      - name: Desplegar en AWS Lightsail
+        uses: appleboy/scp-action@v0.1.4
         with:
-          switches: -avz
-          path: ./dist/
-          remote_path: /var/www/bellarti-app/
-          remote_host: ${{ secrets.REMOTE_HOST }}
-          remote_user: ${{ secrets.REMOTE_USER }}
-          remote_key: ${{ secrets.REMOTE_KEY }}
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "dist"
+          target: "~/temp_dist"
+
+      - name: Mover archivos a la carpeta de despliegue
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            sudo rm -rf /var/www/bellarti-app/*
+            sudo mv ~/temp_dist/* /var/www/bellarti-app/
+            sudo rm -rf ~/temp_dist
+            sudo systemctl restart nginx
