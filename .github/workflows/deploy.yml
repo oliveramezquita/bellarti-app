@@ -10,27 +10,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Paso 1: Configurar Node.js (versión 23)
+      # Paso 1: Configurar Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '23'  # Aquí se especifica la versión de Node.js
+          node-version: '23' # Puedes cambiarlo si tu proyecto requiere otra versión
+          cache: 'pnpm'
 
-      # Paso 2: Clonar el repositorio
+      # Paso 2: Instalar pnpm
+      - name: Install pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+
+      # Paso 3: Clonar el repositorio
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Paso 3: Instalar dependencias
+      # Paso 4: Instalar dependencias
       - name: Install dependencies
-        run: |
-          npm install
+        run: pnpm install
 
-      # Paso 4: Construir la aplicación
+      # Paso 5: Construir la aplicación
       - name: Build Vue.js application
-        run: |
-          npm cache clean --force && npm install
+        run: pnpm run build
 
-      # Paso 5: Subir carpeta 'dist' al servidor
+      # Paso 6: Subir carpeta 'dist' al servidor
       - name: Deploy dist folder
         uses: burnett01/rsync-deployments@7.0.2
         with:
