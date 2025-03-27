@@ -21,7 +21,7 @@ const isDeleteUserDialogVisible = ref(false)
 const router = useRouter()
 
 const editUser = async data => {
-  const response = await $api(`/api/user/${data.id}`, {
+  const response = await $api(`api/user/${data.id}`, {
     method: 'PATCH',
     body: {
       name: data.name,
@@ -36,7 +36,7 @@ const editUser = async data => {
 }
 
 const changeStatus = async (id, status) => {
-  const response = await $api(`/api/user/${id}`, {
+  const response = await $api(`api/user/${id}`, {
     method: 'PATCH',
     body: {
       "status": status,
@@ -48,7 +48,7 @@ const changeStatus = async (id, status) => {
 }
  
 const deleteUser = async id => {
-  await $api(`/api/user/${id}`, { method: 'DELETE' })
+  await $api(`api/user/${id}`, { method: 'DELETE' })
   router.push('/apps/user/list')
 }
 </script>

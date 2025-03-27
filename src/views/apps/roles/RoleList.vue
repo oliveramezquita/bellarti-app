@@ -21,7 +21,7 @@ const updateOptions = options => {
 const {
   data: rolesData,
   execute: fetchRoles,
-} = await useApi(createUrl('/api/roles', {
+} = await useApi(createUrl('api/roles', {
   query: {
     status: selectedStatus,
     itemsPerPage,
@@ -81,7 +81,7 @@ const resolveStatusLabel = stat => {
 }
 
 const addNewRole = async roleData => {
-  await $api('/api/roles', {
+  await $api('api/roles', {
     method: 'POST',
     body: {
       "name": roleData.name,
@@ -94,7 +94,7 @@ const addNewRole = async roleData => {
 }
 
 const editRole = async roleData => {
-  await $api(`/api/role/${roleData.id}`, {
+  await $api(`api/role/${roleData.id}`, {
     method: 'PATCH',
     body: {
       "name": roleData.name,
@@ -106,7 +106,7 @@ const editRole = async roleData => {
 }
 
 const changeStatus = async (id, status) => {
-  await $api(`/api/role/${id}`, {
+  await $api(`api/role/${id}`, {
     method: 'PATCH',
     body: {
       "status": status,
@@ -117,7 +117,7 @@ const changeStatus = async (id, status) => {
 }
 
 const deleteRole = async id => {
-  await $api(`/api/role/${id}`, { method: 'DELETE' })
+  await $api(`api/role/${id}`, { method: 'DELETE' })
   isDeleteRoleDialogVisible.value = false
   fetchRoles()
 }

@@ -8,8 +8,8 @@ definePage({
 
 const route = useRoute('apps-roles-view-id')
 const permissions = ref({})
-const { data: roleData } = await useApi(`/api/role/${ route.params.id }`)
-const { data: sections }= await useApi('/api/tree-view-sections')
+const { data: roleData } = await useApi(`api/role/${ route.params.id }`)
+const { data: sections }= await useApi('api/tree-view-sections')
 const isConfirmDialogVisible = ref(false)
 const isNotificationVisible = ref(false)
 const notificationMessage = ref('')
@@ -47,7 +47,7 @@ for (const [key, value] of Object.entries(roleData.value.permissions)) {
 
 const update = async id => {
   isConfirmDialogVisible.value = false
-  await $api(`/api/update-permissions/${id}`, {
+  await $api(`api/update-permissions/${id}`, {
     method: 'PATCH',
     body: permissions.value,
     onResponse({ response }) {
