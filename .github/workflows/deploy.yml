@@ -22,7 +22,7 @@ jobs:
       # Paso 3: Construir la aplicación
       - name: Build Vue.js application
         run: |
-          npm run build
+          npm install || npm cache clean --force && npm install
 
       # Paso 4: Subir carpeta 'dist' al servidor
       - name: Deploy dist folder
