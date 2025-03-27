@@ -65,7 +65,7 @@ jobs:
         with:
           switches: -avz
           path: ./dist/
-          remote_path: /home/ubuntu/dist/
+          remote_path: /var/www/bellarti-app/
           remote_host: ${{ secrets.REMOTE_HOST }}
           remote_user: ${{ secrets.REMOTE_USER }}
           remote_key: ${{ secrets.REMOTE_KEY }}
