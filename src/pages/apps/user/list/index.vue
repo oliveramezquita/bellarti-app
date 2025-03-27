@@ -66,7 +66,7 @@ const status = [
 const {
   data: usersData,
   execute: fetchUsers,
-} = await useApi(createUrl('/api/users', {
+} = await useApi(createUrl('api/users', {
   query: {
     q: searchQuery,
     status: selectedStatus,
@@ -106,7 +106,7 @@ const resolveStatusLabel = stat => {
 const isAddNewUserDrawerVisible = ref(false)
 
 const addNewUser = async userData => {
-  await $api('/api/users', {
+  await $api('api/users', {
     method: 'POST',
     body: userData,
   })
@@ -118,7 +118,7 @@ const addNewUser = async userData => {
 const isEditUserDrawerVisible = ref(false)
 
 const editUser = async userData => {
-  await $api(`/api/user/${userData.id}`, {
+  await $api(`api/user/${userData.id}`, {
     method: 'PATCH',
     body: {
       name: userData.name,
@@ -132,7 +132,7 @@ const editUser = async userData => {
 }
 
 const changeStatus = async (id, status) => {
-  await $api(`/api/user/${id}`, {
+  await $api(`api/user/${id}`, {
     method: 'PATCH',
     body: {
       "status": status,
@@ -143,7 +143,7 @@ const changeStatus = async (id, status) => {
 } 
 
 const deleteUser = async id => {
-  await $api(`/api/user/${id}`, { method: 'DELETE' })
+  await $api(`api/user/${id}`, { method: 'DELETE' })
   isDeleteUserDialogVisible.value = false
   fetchUsers()
 }
