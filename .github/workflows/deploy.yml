@@ -1,0 +1,36 @@
+name: Deploy Bellarti App Dist Folder
+
+on:
+  push:
+    branches:
+      - main  # Desencadenar acciones solo en el branch principal
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Paso 1: Clonar el repositorio
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Paso 2: Instalar dependencias
+      - name: Install dependencies
+        run: |
+          npm install
+
+      # Paso 3: Construir la aplicación
+      - name: Build Vue.js application
+        run: |
+          npm run build
+
+      # Paso 4: Subir carpeta 'dist' al servidor
+      - name: Deploy dist folder
+        uses: burnett01/rsync-deployments@v5.0
+        with:
+          switches: -avz
+          path: ./dist/
+          remote_path: /home/ubuntu/dist/
+          remote_host: ${{ secrets.REMOTE_HOST }}
+          remote_user: ${{ secrets.REMOTE_USER }}
+          remote_key: ${{ secrets.REMOTE_KEY }}
