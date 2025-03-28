@@ -8,6 +8,9 @@ definePage({
 import AnalyticsStatusUsersOverview from '@/views/dashboards/admin/AnalyticsStatusUsersOverview.vue'
 
 const userData = useCookie('userData')
+const { data: dashboardData } = await useApi('api/dashboard')
+
+console.log()
 </script>
 
 <template>
@@ -54,7 +57,7 @@ const userData = useCookie('userData')
         sm="6"
         lg="4"
       >
-        <AnalyticsStatusUsersOverview />
+        <AnalyticsStatusUsersOverview :data="dashboardData[0].users_status" />
       </VCol>
     </VRow>
   </div>

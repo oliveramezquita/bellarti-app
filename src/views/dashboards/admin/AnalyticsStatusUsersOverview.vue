@@ -1,4 +1,11 @@
 <script setup>
+const props = defineProps({
+  data: {
+    type: Array,
+    required: true, 
+  },
+})
+
 const chartColors = {
   donut: {
     series1: '#28C76F',
@@ -10,11 +17,7 @@ const chartColors = {
 const headingColor = 'rgba(var(--v-theme-on-background), var(--v-high-emphasis-opacity))'
 const labelColor = 'rgba(var(--v-theme-on-background), var(--v-medium-emphasis-opacity))'
 
-const deliveryExceptionsChartSeries = [
-  3,
-  4,
-  1,
-]
+const deliveryExceptionsChartSeries = props.data[0]
 
 const deliveryExceptionsChartConfig = {
   labels: [
@@ -78,7 +81,7 @@ const deliveryExceptionsChartConfig = {
             label: 'Total',
             color: labelColor,
             formatter() {
-              return 8
+              return props.data[1]
             },
           },
         },
@@ -111,7 +114,7 @@ const deliveryExceptionsChartConfig = {
                 label: 'Total',
                 color: labelColor,
                 formatter() {
-                  return 8
+                  return props.data[1]
                 },
               },
             },
