@@ -9,8 +9,6 @@ import AnalyticsStatusUsersOverview from '@/views/dashboards/admin/AnalyticsStat
 
 const userData = useCookie('userData')
 const { data: dashboardData } = await useApi('api/dashboard')
-
-console.log()
 </script>
 
 <template>
