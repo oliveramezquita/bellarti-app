@@ -66,6 +66,7 @@ declare module 'vue-router/auto-routes' {
     'apps-suppliers-list': RouteRecordInfo<'apps-suppliers-list', '/apps/suppliers/list', Record<never, never>, Record<never, never>>,
     'apps-templates-list': RouteRecordInfo<'apps-templates-list', '/apps/templates/list', Record<never, never>, Record<never, never>>,
     'apps-townhouses-list': RouteRecordInfo<'apps-townhouses-list', '/apps/townhouses/list', Record<never, never>, Record<never, never>>,
+    'apps-townhouses-view-id': RouteRecordInfo<'apps-townhouses-view-id', '/apps/townhouses/view/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     'apps-user-list': RouteRecordInfo<'apps-user-list', '/apps/user/list', Record<never, never>, Record<never, never>>,
     'apps-user-view-id': RouteRecordInfo<'apps-user-view-id', '/apps/user/view/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     'apps-volumetry-list': RouteRecordInfo<'apps-volumetry-list', '/apps/volumetry/list', Record<never, never>, Record<never, never>>,
