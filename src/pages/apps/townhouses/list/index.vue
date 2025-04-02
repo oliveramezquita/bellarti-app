@@ -79,7 +79,7 @@ const addNewClient = async clientData => {
   fetchClients()
 }
 
-const viewEditUserDrawer = client => {
+const viewEditClientDrawer = client => {
   selectedClient.value = client
   isEditClientDrawerVisible.value = true
 }
@@ -220,7 +220,7 @@ const deleteClient = async id => {
 
       <!-- Actions -->
       <template #item.actions="{ item }">
-        <IconBtn @click="viewEditUserDrawer(item)">
+        <IconBtn @click="viewEditClientDrawer(item)">
           <VIcon icon="tabler-pencil" />
         </IconBtn>
         <IconBtn @click="viewDeleteClientDialog(item)">
