@@ -40,6 +40,8 @@ const onSubmit = () => {
   refForm.value?.validate().then(({ valid }) => {
     if (valid) {
       createMateiral()
+    } else {
+      isLoadingDialogVisible.value = false
     }
   })
 }
@@ -85,7 +87,7 @@ const differentiatePrices = () => {
   if (material.value.unit_price !== null)
     material.value.unit_price = convertCurrency(material.value.unit_price)
   if (parseFloat(material.value.inventory_price) > 0 && parseFloat(material.value.market_price) > 0) {
-    const priceDifference =  parseFloat(material.value.inventory_price) - parseFloat(material.value.market_price)
+    const priceDifference =  parseFloat(material.value.market_price) - parseFloat(material.value.inventory_price)
 
     material.value.price_difference = convertCurrency(priceDifference)
   }

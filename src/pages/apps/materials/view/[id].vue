@@ -8,6 +8,7 @@ definePage({
 })
 
 const route = useRoute('apps-materials-view-id')
+const router = useRouter()
 const { data: materialData } = await useApi(`api/material/${ route.params.id }`)
 const { data: suppliers } = await useApi('api/suppliers?itemsPerPage=1000')
 const { data: unitsOfMeasurement }= await useApi('api/catalog/67e8534fa303a4cd1b381d22')
@@ -18,6 +19,7 @@ const isLoadingDialogVisible = ref(false)
 const isNotificationVisible = ref(false)
 const notificationMessage = ref('')
 const material = ref(materialData.value)
+const isDeleteUserDialogVisible = ref(false)
 
 const onSubmit = () => {
   isLoadingDialogVisible.value = true
@@ -63,10 +65,15 @@ const differentiatePrices = () => {
   if (material.value.unit_price !== null)
     material.value.unit_price = convertCurrency(material.value.unit_price)
   if (parseFloat(material.value.inventory_price) > 0 && parseFloat(material.value.market_price) > 0) {
-    const priceDifference =  parseFloat(material.value.inventory_price) - parseFloat(material.value.market_price)
+    const priceDifference =  parseFloat(material.value.market_price) - parseFloat(material.value.inventory_price)
 
     material.value.price_difference = convertCurrency(priceDifference)
   }
+}
+
+const deleteMaterial = async id => {
+  await $api(`api/material/${id}`, { method: 'DELETE' })
+  router.push('/apps/materials/list')
 }
 </script>
 
@@ -291,6 +298,14 @@ const differentiatePrices = () => {
                 </VBtn>
 
                 <VBtn
+                  variant="tonal"
+                  color="error"
+                  @click="isDeleteUserDialogVisible = true"
+                >
+                  Eliminar
+                </VBtn>
+
+                <VBtn
                   type="reset"
                   color="secondary"
                   variant="tonal"
@@ -311,6 +326,26 @@ const differentiatePrices = () => {
     v-model:is-notification-visible="isNotificationVisible"
     :message="notificationMessage"
   />
+  <VDialog
+    v-model="isDeleteUserDialogVisible"
+    width="500"
+  >
+    <!-- Dialog close btn -->
+    <DialogCloseBtn @click="isDeleteUserDialogVisible = !isDeleteUserDialogVisible" />
+
+    <!-- Dialog Content -->
+    <VCard title="Eliminar Material">
+      <VCardText>
+        ¿Estás seguro de eliminar el material <b>{{ materialData.name }}</b>?
+      </VCardText>
+
+      <VCardText class="d-flex justify-end">
+        <VBtn @click="deleteMaterial(materialData._id)">
+          Eliminar
+        </VBtn>
+      </VCardText>
+    </VCard>
+  </VDialog>
 </template>
 
 <style lang="scss">
