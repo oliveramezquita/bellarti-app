@@ -5,8 +5,8 @@ definePage({
     subject: 'VSPrototipos',
   },
 })
-import AddNewPrototypeDrawer from '@/views/apps/prototypes/list/AddNewPrototypeDrawer.vue'
-import EditPrototypeDrawer from '@/views/apps/prototypes/list/EditPrototypeDrawer.vue'
+import AddNewPrototypeDrawer from '@/views/apps/prototypes/AddNewPrototypeDrawer.vue'
+import EditPrototypeDrawer from '@/views/apps/prototypes/EditPrototypeDrawer.vue'
 
 const breadcrumbItems = ref([{ title: 'Vivienda en Serie', class: 'text-primary' }, { title: 'Prototipos' }])
 const searchQuery = ref('')

@@ -11,7 +11,7 @@ const route = useRoute('apps-materials-view-id')
 const router = useRouter()
 const { data: materialData } = await useApi(`api/material/${ route.params.id }`)
 const { data: suppliers } = await useApi('api/suppliers?itemsPerPage=1000')
-const { data: unitsOfMeasurement }= await useApi('api/catalog/67e8534fa303a4cd1b381d22')
+const { data: unitsOfMeasurement }= await useApi('api/catalogs?name=Unidades de medida')
 const currentTab = ref('tab-1')
 const isFormValid = ref(false)
 const refForm = ref()
@@ -20,6 +20,11 @@ const isNotificationVisible = ref(false)
 const notificationMessage = ref('')
 const material = ref(materialData.value)
 const isDeleteUserDialogVisible = ref(false)
+
+if (route.query.new) {
+  notificationMessage.value = `El material ${materialData.value.name} ha sido agregado con éxito`
+  isNotificationVisible.value = true
+}
 
 const onSubmit = () => {
   isLoadingDialogVisible.value = true

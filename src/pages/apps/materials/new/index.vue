@@ -33,7 +33,7 @@ const material = ref({
 })
 
 const { data: suppliers } = await useApi('api/suppliers?itemsPerPage=1000')
-const { data: unitsOfMeasurement }= await useApi('api/catalog/67e8534fa303a4cd1b381d22')
+const { data: unitsOfMeasurement }= await useApi('api/catalogs?name=Unidades de medida')
 
 const onSubmit = () => {
   isLoadingDialogVisible.value = true
@@ -56,12 +56,12 @@ const createMateiral = async() => {
       method: 'POST',
       body: filteredObject,
       onResponse({ response }) {
-        isNotificationVisible.value = true
         if (response.status === 201) {
           nextTick(() => { 
-            router.replace(`/apps/materials/view/${response._data.id}`)
+            router.replace(`/apps/materials/view/${response._data.id}?new=true`)
           })
         } else {
+          isNotificationVisible.value = true
           notificationMessage.value = response._data
         }
       },
