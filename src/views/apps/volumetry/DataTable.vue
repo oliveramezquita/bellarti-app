@@ -51,13 +51,19 @@ watch(() => props.volumetry, newValue => {}, { deep: true })
 
 <template>
   <VCard>
-    <VCardTitle>
-      Volumetría actual
-    </VCardTitle>
-    <VRow class="mt-1">
+    <VRow
+      class="mt-1 mb-2"
+      style="padding-block: 0;padding-inline: 20px;"
+    >
       <VCol
         cols="12"
-        offset-md="8"
+        md="3"
+      >
+        <h4>Volumetría actual</h4>
+      </VCol>
+      <VCol
+        cols="12"
+        offset-md="5"
         md="4"
       >
         <AppTextField
