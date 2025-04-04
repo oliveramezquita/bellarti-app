@@ -4,10 +4,12 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+
 })
 
 const emit = defineEmits([
   'update:volumetry',
+  'volumetryData',
 ])
 
 const search = ref('')
@@ -33,14 +35,25 @@ const headers = [
     title: 'UNIDAD DE MEDIDA',
     key: 'material.measurement',
   },
-  
+  {
+    title: '',
+    key: 'actions',
+    sortable: false, 
+  },
 ]
+
+const deleteMaterial = id => {
+  emit('volumetryData', id)
+}
 
 watch(() => props.volumetry, newValue => {}, { deep: true })
 </script>
 
 <template>
   <VCard>
+    <VCardTitle>
+      Volumetría actual
+    </VCardTitle>
     <VRow class="mt-1">
       <VCol
         cols="12"
@@ -71,6 +84,14 @@ watch(() => props.volumetry, newValue => {}, { deep: true })
         <tr class="v-data-table__tr">
           <td :colspan="headers.length">
             <table class="more-info">
+              <tr>
+                <td style=" padding-block-end: 5px;padding-inline-start: 55px !important;">
+                  <b>ELEMENTO</b>
+                </td>
+                <td style="padding-inline-start: 7px !important;">
+                  <b>CANTIDAD</b>
+                </td>
+              </tr>
               <tr
                 v-for="v in slotProps.item.volumetry"
                 :key="v.element"
@@ -85,6 +106,13 @@ watch(() => props.volumetry, newValue => {}, { deep: true })
             </table>
           </td>
         </tr>
+      </template>
+
+      <!-- Actions -->
+      <template #item.actions="{ item }">
+        <IconBtn @click="deleteMaterial(item)">
+          <VIcon icon="tabler-trash" />
+        </IconBtn>
       </template>
     </VDataTable>
   </VCard>

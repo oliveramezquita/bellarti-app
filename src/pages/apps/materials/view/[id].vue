@@ -44,8 +44,6 @@ const editMateiral = async() => {
         notificationMessage.value = response._data
       },
     })
-  } catch (err) {
-    console.error(err)
   } finally {
     isLoadingDialogVisible.value = false
   }

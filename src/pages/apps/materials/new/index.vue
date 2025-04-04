@@ -66,8 +66,6 @@ const createMateiral = async() => {
         }
       },
     })
-  } catch (err) {
-    console.error(err)
   } finally {
     isLoadingDialogVisible.value = false
   }

@@ -49,8 +49,6 @@ const onSubmit = async () => {
       method: 'PATCH',
       body: { 'permissions': permissions.value },
     })
-  } catch (err) {
-    console.error(err)
   } finally {
     isLoadingDialogVisible.value = false
   }

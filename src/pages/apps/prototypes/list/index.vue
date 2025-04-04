@@ -14,6 +14,7 @@ const itemsPerPage = ref(10)
 const page = ref(1)
 const isAddNewPrototypeDrawerVisible = ref(false)
 const isEditPrototypeDrawerVisible = ref(false)
+const isLoadingDialogVisible = ref(false)
 const isNotificationVisible = ref(false)
 const notificationMessage = ref('')
 const isDeletePrototypeDialogVisible = ref(false)
@@ -56,21 +57,26 @@ const prototypes = computed(() => prototypesData.value.data)
 const totalPrototypes = computed(() => prototypesData.value.total_elements)
 
 const addNewPrototype = async prototypeData => {
-  const filtered = Object.fromEntries(
-    Object.entries(prototypeData).filter(([_, value]) => value !== null),
-  )
+  isLoadingDialogVisible.value = true
+  try {
+    const filtered = Object.fromEntries(
+      Object.entries(prototypeData).filter(([_, value]) => value !== null),
+    )
 
-  await $api('api/prototypes', {
-    method: 'POST',
-    body: filtered,
-    onResponse({ response }) {
-      isNotificationVisible.value = true
-      notificationMessage.value = response._data
-    },
-  })
+    await $api('api/prototypes', {
+      method: 'POST',
+      body: filtered,
+      onResponse({ response }) {
+        isNotificationVisible.value = true
+        notificationMessage.value = response._data
+      },
+    })
 
-  // Refetch Prototype
-  fetchPrototypes()
+    // Refetch Prototype
+    fetchPrototypes()
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
 }
 
 const viewEditPrototypeDrawer = prototype => {
@@ -198,9 +204,11 @@ const deletePrototype = async id => {
 
         <!-- Actions -->
         <template #item.actions="{ item }">
-          <IconBtn @click="viewEditPrototypeDrawer(item)">
+          <!--
+            <IconBtn @click="viewEditPrototypeDrawer(item)">
             <VIcon icon="tabler-pencil" />
-          </IconBtn>
+            </IconBtn> 
+          -->
           <IconBtn @click="viewDeletePrototypeDialog(item)">
             <VIcon icon="tabler-trash" />
           </IconBtn>
@@ -227,6 +235,7 @@ const deletePrototype = async id => {
       v-model:prototype-info="selectedPrototype"
       @prototype-data="editPrototype"
     />
+    <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
     <Notification
       v-model:is-notification-visible="isNotificationVisible"
       :message="notificationMessage"
