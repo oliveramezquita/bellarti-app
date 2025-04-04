@@ -25,10 +25,6 @@ const headers = [
     key: 'name',
   },
   {
-    title: 'Dirección',
-    key: 'address',
-  },
-  {
     title: 'Correo electrónico',
     key: 'email',
   },
@@ -192,24 +188,6 @@ const deleteSupplier = async id => {
                 </RouterLink>
               </h6>
             </div>
-          </div>
-        </template>
-
-        <template #item.address="{ item }">
-          <div class="text-body-1 text-high-emphasis text-capitalize">
-            {{ item.address }}
-          </div>
-        </template>
-
-        <template #item.email="{ item }">
-          <div class="text-body-1 text-high-emphasis">
-            {{ item.email }}
-          </div>
-        </template>
-
-        <template #item.phone="{ item }">
-          <div class="text-body-1 text-high-emphasis text-capitalize">
-            {{ item.phone }}
           </div>
         </template>
 
