@@ -30,8 +30,6 @@ const updateUser = async () => {
         notificationMessage.value = response.status !== 200 ? response._data : 'Datos actualizados correctamente.'
       },
     })
-  } catch (err) {
-    console.error(err)
   } finally {
     isLoadingDialogVisible.value = false
     isBtnEnabled.value = false

@@ -29,8 +29,6 @@ const passwordRequest = async () => {
         isAlertVisible.value = true
       },
     })
-  } catch (err) {
-    console.error(err)
   } finally {
     if (requestResponse.value.status === 200) refVForm.value?.reset()
     isLoadingDialogVisible.value = false

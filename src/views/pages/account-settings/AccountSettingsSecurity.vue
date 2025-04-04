@@ -42,8 +42,6 @@ const changePassword = async () => {
     })
 
     resetForm()
-  } catch (err) {
-    console.error(err)
   } finally {
     isLoadingDialogVisible.value = false
     isBtnEnabled.value = false
