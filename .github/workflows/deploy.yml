@@ -79,4 +79,5 @@ jobs:
             sudo rm -rf /var/www/bellarti-app/*
             sudo mv ~/temp_dist/dist/* /var/www/bellarti-app/
             sudo rm -rf ~/temp_dist
+            sudo systemctl reload nginx
             sudo systemctl restart nginx

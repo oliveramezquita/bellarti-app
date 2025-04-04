@@ -47,13 +47,13 @@ export default [
     children: [
       {
         title: 'Prototipos',
-        to: 'apps-prototypes-list',
+        to: 'apps-prototypes',
         action: 'read',
         subject: 'VSPrototipos',
       },
       {
         title: 'Volumetría',
-        to: 'apps-volumetry-list',
+        to: 'apps-volumetry',
         action: 'read',
         subject: 'VSVolumetria',
       },
