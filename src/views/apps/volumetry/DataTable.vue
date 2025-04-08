@@ -28,7 +28,7 @@ const headers = [
     key: 'material.name',
   },
   {
-    title: 'CANTIDAD',
+    title: 'TOTAL',
     key: 'gran_total',
   },
   {

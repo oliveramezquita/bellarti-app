@@ -15,12 +15,24 @@ const props = defineProps({
     type: String,
     default: null,
   },
+  responseUploadedFile: {
+    type: Object,
+    default: () => ({
+      num_inserted: 0,
+      num_updated: 0,
+      warnings: [],
+      error: null,
+    }),
+  },
 })
 
 const emit = defineEmits([
+  'update:prototypes',
   'update:volumetry',
   'update:volumetryItemDeleted',
+  'update:responseUploadedFile',
   'volumetryData',
+  'fileData',
 ])
 
 const { data: materials } = await useApi('api/materials?itemsPerPage=9999')
@@ -39,6 +51,8 @@ const refNewElementForm = ref()
 const isMaterialFormValid = ref(false)
 const refMaterialForm = ref()
 const volumetryForm = ref()
+const excelFile = ref()
+const viewResults = ref(false)
 
 const materialChange = async () => {
   const leakedMaterial = props.volumetry.filter(item => item.material_id === material.value._id)
@@ -104,6 +118,13 @@ const addVolumetry = () => {
   })
 }
 
+const uploadVolumetry = () => {
+  const formData = new FormData()
+
+  formData.append('file', excelFile.value)
+  emit('fileData', formData)
+}
+
 const deleteElmenet = index => {
   volumetryForm.value.splice(index, 1)
 } 
@@ -123,7 +144,7 @@ const elementAmount = prototypes => {
     return sum + Number(item.quantities.factory) + Number(item.quantities.instalation)
   }, 0)
   
-  return total > 0 ? `(${total})` : ''
+  return total > 0 ? `(${total.toFixed(2)})` : ''
 }
 
 const validateNumber = (i, s, input) => {
@@ -143,7 +164,14 @@ const validateNumber = (i, s, input) => {
   volumetryForm.value[i].prototypes[s].quantities[input] = value.charAt(0) === '.' ? '0' + value : value
 }
 
+watch(currentTab, val => {
+  if (val === 0)
+    material.value = null
+  if (val === 1)
+    viewResults.value = false
+})
 watch(() => props.volumetry, newValue => {
+  console.log(props.prototypes)
   if (newValue.length === 0) {
     volumetryForm.value = elements.value.values.map(element => ({
       element,
@@ -154,6 +182,7 @@ watch(() => props.volumetry, newValue => {
       expand: false,
       icon: 'tabler-chevron-down',
     }))
+    material.value = null
   } else {
     if (material.value && material.value._id === props.volumetryItemDeleted) 
       volumetryForm.value = elements.value.values.map(element => ({
@@ -165,6 +194,14 @@ watch(() => props.volumetry, newValue => {
         expand: false,
         icon: 'tabler-chevron-down',
       }))
+    else
+      material.value = null
+  }
+}, { deep: true })
+watch(() => props.responseUploadedFile, newResponse => {
+  if (newResponse) {
+    excelFile.value = null
+    viewResults.value = true
   }
 }, { deep: true })
 </script>
@@ -372,7 +409,89 @@ watch(() => props.volumetry, newValue => {
           </VBtn>
         </VWindowItem>
         <VWindowItem>
-          Por archivo
+          <p>Para cargar innformación a través de un archivo debe ser de formato <b>excel</b> y debe tener una estructura en específico, el cual para la volumetría es el siguiente: FORMATO VOLUMETRÍA</p>
+          <VRow>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VFileInput
+                v-model="excelFile"
+                label="Sube tu archivo excel"
+                accept=".xlsx, .xls"
+                outlined
+                dense
+                required
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="3"
+            >
+              <VBtn
+                color="primary"
+                :disabled="excelFile ? false : true"
+                @click="uploadVolumetry"
+              >
+                Enviar
+              </VBtn>
+            </VCol>
+          </VRow>
+          <VCard
+            v-if="viewResults"
+            class="mt-5"
+          >
+            <VCardItem>
+              <VCardTitle>Resultados</VCardTitle>
+              <template #append>
+                <div class="mt-n4 me-n2">
+                  <VBtn
+                    icon="tabler-x"
+                    variant="text"
+                    color="secondary"
+                    @click="viewResults = false"
+                  />
+                </div>
+              </template>
+            </VCardItem>
+            <VCardText>
+              <VAlert
+                v-if="(props.responseUploadedFile.hasOwnProperty('num_inserted') && props.responseUploadedFile.num_inserted > 0) || (props.responseUploadedFile.hasOwnProperty('num_updated') && props.responseUploadedFile.num_updated > 0)"
+                border="start"
+                border-color="success"
+                class="mb-2"
+              >
+                Archivo cargado correctamente, total de registros cargados: <b>{{ props.responseUploadedFile.num_inserted + props.responseUploadedFile.num_updated }}</b>
+                <ul>
+                  <li>Nuevos: {{ props.responseUploadedFile.num_inserted }}</li>
+                  <li>Actualizados: {{ props.responseUploadedFile.num_updated }}</li>
+                </ul>
+              </VAlert>
+              <VAlert
+                v-if="props.responseUploadedFile.hasOwnProperty('warnings') && props.responseUploadedFile.warnings.length > 0"
+                border="start"
+                border-color="warning"
+                class="mb-2"
+              >
+                Advertencias:
+                <ul
+                  v-for="(warning, idx) in props.responseUploadedFile.warnings"
+                  :key="idx"
+                >
+                  <li>{{ warning }}</li>
+                </ul>
+              </VAlert>
+              <VAlert
+                v-if="props.responseUploadedFile.hasOwnProperty('error') && props.responseUploadedFile.error"
+                border="start"
+                border-color="error"
+              >
+                Ocurrió un error al procesaro el archivo: 
+                <br>
+                {{ props.responseUploadedFile.error }}
+              </VAlert>
+            </VCardText>
+          </VCard>
         </VWindowItem>
       </VWindow>
     </VCardText>

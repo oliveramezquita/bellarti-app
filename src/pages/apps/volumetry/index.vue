@@ -21,14 +21,14 @@ const fronts = ref([])
 const prototypes = ref([])
 const volumetry = ref([])
 const volumetryItemDeleted = ref()
+const responseUploadedFile = ref()
 
 const clientChange = async value => {
   await $api(`api/prototype_by_client/${value}`, {
     method: 'GET',
     onResponse({ response }) {
       if (response.status === 200) {
-        fronts.value = response._data.fronts
-        prototypes.value = response._data.prototypes
+        fronts.value = response._data
       } else {
         isNotificationVisible.value = true
         notificationMessage.value = response._data
@@ -40,7 +40,7 @@ const clientChange = async value => {
   })
 }
 
-const frontChange = async value => {
+const frontChange = async () => {
   isLoadingDialogVisible.value = true
   try {
     await $api(`api/volumetries?client_id=${client.value}&front=${front.value}`, {
@@ -48,7 +48,8 @@ const frontChange = async value => {
       onResponse({ response }) {
         if (response.status === 200) {
           isViewVolumetry.value = true
-          volumetry.value = response._data
+          volumetry.value = response._data.volumetry
+          prototypes.value = response._data.prototypes
         }
       },
     })
@@ -58,7 +59,7 @@ const frontChange = async value => {
 }
 
 const addVolumetry  = async volumetryData => {
-  isLoadingDialogVisible.value = false
+  isLoadingDialogVisible.value = true
 
   try {
     await $api('api/volumetries', {
@@ -85,6 +86,28 @@ const addVolumetry  = async volumetryData => {
   }
 }
 
+const uploadVolumetry = async formsData => {
+  isLoadingDialogVisible.value = true
+
+  try {
+    await $api(`api/upload_volumetry?client_id=${client.value}&front=${front.value}`, {
+      method: 'POST',
+      body: formsData,
+      onResponse({ response }) {
+        if (response.status !== 200) {
+          notificationMessage.value = response._data
+          isNotificationVisible.value = true
+        } else {
+          volumetry.value = response._data.volumetry
+          responseUploadedFile.value = response._data
+        }
+      },
+    })
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
+}
+
 const deleteVolumetry = async i => {
   await $api(`api/volumetry/${i.id}`, { 
     method: 'DELETE',
@@ -93,7 +116,6 @@ const deleteVolumetry = async i => {
         volumetry.value = volumetry.value.filter(item => item.id !== i.id)
         volumetryItemDeleted.value = i.material_id
       } else {
-        console.log(response._data )
         isNotificationVisible.value = true
         notificationMessage.value = response._data 
       }
@@ -157,7 +179,9 @@ const deleteVolumetry = async i => {
       :prototypes="prototypes"
       :volumetry="volumetry"
       :volumetry-item-deleted="volumetryItemDeleted"
+      :response-uploaded-file="responseUploadedFile"
       @volumetry-data="addVolumetry"
+      @file-data="uploadVolumetry"
     />
     <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
     <Notification

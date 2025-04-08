@@ -2,11 +2,11 @@
 definePage({
   meta: {
     action: 'read',
-    subject: 'CatBancos',
+    subject: 'Catalogos',
   },
 })
 
-const breadcrumbItems = ref([{ title: 'Catálogos', class: 'text-primary' }, { title: 'Bancos' }])
+const breadcrumbItems = ref([{ title: 'Catálogos', class: 'text-primary' }])
 </script>
 
 <template>
