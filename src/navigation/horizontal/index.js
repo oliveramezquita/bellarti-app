@@ -170,14 +170,10 @@ export default [
   {
     title: 'Catálogos',
     icon: { icon: 'tabler-files' },
-    children: [
-      {
-        title: 'Bancos',
-        to: 'apps-banks-list',
-        action: 'read',
-        subject: 'CatBancos',
-      },
-    ],
+    to: 'apps-catalogs',
+    action: 'read',
+    subject: 'Catalogos',
+
   },
   {
     title: 'Administración',
