@@ -18,6 +18,7 @@ const name = ref('')
 const address = ref()
 const email = ref()
 const phone = ref()
+const contact = ref()
 
 const closeNavigationDrawer = () => {
   emit('update:isDrawerOpen', false)
@@ -35,6 +36,7 @@ const onSubmit = () => {
         address: address.value,
         email: email.value,
         phone: phone.value,
+        contact: contact.value,
       })
       emit('update:isDrawerOpen', false)
       nextTick(() => {
@@ -113,6 +115,15 @@ const handleDrawerModelValueUpdate = val => {
                   v-model="phone"
                   label="Teléfono"
                   placeholder="Teléfono"
+                />
+              </VCol>
+
+              <!-- 👉 Contact -->
+              <VCol cols="12">
+                <AppTextField
+                  v-model="contact"
+                  label="Contacto"
+                  placeholder="Contacto"
                 />
               </VCol>
 

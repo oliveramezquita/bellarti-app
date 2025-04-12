@@ -125,6 +125,15 @@ const handleDrawerModelValueUpdate = val => {
                 />
               </VCol>
 
+              <!-- 👉 Contact -->
+              <VCol cols="12">
+                <AppTextField
+                  v-model="supplier.contact"
+                  label="Contacto"
+                  placeholder="Contacto"
+                />
+              </VCol>
+
               <!-- 👉 Submit and Cancel -->
               <VCol cols="12">
                 <VBtn
