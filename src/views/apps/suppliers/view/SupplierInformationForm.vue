@@ -20,7 +20,10 @@ const refForm = ref()
 const supplier = ref(props.supplierInfo)
 
 const onSubmit = () => {
-  console.log(supplier.value)
+  refForm.value?.validate().then(({ valid }) => {
+    if (valid)
+      emit('supplierData', supplier.value)
+  })
 }
 </script>
 
@@ -52,7 +55,6 @@ const onSubmit = () => {
           v-model="supplier.address"
           label="Dirección"
           placeholder="Dirección"
-          class="font-weight-bold"
         />
       </VCol>
 
@@ -64,7 +66,6 @@ const onSubmit = () => {
           v-model="supplier.contact"
           label="Contacto"
           placeholder="Contacto"
-          class="font-weight-bold"
         />
       </VCol>
 
@@ -76,7 +77,6 @@ const onSubmit = () => {
           v-model="supplier.email"
           label="Correo electrónico"
           placeholder="Correo electrónico"
-          class="font-weight-bold"
         />
       </VCol>
 
@@ -88,7 +88,6 @@ const onSubmit = () => {
           v-model="supplier.phone"
           label="Teléfono"
           placeholder="Teléfono"
-          class="font-weight-bold"
         />
       </VCol>
 

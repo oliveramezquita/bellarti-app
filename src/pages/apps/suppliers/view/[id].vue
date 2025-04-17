@@ -5,12 +5,16 @@ definePage({
     subject: 'Proveedores',
   },
 })
+import BankDataInformationForm from '@/views/apps/suppliers/view/BankDataInformationForm.vue'
 import SupplierInformationForm from '@/views/apps/suppliers/view/SupplierInformationForm.vue'
+import SupplierUpdates from '@/views/apps/suppliers/view/SupplierUpdates.vue'
 import TaxDataInformationForm from '@/views/apps/suppliers/view/TaxDataInformationForm.vue'
 
 const route = useRoute('apps-suppliers-view-id')
 const { data: supplierInfo } = await useApi(`api/supplier/${ route.params.id }`)
 const { data: taxDataInfo } = await useApi(`api/tax_data/${ route.params.id }`)
+const { data: bankDataInfo } = await useApi(`api/bank_data/${ route.params.id }`)
+const { data: refreshRate } = await useApi(`api/refresh_rate/${ route.params.id }`)
 const currentTab = ref('tab-1')
 const isLoadingDialogVisible = ref(false)
 const isNotificationVisible = ref(false)
@@ -18,23 +22,78 @@ const notificationMessage = ref('')
 const breadcrumbItems = ref([{ title: 'Proveedores', to: { name: 'apps-suppliers-list' }, class: 'text-underline' }, { title: supplierInfo.value.name }])
 
 const editSupplier = async supplierData => {
-  console.log(supplierData)
+  isLoadingDialogVisible.value = true
+
+  try {
+    if (supplierData.hasOwnProperty('_id'))
+      delete supplierData._id
+    await $api(`api/supplier/${ route.params.id }`, {
+      method: 'PATCH',
+      body: supplierData,
+      onResponse({ response }) {
+        notificationMessage.value = response._data
+        isNotificationVisible.value = true
+      },
+    })
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
 }
 
 const saveTaxData = async taxData => {
   isLoadingDialogVisible.value = true
 
   try {
+    const newTaxData = new FormData()
+    for (const [key, value] of taxData.entries()) {
+      if (key !== "_id") { 
+        newTaxData.append(key, value)
+      }
+    }
+
     await $api(`api/tax_data/${ route.params.id }`, {
       method: 'POST',
-      body: taxData,
+      body: newTaxData,
       onResponse({ response }) {
-        if (response.status === 200) {
-          volumetry.value = response._data.data
-          notificationMessage.value = response._data.message
-        } else {
-          notificationMessage.value = response._data
-        }
+        notificationMessage.value = response._data
+        isNotificationVisible.value = true
+      },
+    })
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
+}
+
+const saveBankData = async bankData => {
+  isLoadingDialogVisible.value = true
+
+  try {
+    if (bankData.hasOwnProperty('_id'))
+      delete bankData._id
+    await $api(`api/bank_data/${ route.params.id }`, {
+      method: 'POST',
+      body: bankData,
+      onResponse({ response }) {
+        notificationMessage.value = response._data
+        isNotificationVisible.value = true
+      },
+    })
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
+}
+
+const saveRefreshRate = async refreshRate => {
+  isLoadingDialogVisible.value = true
+
+  try {
+    if (refreshRate.hasOwnProperty('_id'))
+      delete refreshRate._id
+    await $api(`api/refresh_rate/${ route.params.id }`, {
+      method: 'POST',
+      body: refreshRate,
+      onResponse({ response }) {
+        notificationMessage.value = response._data
         isNotificationVisible.value = true
       },
     })
@@ -103,8 +162,18 @@ const saveTaxData = async taxData => {
             @tax-data-info="saveTaxData"
           />
         </VWindowItem>
-        <VWindowItem>Datos Bancarios</VWindowItem>
-        <VWindowItem>Actualizaciones</VWindowItem>
+        <VWindowItem>
+          <BankDataInformationForm
+            v-model:bank-data-info="bankDataInfo"
+            @bank-data-info="saveBankData"
+          />
+        </VWindowItem>
+        <VWindowItem>
+          <SupplierUpdates
+            v-model:refresh-rate="refreshRate"
+            @refresh-rate-data="saveRefreshRate"
+          />
+        </VWindowItem>
       </VWindow>
     </VCardText>
   </VCard>
@@ -114,3 +183,9 @@ const saveTaxData = async taxData => {
     :message="notificationMessage"
   />
 </template>
+
+<style lang="scss">
+.font-weight-bold label {
+  font-weight: 700 !important;
+}
+</style>

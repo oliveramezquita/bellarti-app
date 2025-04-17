@@ -33,15 +33,19 @@ const constancyFile = ref()
 const onSubmit = () => {
   const formData = new FormData()
 
-  for (const key in taxDataInfo.value) {
-    if (taxDataInfo.value.hasOwnProperty(key)) {
-      formData.append(key, taxDataInfo.value[key])
-    }
-  }
-  if (constancyFile.value)
-    formData.append('constancy', constancyFile.value)
+  refForm.value?.validate().then(({ valid }) => {
+    if (valid) {
+      for (const key in taxDataInfo.value) {
+        if (taxDataInfo.value.hasOwnProperty(key)) {
+          formData.append(key, taxDataInfo.value[key])
+        }
+      }
+      if (constancyFile.value)
+        formData.append('constancy', constancyFile.value)
   
-  emit('taxDataInfo', formData)
+      emit('taxDataInfo', formData)
+    }
+  })
 }
 </script>
 
@@ -86,7 +90,6 @@ const onSubmit = () => {
           v-model="taxDataInfo.address"
           label="Domicilio Fiscal"
           placeholder="Domicilio Fiscal"
-          class="font-weight-bold"
         />
       </VCol>
 
@@ -98,7 +101,6 @@ const onSubmit = () => {
           v-model="taxDataInfo.postal_code"
           label="Código Postal"
           placeholder="Código Postal"
-          class="font-weight-bold"
         />
       </VCol>
 
@@ -110,9 +112,7 @@ const onSubmit = () => {
           v-model="taxDataInfo.regime"
           label="Regímen Fiscal"
           placeholder="Regímen Fiscal"
-          :rules="[requiredValidator]"
           :items="taxRegimes.values"
-          class="font-weight-bold"
         />
       </VCol>
 
