@@ -20,20 +20,20 @@ const headers = [
     key: 'data-table-expand',
   },
   {
-    title: 'PROVEEDOR',
-    key: 'supplier',
+    title: 'CÓDIGO INTERNO',
+    key: 'material.internal_code',
   },
   {
     title: 'MATERIAL',
     key: 'material.name',
   },
   {
-    title: 'TOTAL',
-    key: 'gran_total',
-  },
-  {
     title: 'UNIDAD DE MEDIDA',
     key: 'material.measurement',
+  },
+  {
+    title: 'TOTAL',
+    key: 'gran_total',
   },
   {
     title: '',
@@ -92,7 +92,7 @@ watch(() => props.volumetry, newValue => {}, { deep: true })
             <table class="more-info">
               <tr>
                 <td style=" padding-block-end: 5px;padding-inline-start: 55px !important;">
-                  <b>ELEMENTO</b>
+                  <b>ÁREA</b>
                 </td>
                 <td style="padding-inline-start: 7px !important;">
                   <b>CANTIDAD</b>

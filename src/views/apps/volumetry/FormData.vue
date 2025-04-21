@@ -36,9 +36,9 @@ const emit = defineEmits([
 ])
 
 const { data: materials } = await useApi('api/materials?itemsPerPage=9999')
-const { data: elements } = await useApi('api/catalogs?name=Elementos de volumetría')
+const { data: elements } = await useApi('api/catalogs?name=Áreas')
 const measurement = ref()
-const supplierCode = ref()
+const internalCode = ref()
 const reference = ref()
 const prototypes = props.prototypes
 const newElement = ref()
@@ -78,8 +78,8 @@ const materialChange = async () => {
   }
   
   measurement.value = material.value.measurement
-  if (material.value.hasOwnProperty('supplier_code'))
-    supplierCode.value = material.value.measurement.supplier_code
+  if (material.value.hasOwnProperty('internal_code'))
+    internalCode.value = material.value.measurement.internal_code
   if (material.value.hasOwnProperty('reference'))
     reference.value = material.value.measurement.reference
 }
@@ -171,7 +171,6 @@ watch(currentTab, val => {
     viewResults.value = false
 })
 watch(() => props.volumetry, newValue => {
-  console.log(props.prototypes)
   if (newValue.length === 0) {
     volumetryForm.value = elements.value.values.map(element => ({
       element,
@@ -269,8 +268,8 @@ watch(() => props.responseUploadedFile, newResponse => {
                 md="6"
               >
                 <AppTextField
-                  v-model="supplierCode"
-                  label="Código Proveedor"
+                  v-model="internalCode"
+                  label="Código Interno"
                   disabled="True"
                 />
               </VCol>
@@ -357,7 +356,7 @@ watch(() => props.responseUploadedFile, newResponse => {
             class="v-card-new"
           >
             <VCardTitle class="d-flex align-center justify-space-between">
-              <div>Agregar nuevo elemento</div>
+              <div>Agregar nueva área</div>
               <div>
                 <VBtn
                   :icon="newElementIcon"
@@ -381,7 +380,7 @@ watch(() => props.responseUploadedFile, newResponse => {
                     <AppTextField
                       v-model="newElement"
                       class="font-weight-bold"
-                      label="Nuevo elemento"
+                      label="Nueva área"
                       :rules="[requiredValidator]"
                     />
                   </VCol>
@@ -394,7 +393,7 @@ watch(() => props.responseUploadedFile, newResponse => {
                       variant="tonal"
                       type="submit"
                     >
-                      Agregar elemento
+                      Agregar área
                     </VBtn>
                   </VCol>
                 </VRow>

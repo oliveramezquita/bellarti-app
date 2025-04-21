@@ -22,7 +22,9 @@ const material = ref({
   presentation: null,
   supplier_id: null,
   area: null,
+  reference: null,
   supplier_code: null,
+  internal_code: null,
   minimum: null,
   maximum: null,
   unit_price: null,
@@ -132,7 +134,7 @@ const differentiatePrices = () => {
               <!-- 👉 Name -->
               <VCol
                 cols="12"
-                md="9"
+                md="8"
               >
                 <AppTextField
                   v-model="material.name"
@@ -146,7 +148,7 @@ const differentiatePrices = () => {
               <!-- 👉 Measurement -->
               <VCol
                 cols="12"
-                md="3"
+                md="4"
               >
                 <AppSelect
                   v-model="material.measurement"
@@ -161,7 +163,7 @@ const differentiatePrices = () => {
               <!-- 👉 Presentation -->
               <VCol
                 cols="12"
-                md="4"
+                md="6"
               >
                 <AppTextField
                   v-model="material.presentation"
@@ -173,7 +175,7 @@ const differentiatePrices = () => {
               <!-- 👉 Supplier -->
               <VCol
                 cols="12"
-                md="4"
+                md="6"
               >
                 <AppSelect
                   v-model="material.supplier_id"
@@ -190,7 +192,7 @@ const differentiatePrices = () => {
               <!-- 👉 Area -->
               <VCol
                 cols="12"
-                md="4"
+                md="6"
               >
                 <AppSelect
                   v-model="material.area"
@@ -200,10 +202,22 @@ const differentiatePrices = () => {
                 />
               </VCol>
 
+              <!-- 👉 Reference -->
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  v-model="material.reference"
+                  label="Referencia"
+                  placeholder="Referencia"
+                />
+              </VCol>
+
               <!-- 👉 Supplier code -->
               <VCol
                 cols="12"
-                md="4"
+                md="6"
               >
                 <AppTextField
                   v-model="material.supplier_code"
@@ -212,10 +226,22 @@ const differentiatePrices = () => {
                 />
               </VCol>
 
+              <!-- 👉 Internal code -->
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  v-model="material.internal_code"
+                  label="Código Interno"
+                  placeholder="Código Interno"
+                />
+              </VCol>
+
               <!-- 👉 Minimum -->
               <VCol
                 cols="12"
-                md="4"
+                md="6"
               >
                 <AppTextField
                   v-model="material.minimum"
@@ -227,7 +253,7 @@ const differentiatePrices = () => {
               <!-- 👉 Maximum -->
               <VCol
                 cols="12"
-                md="4"
+                md="6"
               >
                 <AppTextField
                   v-model="material.maximum"

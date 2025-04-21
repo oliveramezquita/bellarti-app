@@ -120,7 +120,7 @@ const deleteMaterial = async id => {
               <!-- 👉 Name -->
               <VCol
                 cols="12"
-                md="9"
+                md="8"
               >
                 <AppTextField
                   v-model="material.name"
@@ -134,7 +134,7 @@ const deleteMaterial = async id => {
               <!-- 👉 Measurement -->
               <VCol
                 cols="12"
-                md="3"
+                md="4"
               >
                 <AppSelect
                   v-model="material.measurement"
@@ -149,7 +149,7 @@ const deleteMaterial = async id => {
               <!-- 👉 Presentation -->
               <VCol
                 cols="12"
-                md="4"
+                md="6"
               >
                 <AppTextField
                   v-model="material.presentation"
@@ -161,7 +161,7 @@ const deleteMaterial = async id => {
               <!-- 👉 Supplier -->
               <VCol
                 cols="12"
-                md="4"
+                md="6"
               >
                 <AppSelect
                   v-model="material.supplier_id"
@@ -178,7 +178,7 @@ const deleteMaterial = async id => {
               <!-- 👉 Area -->
               <VCol
                 cols="12"
-                md="4"
+                md="6"
               >
                 <AppSelect
                   v-model="material.area"
@@ -188,10 +188,22 @@ const deleteMaterial = async id => {
                 />
               </VCol>
 
+              <!-- 👉 Reference -->
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  v-model="material.reference"
+                  label="Referencia"
+                  placeholder="Referencia"
+                />
+              </VCol>
+
               <!-- 👉 Supplier code -->
               <VCol
                 cols="12"
-                md="4"
+                md="6"
               >
                 <AppTextField
                   v-model="material.supplier_code"
@@ -200,10 +212,22 @@ const deleteMaterial = async id => {
                 />
               </VCol>
 
+              <!-- 👉 Internal code -->
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  v-model="material.internal_code"
+                  label="Código Interno"
+                  placeholder="Código Interno"
+                />
+              </VCol>
+
               <!-- 👉 Minimum -->
               <VCol
                 cols="12"
-                md="4"
+                md="6"
               >
                 <AppTextField
                   v-model="material.minimum"
@@ -215,7 +239,7 @@ const deleteMaterial = async id => {
               <!-- 👉 Maximum -->
               <VCol
                 cols="12"
-                md="4"
+                md="6"
               >
                 <AppTextField
                   v-model="material.maximum"
