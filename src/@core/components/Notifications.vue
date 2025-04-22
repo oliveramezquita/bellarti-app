@@ -1,5 +1,7 @@
+<!-- eslint-disable camelcase -->
 <script setup>
 import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
+
 
 const props = defineProps({
   notifications: {
@@ -26,7 +28,7 @@ const emit = defineEmits([
 ])
 
 const isAllMarkRead = computed(() => {
-  return props.notifications.some(item => item.isSeen === false)
+  return props.notifications.some(item => item.is_seen === false)
 })
 
 const markAllReadOrUnread = () => {
@@ -38,11 +40,11 @@ const markAllReadOrUnread = () => {
 }
 
 const totalUnseenNotifications = computed(() => {
-  return props.notifications.filter(item => item.isSeen === false).length
+  return props.notifications.filter(item => item.is_seen === false).length
 })
 
-const toggleReadUnread = (isSeen, Id) => {
-  if (isSeen)
+const toggleReadUnread = (is_seen, Id) => {
+  if (is_seen)
     emit('unread', [Id])
   else
     emit('read', [Id])
@@ -53,7 +55,7 @@ const toggleReadUnread = (isSeen, Id) => {
   <IconBtn id="notification-btn">
     <VBadge
       v-bind="props.badgeProps"
-      :model-value="props.notifications.some(n => !n.isSeen)"
+      :model-value="props.notifications.some(n => !n.is_seen)"
       color="error"
       dot
       offset-x="2"
@@ -78,7 +80,7 @@ const toggleReadUnread = (isSeen, Id) => {
 
           <template #append>
             <VChip
-              v-show="props.notifications.some(n => !n.isSeen)"
+              v-show="props.notifications.some(n => !n.is_seen)"
               size="small"
               color="primary"
               class="me-2"
@@ -167,10 +169,10 @@ const toggleReadUnread = (isSeen, Id) => {
                     <VIcon
                       size="10"
                       icon="tabler-circle-filled"
-                      :color="!notification.isSeen ? 'primary' : '#a8aaae'"
-                      :class="`${notification.isSeen ? 'visible-in-hover' : ''}`"
+                      :color="!notification.is_seen ? 'primary' : '#a8aaae'"
+                      :class="`${notification.is_seen ? 'visible-in-hover' : ''}`"
                       class="mb-2"
-                      @click.stop="toggleReadUnread(notification.isSeen, notification.id)"
+                      @click.stop="toggleReadUnread(notification.is_seen, notification.id)"
                     />
 
                     <VIcon
