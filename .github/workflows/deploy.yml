@@ -52,8 +52,10 @@ jobs:
       - name: Configure environment variables
         env:
           VITE_API_BASE_URL: "https://api.bellarti.art/"
+          VITE_WS: "wss://api.bellarti.art/ws"
         run: |
           echo "VITE_API_BASE_URL=$VITE_API_BASE_URL" >> $GITHUB_ENV
+          echo "VITE_WS=$VITE_WS" >> $GITHUB_ENV
 
       # Construir la aplicación
       - name: Build Vue.js application
