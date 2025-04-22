@@ -1,49 +1,14 @@
+<!-- eslint-disable camelcase -->
 <script setup>
+import { useWebSocket } from '@core/composable/useWebSocket'
+
 const notifications = ref([])
 
-// const notifications = ref([
-//   {
-//     id: 1,
-//     img: avatar4,
-//     title: 'Congratulation Flora! 🎉',
-//     subtitle: 'Won the monthly best seller badge',
-//     time: 'Today',
-//     isSeen: true,
-//   },
-//   {
-//     id: 2,
-//     text: 'Tom Holland',
-//     title: 'New user registered.',
-//     subtitle: '5 hours ago',
-//     time: 'Yesterday',
-//     isSeen: false,
-//   },
-//   {
-//     id: 3,
-//     img: avatar5,
-//     title: 'New message received 👋🏻',
-//     subtitle: 'You have 10 unread messages',
-//     time: '11 Aug',
-//     isSeen: true,
-//   },
-//   {
-//     id: 4,
-//     img: paypal,
-//     title: 'PayPal',
-//     subtitle: 'Received Payment',
-//     time: '25 May',
-//     isSeen: false,
-//     color: 'error',
-//   },
-//   {
-//     id: 5,
-//     img: avatar3,
-//     title: 'Received Order 📦',
-//     subtitle: 'New order received from john',
-//     time: '19 Mar',
-//     isSeen: true,
-//   },
-// ])
+const handleNewNotification = data => {
+  notifications.value.unshift(data.notification)
+}
+
+const { messages } = useWebSocket(handleNewNotification)
 
 const removeNotification = notificationId => {
   notifications.value.forEach((item, index) => {
@@ -56,7 +21,7 @@ const markRead = notificationId => {
   notifications.value.forEach(item => {
     notificationId.forEach(id => {
       if (id === item.id)
-        item.isSeen = true
+        item.is_seen = true
     })
   })
 }
@@ -65,13 +30,13 @@ const markUnRead = notificationId => {
   notifications.value.forEach(item => {
     notificationId.forEach(id => {
       if (id === item.id)
-        item.isSeen = false
+        item.is_seen = false
     })
   })
 }
 
 const handleNotificationClick = notification => {
-  if (!notification.isSeen)
+  if (!notification.is_seen)
     markRead([notification.id])
 }
 </script>
