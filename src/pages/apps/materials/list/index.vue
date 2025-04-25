@@ -3,6 +3,7 @@ definePage({
   meta: {
     action: 'read',
     subject: 'Materiales',
+    navActiveLink: 'apps-materials-list',
   },
 })
 
@@ -99,12 +100,28 @@ const deleteMaterial = async id => {
             placeholder="Buscar"
             style="inline-size: 15.625rem;"
           />
-          <!-- 👉 Add user button -->
+          <!-- 👉 Add material button -->
           <VBtn
             prepend-icon="tabler-plus"
             :to="{name: 'apps-materials-new'}"
           >
-            Agregar nuevo material
+            Agregar
+          </VBtn>
+          <!-- 👉 Upload material button -->
+          <VBtn
+            prepend-icon="tabler-upload"
+            variant="outlined"
+            :to="{name: 'apps-materials-upload'}"
+          >
+            Subir
+          </VBtn>
+          <!-- 👉 Download material button -->
+          <VBtn
+            prepend-icon="tabler-download"
+            color="secondary"
+            variant="outlined"
+          >
+            Descargar
           </VBtn>
         </div>
       </VCardText>
@@ -112,7 +129,7 @@ const deleteMaterial = async id => {
       <VDivider />
 
       <!-- SECTION datatable -->
-      <VDataTable
+      <VDataTableServer
         v-model:items-per-page="itemsPerPage"
         v-model:page="page"
         :items-per-page-options="[
@@ -196,7 +213,7 @@ const deleteMaterial = async id => {
             :total-items="totalMaterials"
           />
         </template>
-      </VDataTable>
+      </VDataTableServer>
     </VCard>
     <!-- SECTION -->
     <VDialog

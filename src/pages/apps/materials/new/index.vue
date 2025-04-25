@@ -4,6 +4,7 @@ definePage({
   meta: {
     action: 'create',
     subject: 'Materiales',
+    navActiveLink: 'apps-materials-list',
   },
 })
 
@@ -199,6 +200,7 @@ const differentiatePrices = () => {
                   :items="['CONSUMO INTERNO','OPERACIÓN']"
                   label="Área"
                   placeholder="Área"
+                  clearable
                 />
               </VCol>
 

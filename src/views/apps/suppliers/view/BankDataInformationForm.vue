@@ -105,6 +105,7 @@ const onSubmit = () => {
           label="Plazo de crédito"
           placeholder="Plazo de crédito"
           :items="creditTerms.values"
+          clearable
         />
       </VCol>
 

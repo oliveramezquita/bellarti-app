@@ -185,6 +185,7 @@ const deleteMaterial = async id => {
                   :items="['CONSUMO INTERNO','OPERACIÓN']"
                   label="Área"
                   placeholder="Área"
+                  clearable
                 />
               </VCol>
 

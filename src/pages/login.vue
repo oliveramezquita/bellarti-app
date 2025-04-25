@@ -49,13 +49,14 @@ const login = async () => {
       },
     })
 
-    const { accessToken, userData, userAbilityRules, home } = response
+    const { accessToken, userData, userAbilityRules, notifications, home } = response
 
     saveStoragePermissions(userAbilityRules)
     ability.update(userAbilityRules)
     useCookie('userData').value = userData
     useCookie('accessToken').value = accessToken
     useCookie('home').value = home
+    localStorage.setItem('notifications', JSON.stringify(notifications)) 
     await nextTick(() => { 
       router.replace(route.query.to ? String(route.query.to) : '/')
     })
