@@ -22,6 +22,9 @@ const refForm = ref()
 const client = ref()
 const name = ref('')
 const front = ref()
+const { data: prototypeCatalog }= await useApi('api/catalogs?name=Prototipos')
+const fronts = ref(Object.keys(prototypeCatalog.value.values))
+const prototypes = ref([])
 
 const closeNavigationDrawer = () => {
   emit('update:isDrawerOpen', false)
@@ -51,6 +54,22 @@ const onSubmit = () => {
 
 const handleDrawerModelValueUpdate = val => {
   emit('update:isDrawerOpen', val)
+}
+
+const optionFrontSelected = val => {
+  let option = val.option
+  if (val.option === 'Agregar una nueva opción' && val.newOption)
+    option = val.newOption
+  front.value = option
+
+  prototypes.value = prototypeCatalog.value.values[option] ? prototypeCatalog.value.values[option] : []
+}
+
+const optionPrototypeSelected = val => {
+  let option = val.option
+  if (val.option === 'Agregar una nueva opción' && val.newOption)
+    option = val.newOption
+  name.value = option
 }
 </script>
 
@@ -95,23 +114,23 @@ const handleDrawerModelValueUpdate = val => {
                 />
               </VCol>
 
-              <!-- 👉 Name -->
+              <!-- 👉 Frente / Fraccionamiento -->
               <VCol cols="12">
-                <AppTextField
-                  v-model="name"
+                <CustomSelect
+                  label="Frente / Fraccionamiento"
+                  :options="fronts"
                   :rules="[requiredValidator]"
-                  label="Nombre"
-                  placeholder="Nombre"
+                  @option-data="optionFrontSelected"
                 />
               </VCol>
 
-              <!-- 👉 Front -->
+              <!-- 👉 Name -->
               <VCol cols="12">
-                <AppTextField
-                  v-model="front"
+                <CustomSelect
+                  label="Prototipo"
+                  :options="prototypes"
                   :rules="[requiredValidator]"
-                  label="Frente / Fraccionamiento"
-                  placeholder="Frente / Fraccionamiento"
+                  @option-data="optionPrototypeSelected"
                 />
               </VCol>
 

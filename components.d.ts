@@ -41,6 +41,7 @@ declare module 'vue' {
     CustomRadios: typeof import('./src/@core/components/app-form-elements/CustomRadios.vue')['default']
     CustomRadiosWithIcon: typeof import('./src/@core/components/app-form-elements/CustomRadiosWithIcon.vue')['default']
     CustomRadiosWithImage: typeof import('./src/@core/components/app-form-elements/CustomRadiosWithImage.vue')['default']
+    CustomSelect: typeof import('./src/components/CustomSelect.vue')['default']
     DemoAlertBasic: typeof import('./src/views/demos/components/alert/DemoAlertBasic.vue')['default']
     DemoAlertBorder: typeof import('./src/views/demos/components/alert/DemoAlertBorder.vue')['default']
     DemoAlertClosable: typeof import('./src/views/demos/components/alert/DemoAlertClosable.vue')['default']

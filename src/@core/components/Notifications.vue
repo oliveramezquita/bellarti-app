@@ -32,7 +32,7 @@ const isAllMarkRead = computed(() => {
 })
 
 const markAllReadOrUnread = () => {
-  const allNotificationsIds = props.notifications.map(item => item.id)
+  const allNotificationsIds = props.notifications.map(item => item._id)
   if (!isAllMarkRead.value)
     emit('unread', allNotificationsIds)
   else
@@ -102,7 +102,7 @@ const toggleReadUnread = (is_seen, Id) => {
                 activator="parent"
                 location="start"
               >
-                {{ !isAllMarkRead ? 'Mark all as unread' : 'Mark all as read' }}
+                {{ !isAllMarkRead ? 'Marcar todo como no leído' : 'Marcar todo como leído' }}
               </VTooltip>
             </IconBtn>
           </template>
@@ -172,14 +172,14 @@ const toggleReadUnread = (is_seen, Id) => {
                       :color="!notification.is_seen ? 'primary' : '#a8aaae'"
                       :class="`${notification.is_seen ? 'visible-in-hover' : ''}`"
                       class="mb-2"
-                      @click.stop="toggleReadUnread(notification.is_seen, notification.id)"
+                      @click.stop="toggleReadUnread(notification.is_seen, notification._id)"
                     />
 
                     <VIcon
                       size="20"
                       icon="tabler-x"
                       class="visible-in-hover"
-                      @click="$emit('remove', notification.id)"
+                      @click="$emit('remove', notification._id)"
                     />
                   </div>
                 </div>

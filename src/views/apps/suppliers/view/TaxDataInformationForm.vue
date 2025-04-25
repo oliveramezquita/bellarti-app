@@ -113,6 +113,7 @@ const onSubmit = () => {
           label="Regímen Fiscal"
           placeholder="Regímen Fiscal"
           :items="taxRegimes.values"
+          clearable
         />
       </VCol>
 

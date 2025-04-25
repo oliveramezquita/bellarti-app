@@ -371,6 +371,9 @@
     "SAVE_STORAGE_PERMISSIONS": true,
     "EXTRACT_STORAGE_PERMISSIONS": true,
     "saveStoragePermissions": true,
-    "extractStoragePermissions": true
+    "extractStoragePermissions": true,
+    "notifications": true,
+    "NOTIFICATIONS": true,
+    "getNotifications": true
   }
 }
