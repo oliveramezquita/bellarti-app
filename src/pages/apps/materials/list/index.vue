@@ -67,7 +67,8 @@ const deleteMaterial = async id => {
 }
 
 const download = async() => {
-  const response = await $api('api/exportar-materiales', { method: 'GET' })
+  const apiUrl = selectedSupplier.value ? `api/exportar-materiales?supplier=${selectedSupplier.value}` : 'api/exportar-materiales'
+  const response = await $api(apiUrl, { method: 'GET' })
 
   const url = URL.createObjectURL(response)
   const link = document.createElement('a')
