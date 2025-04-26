@@ -14,8 +14,11 @@ const refForm = ref()
 const supplier = ref()
 const excelFile = ref()
 const isLoadingDialogVisible = ref(false)
+const messageRespond = ref()
+const errorRespond = ref()
 
 const onSubmit = () => {
+  errorRespond.value =  null
   isLoadingDialogVisible.value = true
 
   try {
@@ -30,7 +33,10 @@ const onSubmit = () => {
           method: 'PUT',
           body: formData,
           onResponse({ response }) {
-            console.log(response)
+            if (response.status === 200) 
+              messageRespond.value = response._data
+            else
+              errorRespond.value = response._data
           },
         })
       }
@@ -94,5 +100,90 @@ const onSubmit = () => {
       </VRow>
     </VForm>
   </VCard>
+  <VCard
+    v-if="messageRespond"
+    class="mt-5"
+  >
+    <VCardItem>
+      <VCardTitle>Resultados</VCardTitle>
+      <template #append>
+        <div class="mt-n4 me-n2">
+          <VBtn
+            icon="tabler-x"
+            variant="text"
+            color="secondary"
+            @click="messageRespond = null"
+          />
+        </div>
+      </template>
+    </VCardItem>
+    <VCardText>
+      <VAlert
+        border="start"
+        border-color="success"
+        class="mb-2"
+      >
+        <p v-if="messageRespond.hasOwnProperty('message')">
+          {{ messageRespond.message }}
+        </p>
+        <div
+          v-if="messageRespond.hasOwnProperty('inserted') && messageRespond.inserted.length > 0"
+          class="mb-2"
+        >
+          <b>Insertados:</b>
+          <ul>
+            <li
+              v-for="material in messageRespond.inserted"
+              :key="material"
+            >
+              {{ material }}
+            </li>
+          </ul>
+        </div>
+        <div
+          v-if="messageRespond.hasOwnProperty('updated') && messageRespond.updated.length > 0"
+          class="mb-2"
+        >
+          <b>Actualizados:</b>
+          <ul>
+            <li
+              v-for="material in messageRespond.updated"
+              :key="material"
+            >
+              {{ material }}
+            </li>
+          </ul>
+        </div>
+      </VAlert>
+      <VAlert
+        v-if="messageRespond.hasOwnProperty('errors') && messageRespond.errors.length > 0"
+        border="start"
+        border-color="warning"
+      >
+        <b>Errores:</b>
+        <ul>
+          <li
+            v-for="error in messageRespond.errors"
+            :key="error.fila"
+          >
+            {{ error.errores[0] }}
+          </li>
+        </ul>
+      </VAlert>
+    </VCardText>
+  </VCard>
+  <VAlert
+    v-if="errorRespond"
+    border="start"
+    border-color="error"
+    class="mt-2"
+  >
+    <p
+      v-for="error in errorRespond"
+      :key="error"
+    >
+      {{ error }}
+    </p>
+  </VAlert>
   <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
 </template>

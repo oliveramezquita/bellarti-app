@@ -211,6 +211,18 @@ const viewDeleteUserDialog = user => {
               clear-icon="tabler-x"
             />
           </VCol>
+          <VCol
+            cols="12"
+            sm="4"
+          >
+            <!-- 👉 Search  -->
+            <div>
+              <AppTextField
+                v-model="searchQuery"
+                placeholder="Buscar usuario"
+              />
+            </div>
+          </VCol>
         </VRow>
       </VCardText>
 
@@ -237,14 +249,6 @@ const viewDeleteUserDialog = user => {
         <VSpacer />
 
         <div class="app-user-search-filter d-flex align-center flex-wrap gap-4">
-          <!-- 👉 Search  -->
-          <div style="inline-size: 15.625rem;">
-            <AppTextField
-              v-model="searchQuery"
-              placeholder="Buscar usuario"
-            />
-          </div>
-
           <!-- 👉 Add user button -->
           <VBtn
             prepend-icon="tabler-plus"

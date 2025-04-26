@@ -8,11 +8,13 @@ definePage({
 })
 
 const breadcrumbItems = ref([{ title: 'Materiales', class: 'text-primary' }, { title: 'Materiales' }])
+const { data: supplierList } = await useApi('api/suppliers?itemsPerPage=100')
 const searchQuery = ref('')
 const itemsPerPage = ref(10)
 const page = ref(1)
 const isDeleteMaterialDialogVisible = ref(false)
 const selectedMaterial = ref()
+const selectedSupplier = ref()
 
 const headers = [
   {
@@ -44,6 +46,7 @@ const {
 } = await useApi(createUrl('api/materials', {
   query: {
     q: searchQuery,
+    supplier: selectedSupplier,
     itemsPerPage,
     page,
   },
@@ -62,6 +65,20 @@ const deleteMaterial = async id => {
   isDeleteMaterialDialogVisible.value = false
   fetchMaterials()
 }
+
+const download = async() => {
+  const response = await $api('api/exportar-materiales', { method: 'GET' })
+
+  const url = URL.createObjectURL(response)
+  const link = document.createElement('a')
+
+  link.href = url
+  link.setAttribute('download', 'materiales.xlsx')
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+}
 </script>
 
 <template>
@@ -72,6 +89,40 @@ const deleteMaterial = async id => {
   />
   <section>
     <VCard>
+      <VCardItem class="pb-4">
+        <VCardTitle>Filtros</VCardTitle>
+      </VCardItem>
+      <VCardText>
+        <VRow>
+          <!-- 👉 Select Supplier -->
+          <VCol
+            cols="12"
+            sm="6"
+          >
+            <AppSelect
+              v-model="selectedSupplier"
+              placeholder="Seleccionar proveedor"
+              :items="supplierList.data"
+              :item-title="item => item.name"
+              :item-value="item => item._id"
+              clearable
+              clear-icon="tabler-x"
+            />
+          </VCol>
+          <VCol
+            cols="12"
+            sm="6"
+          >
+            <!-- 👉 Search  -->
+            <AppTextField
+              v-model="searchQuery"
+              placeholder="Buscar material"
+            />
+          </VCol>
+        </VRow>
+      </VCardText>
+
+      <VDivider />
       <VCardText class="d-flex flex-wrap gap-4">
         <div class="d-flex gap-2 align-center">
           <p class="text-body-1 mb-0">
@@ -94,12 +145,6 @@ const deleteMaterial = async id => {
         <VSpacer />
 
         <div class="d-flex align-center flex-wrap gap-4">
-          <!-- 👉 Search  -->
-          <AppTextField
-            v-model="searchQuery"
-            placeholder="Buscar"
-            style="inline-size: 15.625rem;"
-          />
           <!-- 👉 Add material button -->
           <VBtn
             prepend-icon="tabler-plus"
@@ -120,6 +165,7 @@ const deleteMaterial = async id => {
             prepend-icon="tabler-download"
             color="secondary"
             variant="outlined"
+            @click="download"
           >
             Descargar
           </VBtn>
@@ -144,40 +190,6 @@ const deleteMaterial = async id => {
         class="text-no-wrap"
         @update:options="updateOptions"
       >
-        <!-- Expanded Row Data -->
-        <!--
-          <template #expanded-row="slotProps">
-          <tr class="v-data-table__tr">
-          <td :colspan="headers.length">
-          <p class="my-1">
-          Presentación: {{ slotProps.item.presentation }}
-          </p>
-          <p class="my-1">
-          Área: {{ slotProps.item.area }}
-          </p>
-          <p class="my-1">
-          Mínimo en Stock: {{ slotProps.item.minimum }}
-          </p>
-          <p class="my-1">
-          Máximo en Stock: {{ slotProps.item.maximum }}
-          </p>
-          <p class="my-1">
-          Precio por Unidad ($): {{ slotProps.item.unit_price }}
-          </p>
-          <p class="my-1">
-          Precio Presentación ($): {{ slotProps.item.inventory_price }}
-          </p>
-          <p class="my-1">
-          Precio Mercado ($): {{ slotProps.item.market_price }}
-          </p>
-          <p class="my-1">
-          Diferencia en Precio ($): {{ slotProps.item.price_difference }}
-          </p>
-          </td>
-          </tr>
-          </template> 
-        -->
-        <!-- Name -->
         <template #item.name="{ item }">
           <div class="d-flex align-center gap-x-4">
             <div class="d-flex flex-column">
