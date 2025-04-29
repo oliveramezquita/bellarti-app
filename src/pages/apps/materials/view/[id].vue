@@ -7,6 +7,8 @@ definePage({
   },
 })
 
+import Image from '@/views/apps/materials/Image.vue'
+
 const route = useRoute('apps-materials-view-id')
 const router = useRouter()
 const { data: materialData } = await useApi(`api/material/${ route.params.id }`)
@@ -77,6 +79,46 @@ const differentiatePrices = () => {
 const deleteMaterial = async id => {
   await $api(`api/material/${id}`, { method: 'DELETE' })
   router.push('/apps/materials/list')
+}
+
+const uploadImage = async formData => {
+  isLoadingDialogVisible.value = true
+
+  try {
+    await $api(`api/material-images/${material.value._id}`, {
+      method: 'PATCH',
+      body: formData,
+      onResponse({ response }) {
+        if (response.status === 200) {
+          material.value.images = response._data
+        } else {
+          isNotificationVisible.value = true
+          notificationMessage.value = response._data
+        }
+      },
+    })
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
+}
+
+const deleteImages = async images => {
+  try {
+    await $api(`api/material-images/${material.value._id}`, {
+      method: 'DELETE',
+      body: { images: images },
+      onResponse({ response }) {
+        if (response.status === 200) {
+          material.value.images = response._data
+        } else {
+          isNotificationVisible.value = true
+          notificationMessage.value = response._data
+        }
+      },
+    })
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
 }
 </script>
 
@@ -345,7 +387,14 @@ const deleteMaterial = async id => {
             </VRow>
           </VForm>
         </VWindowItem>
-        <VWindowItem>Imagenes</VWindowItem>
+        <VWindowItem>
+          <Image
+            :material-id="material._id"
+            :images="material.hasOwnProperty('images') && material.images ? material.images : {}"
+            @upload-image="uploadImage"
+            @delete-images="deleteImages"
+          />
+        </VWindowItem>
       </VWindow>
     </VCardText>
   </VCard>

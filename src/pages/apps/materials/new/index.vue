@@ -113,14 +113,6 @@ const differentiatePrices = () => {
         />
         <span>Información</span>
       </VTab>
-
-      <VTab>
-        <VIcon
-          icon="tabler-photo-plus"
-          class="mb-2"
-        />
-        <span>Imagen</span>
-      </VTab>
     </VTabs>
 
     <VCardText>
@@ -352,7 +344,6 @@ const differentiatePrices = () => {
             </VRow>
           </VForm>
         </VWindowItem>
-        <VWindowItem>Imagenes</VWindowItem>
       </VWindow>
     </VCardText>
   </VCard>
