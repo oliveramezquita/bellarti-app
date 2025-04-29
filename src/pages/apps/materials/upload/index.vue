@@ -7,6 +7,9 @@ definePage({
   },
 })
 
+import excelPath from '@/assets/documents/FORMATO_MATERIALES.xlsx'
+
+const MaterialsFormat = excelPath
 const breadcrumbItems = ref([{ title: 'Materiales', class: 'text-primary' }, { title: 'Materiales', to: { name: 'apps-materials-list' }, class: 'text-underline' }, { title: 'Subir por archivo' }])
 const { data: suppliers } = await useApi('api/suppliers?itemsPerPage=1000')
 const isFormValid = ref(false)
@@ -53,52 +56,63 @@ const onSubmit = () => {
     icon="package"
   />
   <VCard class="py-3 pa-3">
-    <VForm
-      ref="refForm"
-      v-model="isFormValid"
-      @submit.prevent="onSubmit"
-    >
-      <VRow>
-        <!-- 👉 Supplier -->
-        <VCol
-          cols="12"
-          md="6"
-        >
-          <AppSelect
-            v-model="supplier"
-            label="Proveedor"
-            placeholder="Proveedor"
-            :rules="[requiredValidator]"
-            :item-title="item => item.name"
-            :item-value="item => item._id"
-            :items="suppliers.data"
-          />
-        </VCol>
-        <VCol
-          cols="12"
-          md="6"
-          class="mt-6"
-        >
-          <VFileInput
-            v-model="excelFile"
-            label="Sube tu archivo excel"
-            accept=".xlsx, .xls"
-            outlined
-            dense
-            required
-          />
-        </VCol>
-        <VCol cols="12">
-          <VBtn
-            color="primary"
-            :disabled="excelFile ? false : true"
-            type="submit"
+    <VCardItem>
+      <p>
+        Para cargar innformación a través de un archivo debe ser de formato <b>EXCEL</b> y debe tener un formato en específico, el cual para los materiales es el siguiente: <a
+          :href="MaterialsFormat"
+          target="_blank"
+          rel="noopener noreferrer"
+        >FORMATO MATERIALES</a>
+      </p>
+    </VCardItem>
+    <VCardText>
+      <VForm
+        ref="refForm"
+        v-model="isFormValid"
+        @submit.prevent="onSubmit"
+      >
+        <VRow>
+          <!-- 👉 Supplier -->
+          <VCol
+            cols="12"
+            md="6"
           >
-            Enviar
-          </VBtn>
-        </VCol>
-      </VRow>
-    </VForm>
+            <AppSelect
+              v-model="supplier"
+              label="Proveedor"
+              placeholder="Proveedor"
+              :rules="[requiredValidator]"
+              :item-title="item => item.name"
+              :item-value="item => item._id"
+              :items="suppliers.data"
+            />
+          </VCol>
+          <VCol
+            cols="12"
+            md="6"
+            class="mt-6"
+          >
+            <VFileInput
+              v-model="excelFile"
+              label="Sube tu archivo excel"
+              accept=".xlsx, .xls"
+              outlined
+              dense
+              required
+            />
+          </VCol>
+          <VCol cols="12">
+            <VBtn
+              color="primary"
+              :disabled="excelFile ? false : true"
+              type="submit"
+            >
+              Enviar
+            </VBtn>
+          </VCol>
+        </VRow>
+      </VForm>
+    </VCardText>
   </VCard>
   <VCard
     v-if="messageRespond"
