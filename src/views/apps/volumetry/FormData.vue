@@ -1,5 +1,6 @@
 <!-- eslint-disable camelcase -->
 <script setup>
+import excelPath from '@/assets/documents/FORMATO_VOLUMETRIA.xlsx'
 import { useApi } from '@/composables/useApi'
 
 const props = defineProps({
@@ -35,8 +36,9 @@ const emit = defineEmits([
   'fileData',
 ])
 
+const VolumetryFormat = excelPath
 const { data: materials } = await useApi('api/materials?itemsPerPage=9999')
-const { data: elements } = await useApi('api/catalogs?name=Áreas')
+const { data: areas } = await useApi('api/catalogs?name=Áreas')
 const measurement = ref()
 const internalCode = ref()
 const reference = ref()
@@ -66,8 +68,8 @@ const materialChange = async () => {
 
     volumetryForm.value = editVolumetryForm
   } else {
-    volumetryForm.value = elements.value.values.map(element => ({
-      element,
+    volumetryForm.value = areas.value.values.map(area => ({
+      area,
       prototypes: props.prototypes.map(prototype => ({
         prototype,
         quantities: { factory: 0, instalation: 0 },
@@ -88,7 +90,7 @@ const addElement = () => {
   refNewElementForm.value?.validate().then(({ valid }) => {
     if (valid) {
       volumetryForm.value.push({
-        element: newElement.value,
+        area: newElement.value,
         prototypes: prototypes.map(prototype => ({
           prototype,
           quantities: { factory: 0, instalation: 0 },
@@ -125,7 +127,7 @@ const uploadVolumetry = () => {
   emit('fileData', formData)
 }
 
-const deleteElmenet = index => {
+const deleteArea = index => {
   volumetryForm.value.splice(index, 1)
 } 
 
@@ -139,7 +141,7 @@ const toggleExpandNew = () => {
   newElementExpand.value = !newElementExpand.value
 }
 
-const elementAmount = prototypes => {
+const areaAmount = prototypes => {
   const total = Object.values(prototypes).reduce((sum, item) => {
     return sum + Number(item.quantities.factory) + Number(item.quantities.instalation)
   }, 0)
@@ -172,8 +174,8 @@ watch(currentTab, val => {
 })
 watch(() => props.volumetry, newValue => {
   if (newValue.length === 0) {
-    volumetryForm.value = elements.value.values.map(element => ({
-      element,
+    volumetryForm.value = areas.value.values.map(area => ({
+      area,
       prototypes: props.prototypes.map(prototype => ({
         prototype,
         quantities: { factory: 0, instalation: 0 },
@@ -184,8 +186,8 @@ watch(() => props.volumetry, newValue => {
     material.value = null
   } else {
     if (material.value && material.value._id === props.volumetryItemDeleted) 
-      volumetryForm.value = elements.value.values.map(element => ({
-        element,
+      volumetryForm.value = areas.value.values.map(area => ({
+        area,
         prototypes: props.prototypes.map(prototype => ({
           prototype,
           quantities: { factory: 0, instalation: 0 },
@@ -291,13 +293,13 @@ watch(() => props.responseUploadedFile, newResponse => {
             class="v-card-expandable"
           >
             <VCardTitle class="d-flex align-center justify-space-between">
-              <div>{{ `${v.element} ${elementAmount(v.prototypes)}` }}</div>
+              <div>{{ `${v.area} ${areaAmount(v.prototypes)}` }}</div>
               <div>
                 <VBtn
                   icon="tabler-trash"
                   variant="text"
                   class="mr-2"
-                  @click="deleteElmenet(index)"
+                  @click="deleteArea(index)"
                 />
                 <VBtn
                   :icon="v.icon"
@@ -408,7 +410,13 @@ watch(() => props.responseUploadedFile, newResponse => {
           </VBtn>
         </VWindowItem>
         <VWindowItem>
-          <p>Para cargar innformación a través de un archivo debe ser de formato <b>excel</b> y debe tener una estructura en específico, el cual para la volumetría es el siguiente: FORMATO VOLUMETRÍA</p>
+          <p>
+            Para cargar información a través de un archivo debe ser de formato <b>excel</b> y debe tener una estructura en específico, el cual para la volumetría es el siguiente: <a
+              :href="VolumetryFormat"
+              target="_blank"
+              rel="noopener noreferrer"
+            >FORMATO VOLUMETRÍA</a>
+          </p>
           <VRow>
             <VCol
               cols="12"

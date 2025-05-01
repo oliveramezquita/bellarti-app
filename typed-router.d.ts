@@ -56,6 +56,7 @@ declare module 'vue-router/auto-routes' {
     'apps-materials-upload': RouteRecordInfo<'apps-materials-upload', '/apps/materials/upload', Record<never, never>, Record<never, never>>,
     'apps-materials-view-id': RouteRecordInfo<'apps-materials-view-id', '/apps/materials/view/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     'apps-ods-list': RouteRecordInfo<'apps-ods-list', '/apps/ods/list', Record<never, never>, Record<never, never>>,
+    'apps-ods-view-id': RouteRecordInfo<'apps-ods-view-id', '/apps/ods/view/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     'apps-outputs-list': RouteRecordInfo<'apps-outputs-list', '/apps/outputs/list', Record<never, never>, Record<never, never>>,
     'apps-permissions': RouteRecordInfo<'apps-permissions', '/apps/permissions', Record<never, never>, Record<never, never>>,
     'apps-projects-list': RouteRecordInfo<'apps-projects-list', '/apps/projects/list', Record<never, never>, Record<never, never>>,

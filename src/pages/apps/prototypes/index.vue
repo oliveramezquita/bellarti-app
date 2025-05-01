@@ -90,25 +90,35 @@ const viewDeletePrototypeDialog = prototype => {
 }
 
 const editPrototype = async prototypeData => {
-  const filtered = Object.fromEntries(
-    Object.entries(prototypeData).filter(([key, value]) => key !== 'id' && value !== null),
-  )
+  isLoadingDialogVisible.value = true
+  try {
+    const filtered = Object.fromEntries(
+      Object.entries(prototypeData).filter(([key, value]) => key !== 'id' && value !== null),
+    )
 
-  await $api(`api/prototype/${prototypeData.id}`, {
-    method: 'PATCH',
-    body: filtered,
-    onResponse({ response }) {
-      isNotificationVisible.value = true
-      notificationMessage.value = response._data
-    },
-  })
-  fetchPrototypes()
+    await $api(`api/prototype/${prototypeData.id}`, {
+      method: 'PATCH',
+      body: filtered,
+      onResponse({ response }) {
+        isNotificationVisible.value = true
+        notificationMessage.value = response._data
+      },
+    })
+    fetchPrototypes()
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
 }
 
 const deletePrototype = async id => {
-  await $api(`api/prototype/${id}`, { method: 'DELETE' })
-  isDeletePrototypeDialogVisible.value = false
-  fetchPrototypes()
+  isLoadingDialogVisible.value = true
+  try {
+    await $api(`api/prototype/${id}`, { method: 'DELETE' })
+    isDeletePrototypeDialogVisible.value = false
+    fetchPrototypes()
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
 }
 </script>
 

@@ -1,0 +1,384 @@
+<script setup>
+definePage({
+  meta: {
+    action: 'read',
+    subject: 'VSODs',
+    navActiveLink: 'apps-ods-list',
+  },
+})
+import excelPath from '@/assets/documents/FORMATO_LOTES_OD.xlsx'
+import MaterialTable from '@/views/apps/ods/MaterialTable.vue'
+
+const LotesFormat = excelPath
+
+const route = useRoute('apps-ods-view-id')
+const { data: homeProductionData } = await useApi(`api/home-production/${ route.params.id }`)
+const { data: lotsData } = useApi(`api/lots/${ homeProductionData.value._id }`)
+const { data: prototypeCatalog }= await useApi('api/prototypes?itemsPerPage=1000')
+
+const {
+  data: materialsData,
+  execute: fetchMaterials,
+} = await useApi(createUrl(`api/explosion/${homeProductionData.value._id}`))
+
+const prototypes = prototypeCatalog.value.data.filter(d => d.front === homeProductionData.value.front).map(d => d.name)
+const lots = ref(lotsData.value ? lotsData.value : [])
+const isLoadingDialogVisible = ref(false)
+const isNotificationVisible = ref(false)
+const notificationMessage = ref('')
+const currentTab = ref('tab-1')
+
+const status = [
+  {
+    name: 'Pendiente',
+    value: 0,
+  },
+  {
+    name: 'En Progreso',
+    value: 1,
+  },
+  {
+    name: 'Finalizado',
+    value: 2,
+  },
+]
+
+const addNewLot = () => {
+  lots.value.push({
+    block: null,
+    lot: null,
+    laid: null,
+    prototype: null,
+    status: null,
+  })
+}
+
+const removeLot = async idx => {
+  if(lots.value[idx].hasOwnProperty('_id')) {
+    isLoadingDialogVisible.value = true
+    try {
+      await $api(`api/lot/${lots.value[idx]._id}`, {
+        method: 'DELETE',
+        onResponse({ response }) {
+          if (response.status === 200) {
+            lots.value.splice(idx, 1)
+          } else {
+            isNotificationVisible.value = true
+            notificationMessage.value = response._data
+          }
+        },
+      })
+    } finally {
+      isLoadingDialogVisible.value = false
+    }
+  } else {
+    lots.value.splice(idx, 1)
+  }
+}
+
+const saveLots = async () => {
+  if (isValid()) {
+    isLoadingDialogVisible.value = true
+
+    try {
+      const keysToExclude = ['_id', 'home_production_id']
+      const filtered = lots.value.map(obj => Object.fromEntries(Object.entries(obj).filter(([k, v]) => !keysToExclude.includes(k) && v !== null)))
+
+      await $api(`api/lots/${homeProductionData.value._id}`, {
+        method: 'POST',
+        body: {
+          lots: filtered,
+        }, onResponse({ response }) {
+          if (response.status === 200 && response._data.hasOwnProperty('success')) {
+            lots.value = response._data.success
+            fetchMaterials()
+          } else {
+            isNotificationVisible.value = true
+            notificationMessage.value = response._data
+          }
+        },
+      })
+    } finally {
+      isLoadingDialogVisible.value = false
+    }
+  } else {
+    isNotificationVisible.value = true
+    notificationMessage.value = "Error: Algunos campos obligatorios están vacíos. Por favor, asegúrese de completar los siguientes valores: Manzana, Lote, Sembrado y Prototipo."
+  }
+}
+
+const isValid = () => {
+  let valid = true
+  lots.value.forEach((obj, _) => {
+    const rawObj = toRaw(obj)
+
+    const check = ['block', 'lot', 'laid', 'prototype'].every(
+      key => rawObj[key] !== null && rawObj[key] !== '',
+    )
+
+    if (!check)
+      valid = false
+  })
+  
+  return valid
+}
+
+const updateStatus = async (id, status) => {
+  if (id) {
+    isLoadingDialogVisible.value = true
+
+    try {
+      await $api(`api/lot/${id}`, {
+        method: 'PATCH',
+        body: {
+          status: status,
+        }, onResponse({ response }) {
+          if (response.status !== 200) {
+            isNotificationVisible.value = true
+            notificationMessage.value = response._data
+          }
+        },
+      })
+    } finally {
+      isLoadingDialogVisible.value = false
+    }
+  }
+}
+</script>
+
+<template>
+  <Breadcrumb
+    :items="[{ title: 'Vivienda en Serie', class: 'text-primary' }, { title: `OD's`, to: { name: 'apps-ods-list' }, class: 'text-underline' }, { title: `${homeProductionData.front} - ${homeProductionData.od}` }]"
+    icon="home-stats"
+  />
+  <VCard>
+    <VCardItem class="pb-4">
+      <VCardTitle>Información</VCardTitle>
+    </VCardItem>
+    <VCardText>
+      <VRow>
+        <VCol
+          cols="12"
+          md="4"
+        >
+          <AppTextField
+            v-model="homeProductionData.client"
+            label="Cliente"
+            placeholder="Cliente"
+          />
+        </VCol>
+        <VCol
+          cols="12"
+          md="4"
+        >
+          <AppTextField
+            v-model="homeProductionData.front"
+            label="Frente / Fraccionamiento"
+            placeholder="Frente / Fraccionamiento"
+          />
+        </VCol>
+        <VCol
+          cols="12"
+          md="4"
+        >
+          <AppTextField
+            v-model="homeProductionData.od"
+            label="OD"
+            placeholder="OD"
+          />
+        </VCol>
+      </VRow>
+    </VCardText>
+    <VDivider />
+    <VTabs
+      v-model="currentTab"
+      grow
+      stacked
+    >
+      <VTab>
+        <VIcon
+          icon="tabler-home"
+          class="mb-2"
+        />
+        <span>Lotes</span>
+      </VTab>
+
+      <VTab>
+        <VIcon
+          icon="tabler-package"
+          class="mb-2"
+        />
+        <span>Materiales</span>
+      </VTab>
+    </VTabs>
+    <VCardText>
+      <VWindow v-model="currentTab">
+        <VWindowItem style="padding-block-start: 15px;">
+          <VRow
+            v-for="(_, i) in lots"
+            :key="i"
+            class="row-table"
+            style="margin-inline-start: 0;"
+          >
+            <VCol
+              cols="12"
+              md="2"
+              class="narrow-column"
+            >
+              <AppTextField
+                v-model="lots[i].block"
+                placeholder="Manzana"
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="2"
+              class="narrow-column"
+            >
+              <AppTextField
+                v-model="lots[i].lot"
+                placeholder="Lote"
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="2"
+              class="narrow-column"
+            >
+              <AppSelect
+                v-model="lots[i].laid"
+                placeholder="Sembrado"
+                :items="['IZQUIERDO', 'DERECHO']"
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="2"
+              class="narrow-column"
+            >
+              <AppSelect
+                v-model="lots[i].prototype"
+                placeholder="Prototipo"
+                :items="prototypes"
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="2"
+              class="narrow-column"
+            >
+              <AppSelect
+                v-model="lots[i].status"
+                placeholder="Estatus"
+                :item-title="item => item.name"
+                :item-value="item => item.value"
+                :items="status"
+                @update:model-value="updateStatus(lots[i].hasOwnProperty('_id') ? lots[i]._id: null, lots[i].status)"
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="1"
+            >
+              <IconBtn>
+                <VIcon
+                  icon="tabler-trash"
+                  @click="removeLot(i)"
+                />
+              </IconBtn>
+            </VCol>
+          </VRow>
+          <VRow>
+            <VCol cols="12">
+              <div class="d-flex align-center flex-wrap gap-4">
+                <VBtn
+                  prepend-icon="tabler-plus"
+                  variant="outlined"
+                  @click="addNewLot"
+                >
+                  Añadir Lote
+                </VBtn>
+                <VBtn
+                  prepend-icon="tabler-device-floppy"
+                  :disabled="lots.length > 0 ? false : true"
+                  @click="saveLots"
+                >
+                  Guardar Lotes
+                </VBtn>
+              </div>
+            </VCol>
+          </VRow>
+        </VWindowItem>
+        <VWindowItem>
+          <MaterialTable :materials="materialsData" />
+        </VWindowItem>
+      </VWindow>
+    </VCardText>
+    <VDivider />
+    <VCardItem class="pb-4">
+      <VCardTitle>Subir por archivo</VCardTitle>
+    </VCardItem>
+    <VCardText>
+      <VRow>
+        <VCol cols="12">
+          <p>
+            Para cargar información a través de un archivo debe ser de formato <b>EXCEL</b> y debe tener un formato en específico, el cual para los materiales es el siguiente: <a
+              :href="LotesFormat"
+              target="_blank"
+              rel="noopener noreferrer"
+            >FORMATO LOTES</a>
+          </p>
+        </VCol>
+        <VCol
+          cols="12"
+          md="8"
+        >
+          <VFileInput
+            v-model="excelFile"
+            label="Sube tu archivo excel"
+            accept=".xlsx, .xls"
+            outlined
+            dense
+            required
+          />
+        </VCol>
+        <VCol cols="12">
+          <VBtn
+            color="primary"
+            :disabled="excelFile ? false : true"
+            type="submit"
+            prepend-icon="tabler-file-upload"
+          >
+            Cargar archivo
+          </VBtn>
+        </VCol>
+      </VRow>
+    </VCardText>
+  </VCard>
+  <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
+  <Notification
+    v-model:is-notification-visible="isNotificationVisible"
+    :message="notificationMessage"
+  />
+</template>
+
+<style lang="scss">
+.row-table {
+  .v-col-12 {
+    padding-block: 1px !important;
+  }
+}
+
+.narrow-column {
+  padding-inline: 1px !important;
+
+  .v-field {
+    border-radius: 0 !important;
+  }
+}
+
+.more-info {
+  inline-size: 100%;
+  padding-block: 10px;
+}
+</style>

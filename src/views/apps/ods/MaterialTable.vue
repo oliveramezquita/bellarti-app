@@ -1,6 +1,6 @@
 <script setup>
 const props = defineProps({
-  volumetry: {
+  materials: {
     type: Array,
     required: true,
   },
@@ -8,8 +8,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits([
-  'update:volumetry',
-  'volumetryData',
+  'update:materials',
 ])
 
 const search = ref('')
@@ -35,36 +34,21 @@ const headers = [
     title: 'TOTAL',
     key: 'gran_total',
   },
-  {
-    title: '',
-    key: 'actions',
-    sortable: false, 
-  },
 ]
 
-const deleteMaterial = id => {
-  emit('volumetryData', id)
-}
-
-watch(() => props.volumetry, newValue => {}, { deep: true })
+watch(() => props.materials, newValue => {}, { deep: true })
 </script>
 
 <template>
-  <VCard>
+  <div v-if="props.materials">
     <VRow
       class="mt-1 mb-2"
       style="padding-block: 0;padding-inline: 20px;"
     >
       <VCol
         cols="12"
-        md="3"
-      >
-        <h4>Volumetría actual</h4>
-      </VCol>
-      <VCol
-        cols="12"
-        offset-md="5"
-        md="4"
+        offset-md="6"
+        md="6"
       >
         <AppTextField
           v-model="search"
@@ -80,7 +64,7 @@ watch(() => props.volumetry, newValue => {}, { deep: true })
       
     <VDataTable
       :headers="headers"
-      :items="props.volumetry"
+      :items="props.materials"
       :items-per-page="5"
       :search="search"
       expand-on-click
@@ -99,7 +83,7 @@ watch(() => props.volumetry, newValue => {}, { deep: true })
                 </td>
               </tr>
               <tr
-                v-for="v in slotProps.item.volumetry"
+                v-for="v in slotProps.item.explosion"
                 :key="v.area"
               >
                 <td style=" padding-block-end: 5px;padding-inline-start: 55px !important;">
@@ -113,13 +97,9 @@ watch(() => props.volumetry, newValue => {}, { deep: true })
           </td>
         </tr>
       </template>
-
-      <!-- Actions -->
-      <template #item.actions="{ item }">
-        <IconBtn @click="deleteMaterial(item)">
-          <VIcon icon="tabler-trash" />
-        </IconBtn>
-      </template>
     </VDataTable>
-  </VCard>
+  </div>
+  <div v-else>
+    <label>Se requiere subir lotes para obtener la explosión de materiales</label>
+  </div>
 </template>

@@ -176,7 +176,7 @@
     },
     "dataFooter": {
       "itemsPerPageText": "Elementos por página:",
-      "itemsPerPageAll": "All",
+      "itemsPerPageAll": "Todos",
       "pageText": "{0}-{1} of {2}",
       "firstPage": "First Page",
       "prevPage": "Previous Page",
