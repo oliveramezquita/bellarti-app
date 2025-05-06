@@ -136,7 +136,8 @@ const deleteHomeProduction = async id => {
     :items="breadcrumbItems"
     :return="false"
     icon="home-stats"
-  /><section>
+  />
+  <section>
     <VCard>
       <VCardText class="d-flex flex-wrap gap-4">
         <div class="d-flex gap-2 align-center">

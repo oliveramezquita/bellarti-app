@@ -170,10 +170,9 @@ export default [
   {
     title: 'Catálogos',
     icon: { icon: 'tabler-files' },
-    to: 'apps-catalogs',
+    to: 'apps-catalogs-list',
     action: 'read',
     subject: 'Catalogos',
-
   },
   {
     title: 'Administración',
