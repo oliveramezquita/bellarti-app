@@ -4,6 +4,7 @@ definePage({
   meta: {
     action: 'read',
     subject: 'Materiales',
+    navActiveLink: 'apps-materials-list',
   },
 })
 

@@ -12,7 +12,11 @@ import MaterialTable from '@/views/apps/ods/MaterialTable.vue'
 const LotesFormat = excelPath
 
 const route = useRoute('apps-ods-view-id')
-const { data: homeProductionData } = await useApi(`api/home-production/${ route.params.id }`)
+
+const { 
+  data: homeProductionData,
+  execute: fetchHomeProduction } = await useApi(`api/home-production/${ route.params.id }`)
+
 const { data: lotsData } = useApi(`api/lots/${ homeProductionData.value._id }`)
 const { data: prototypeCatalog }= await useApi('api/prototypes?itemsPerPage=1000')
 
@@ -27,6 +31,10 @@ const isLoadingDialogVisible = ref(false)
 const isNotificationVisible = ref(false)
 const notificationMessage = ref('')
 const currentTab = ref('tab-1')
+const excelFile = ref()
+const successful = ref([])
+const warnings = ref([])
+const errors = ref()
 
 const status = [
   {
@@ -133,7 +141,9 @@ const updateStatus = async (id, status) => {
         body: {
           status: status,
         }, onResponse({ response }) {
-          if (response.status !== 200) {
+          if (response.status === 200) {
+            fetchHomeProduction()
+          } else {
             isNotificationVisible.value = true
             notificationMessage.value = response._data
           }
@@ -142,6 +152,35 @@ const updateStatus = async (id, status) => {
     } finally {
       isLoadingDialogVisible.value = false
     }
+  }
+}
+
+const uploadLots = async () => {
+  isLoadingDialogVisible.value = true
+
+  try {
+    const formData = new FormData()
+
+    formData.append('file', excelFile.value)
+    formData.append('client_id', homeProductionData.value.client_id)
+    formData.append('front', homeProductionData.value.front)
+
+    await $api(`api/lots/${homeProductionData.value._id}`, {
+      method: 'PATCH',
+      body: formData,
+      onResponse({ response }) {
+        if (response.status === 200 && response._data.hasOwnProperty('success')) {
+          lots.value = response._data.success
+          successful.value = response._data.success
+          warnings.value = response._data.errors
+          fetchMaterials()
+        } else {
+          errors.value = response._data
+        }
+      },
+    })
+  } finally {
+    isLoadingDialogVisible.value = false
   }
 }
 </script>
@@ -213,7 +252,7 @@ const updateStatus = async (id, status) => {
     </VTabs>
     <VCardText>
       <VWindow v-model="currentTab">
-        <VWindowItem style="padding-block-start: 15px;">
+        <VWindowItem style="padding-block: 15px;">
           <VRow
             v-for="(_, i) in lots"
             :key="i"
@@ -280,7 +319,7 @@ const updateStatus = async (id, status) => {
               cols="12"
               md="1"
             >
-              <IconBtn>
+              <IconBtn v-if="lots[i].status < 1">
                 <VIcon
                   icon="tabler-trash"
                   @click="removeLot(i)"
@@ -288,7 +327,7 @@ const updateStatus = async (id, status) => {
               </IconBtn>
             </VCol>
           </VRow>
-          <VRow>
+          <VRow v-if="homeProductionData.status < 2">
             <VCol cols="12">
               <div class="d-flex align-center flex-wrap gap-4">
                 <VBtn
@@ -314,11 +353,14 @@ const updateStatus = async (id, status) => {
         </VWindowItem>
       </VWindow>
     </VCardText>
-    <VDivider />
-    <VCardItem class="pb-4">
+    <VDivider v-if="homeProductionData.status < 2" />
+    <VCardItem
+      v-if="homeProductionData.status < 2"
+      class="pb-4"
+    >
       <VCardTitle>Subir por archivo</VCardTitle>
     </VCardItem>
-    <VCardText>
+    <VCardText v-if="homeProductionData.status < 2">
       <VRow>
         <VCol cols="12">
           <p>
@@ -348,9 +390,46 @@ const updateStatus = async (id, status) => {
             :disabled="excelFile ? false : true"
             type="submit"
             prepend-icon="tabler-file-upload"
+            @click="uploadLots"
           >
             Cargar archivo
           </VBtn>
+        </VCol>
+        <VCol cols="12">
+          <VAlert
+            v-if="successful.length > 0"
+            border="start"
+            border-color="success"
+            class="mb-2"
+            closable
+          >
+            Archivo cargado correctamente, total de lotes creados: <b>{{ successful.length }}</b>
+          </VAlert>
+          <VAlert
+            v-if="warnings.length > 0"
+            border="start"
+            border-color="warning"
+            class="mb-2"
+            closable
+          >
+            Advertencias:
+            <ul
+              v-for="(warning, idx) in warnings"
+              :key="idx"
+            >
+              <li>Fila: {{ warning.row }} - {{ warning.errors[0] }}</li>
+            </ul>
+          </VAlert>
+          <VAlert
+            v-if="errors"
+            border="start"
+            border-color="error"
+            closable
+          >
+            Ocurrió un error al procesaro el archivo: 
+            <br>
+            {{ errors }}
+          </VAlert>
         </VCol>
       </VRow>
     </VCardText>

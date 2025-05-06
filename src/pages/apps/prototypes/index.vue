@@ -52,6 +52,8 @@ const {
 }))
 
 const { data: clientsList } = await useApi('api/clients/VS?itemsPerPage=100')
+const { data: prototypesCatalog, execute: fetchCatalogPrototypes } = await useApi('api/catalogs?name=Prototipos')
+const { data: frontsCatalog, execute: fetchCatalogFronts } = await useApi('api/catalogs?name=Frentes')
 
 const prototypes = computed(() => prototypesData.value.data)
 const totalPrototypes = computed(() => prototypesData.value.total_elements)
@@ -67,6 +69,10 @@ const addNewPrototype = async prototypeData => {
       method: 'POST',
       body: filtered,
       onResponse({ response }) {
+        if (response.status === 201) {
+          fetchCatalogPrototypes()
+          fetchCatalogFronts()
+        }
         isNotificationVisible.value = true
         notificationMessage.value = response._data
       },
@@ -237,6 +243,8 @@ const deletePrototype = async id => {
     <AddNewPrototypeDrawer
       v-model:is-drawer-open="isAddNewPrototypeDrawerVisible"
       v-model:clients-list="clientsList.data"
+      v-model:prototypes-catalog="prototypesCatalog"
+      v-model:fronts-catalog="frontsCatalog"
       @prototype-data="addNewPrototype"
     />
     <EditPrototypeDrawer

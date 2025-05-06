@@ -1,3 +1,4 @@
+<!-- eslint-disable camelcase -->
 <script setup>
 const props = defineProps({
   isDrawerOpen: {
@@ -8,23 +9,45 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  frontsCatalog: {
+    type: Array,
+    required: true,
+  },
+  prototypesCatalog: {
+    type: Array,
+    required: true,
+  },
 })
 
 const emit = defineEmits([
   'update:isDrawerOpen',
+  'udpate:clientsList',
+  'udpate:prototypesCatalog',
+  'udpate:frontsCatalog',
   'prototypeData',
 ])
 
 const clientsList = ref(props.clientsList)
+const prototypesCatalog = ref(props.prototypesCatalog)
+const frontsCatalog = ref(props.frontsCatalog)
 
 const isFormValid = ref(false)
 const refForm = ref()
 const client = ref()
 const name = ref('')
 const front = ref()
-const { data: prototypeCatalog }= await useApi('api/catalogs?name=Prototipos')
-const fronts = ref(Object.keys(prototypeCatalog.value.values))
+
+const fronts = ref([])
 const prototypes = ref([])
+
+const getDataByClient = () => {
+  if (client.value && client.value.hasOwnProperty('name')) {
+    if (frontsCatalog.value.values.hasOwnProperty(client.value.name))
+      fronts.value = frontsCatalog.value.values[client.value.name]
+    if (prototypesCatalog.value.values.hasOwnProperty(client.value.name))
+      prototypes.value = prototypesCatalog.value.values[client.value.name]
+  }
+}
 
 const closeNavigationDrawer = () => {
   emit('update:isDrawerOpen', false)
@@ -38,8 +61,8 @@ const onSubmit = () => {
   refForm.value?.validate().then(({ valid }) => {
     if (valid) {
       emit('prototypeData', {
-        // eslint-disable-next-line camelcase
-        client_id: client.value,
+        client_id: client.value._id,
+        client_name: client.value.name,
         name: name.value,
         front: front.value,
       })
@@ -61,8 +84,6 @@ const optionFrontSelected = val => {
   if (val.option === 'Agregar una nueva opción' && val.newOption)
     option = val.newOption
   front.value = option
-
-  prototypes.value = prototypeCatalog.value.values[option] ? prototypeCatalog.value.values[option] : []
 }
 
 const optionPrototypeSelected = val => {
@@ -71,6 +92,13 @@ const optionPrototypeSelected = val => {
     option = val.newOption
   name.value = option
 }
+
+watch(() => props.frontsCatalog, newFrontsCatalog => { 
+  frontsCatalog.value = newFrontsCatalog
+})
+watch(() => props.prototypesCatalog, newPrototypesCatalog => { 
+  prototypesCatalog.value = newPrototypesCatalog
+})
 </script>
 
 <template>
@@ -109,8 +137,9 @@ const optionPrototypeSelected = val => {
                   placeholder="Seleccionar cliente"
                   :rules="[requiredValidator]"
                   :item-title="item => item.name"
-                  :item-value="item => item._id"
+                  :item-value="item => item"
                   :items="clientsList"
+                  @update:model-value="getDataByClient"
                 />
               </VCol>
 
