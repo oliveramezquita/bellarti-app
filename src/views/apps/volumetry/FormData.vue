@@ -185,18 +185,20 @@ watch(() => props.volumetry, newValue => {
     }))
     material.value = null
   } else {
-    if (material.value && material.value._id === props.volumetryItemDeleted) 
-      volumetryForm.value = areas.value.values.map(area => ({
-        area,
-        prototypes: props.prototypes.map(prototype => ({
-          prototype,
-          quantities: { factory: 0, instalation: 0 },
-        })),
-        expand: false,
-        icon: 'tabler-chevron-down',
-      }))
-    else
-      material.value = null
+    if(props.volumetryItemDeleted) {
+      if (material.value && material.value._id === props.volumetryItemDeleted) 
+        volumetryForm.value = areas.value.values.map(area => ({
+          area,
+          prototypes: props.prototypes.map(prototype => ({
+            prototype,
+            quantities: { factory: 0, instalation: 0 },
+          })),
+          expand: false,
+          icon: 'tabler-chevron-down',
+        }))
+      else
+        material.value = null
+    }
   }
 }, { deep: true })
 watch(() => props.responseUploadedFile, newResponse => {

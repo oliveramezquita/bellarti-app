@@ -58,6 +58,12 @@ export default [
         subject: 'VSVolumetria',
       },
       {
+        title: 'Cuantificación',
+        to: 'apps-quantification',
+        action: 'read',
+        subject: 'VSCuantificacion',
+      },
+      {
         title: 'OD\'s',
         to: 'apps-ods-list',
         action: 'read',

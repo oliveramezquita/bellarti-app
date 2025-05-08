@@ -64,6 +64,7 @@ declare module 'vue-router/auto-routes' {
     'apps-projects-list': RouteRecordInfo<'apps-projects-list', '/apps/projects/list', Record<never, never>, Record<never, never>>,
     'apps-prototypes': RouteRecordInfo<'apps-prototypes', '/apps/prototypes', Record<never, never>, Record<never, never>>,
     'apps-purchase-orders-list': RouteRecordInfo<'apps-purchase-orders-list', '/apps/purchase-orders/list', Record<never, never>, Record<never, never>>,
+    'apps-quantification': RouteRecordInfo<'apps-quantification', '/apps/quantification', Record<never, never>, Record<never, never>>,
     'apps-roles-list': RouteRecordInfo<'apps-roles-list', '/apps/roles/list', Record<never, never>, Record<never, never>>,
     'apps-roles-view-id': RouteRecordInfo<'apps-roles-view-id', '/apps/roles/view/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     'apps-rqm-list': RouteRecordInfo<'apps-rqm-list', '/apps/rqm/list', Record<never, never>, Record<never, never>>,
