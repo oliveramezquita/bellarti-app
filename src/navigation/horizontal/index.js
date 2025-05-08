@@ -1,3 +1,4 @@
+
 export default [
   {
     title: 'Dashboards',
@@ -56,6 +57,12 @@ export default [
         to: 'apps-volumetry',
         action: 'read',
         subject: 'VSVolumetria',
+      },
+      {
+        title: 'Cuantificación',
+        to: 'apps-quantification',
+        action: 'read',
+        subject: 'VSCuantificacion',
       },
       {
         title: 'OD\'s',
