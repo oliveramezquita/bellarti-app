@@ -382,6 +382,7 @@ declare module 'vue' {
     ResponseHandler: typeof import('./src/components/ResponseHandler.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    Scan: typeof import('./src/@core/components/Scan.vue')['default']
     ScrollToTop: typeof import('./src/@core/components/ScrollToTop.vue')['default']
     ShareProjectDialog: typeof import('./src/components/dialogs/ShareProjectDialog.vue')['default']
     Shortcuts: typeof import('./src/@core/components/Shortcuts.vue')['default']
