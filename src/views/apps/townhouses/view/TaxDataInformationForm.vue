@@ -24,6 +24,7 @@ const refForm = ref()
 const { data: taxRegimes } = await useApi('api/catalogs?name=Regimen Fiscal')
 const taxDataInfo = ref(props.taxDataInfo)
 const constancyFile = ref()
+const clientType = ref(['Persona Física', 'Persona Moral', 'Cliente sin RFC', 'Cliente Extranjero'])
 
 const onSubmit = () => {
   const formData = new FormData()
@@ -51,6 +52,21 @@ const onSubmit = () => {
     @submit.prevent="onSubmit"
   >
     <VRow>
+      <VCol cols="12">
+        <VRadioGroup
+          v-model="taxDataInfo.client_type"
+          inline
+        >
+          <div>
+            <VRadio
+              v-for="radio in clientType"
+              :key="radio"
+              :label="radio"
+              :value="radio"
+            />
+          </div>
+        </VRadioGroup>
+      </VCol>
       <VCol
         cols="12"
         md="4"
@@ -59,7 +75,6 @@ const onSubmit = () => {
           v-model="taxDataInfo.rfc"
           label="RFC"
           placeholder="RFC"
-          :rules="[requiredValidator]"
           class="font-weight-bold"
         />
       </VCol>

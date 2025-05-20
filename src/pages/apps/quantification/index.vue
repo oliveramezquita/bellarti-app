@@ -5,7 +5,9 @@ definePage({
     subject: 'VSCuantificacion',
   },
 })
+import ChangeAreaDrawer from '@/views/apps/quantification/ChangeAreaDrawer.vue'
 import DataTable from '@/views/apps/quantification/DataTable.vue'
+import SelectColorDrawer from '@/views/apps/quantification/SelectColorDrawer.vue'
 
 const breadcrumbItems = ref([{ title: 'Vivienda en Serie', class: 'text-primary' }, { title: 'Cuantificación' }])
 const { data: clients } = await useApi('api/clients/VS?itemsPerPage=1000')
@@ -18,7 +20,14 @@ const prototype = ref()
 const isLoadingDialogVisible = ref(false)
 const isNotificationVisible = ref(false)
 const notificationMessage = ref('')
+const quantificationId = ref()
 const quantification = ref([])
+const currentTab = ref('tab-1')
+const isSelectColorDrawerVisible = ref(false)
+const isChangeAreaDrawerVisible = ref(false)
+const selectedMaterials = ref()
+const selectedArea = ref()
+const updated = ref(false)
 
 const clientChange = async value => {
   await $api(`api/quantification-filters?client_id=${value}`, {
@@ -49,6 +58,7 @@ const getQuantification = async () => {
       method: 'GET',
       onResponse({ response }) {
         if (response.status === 200) {
+          quantificationId.value = response._data._id
           if (response._data.hasOwnProperty('quantification'))
             transformData(response._data.quantification)
         } else {
@@ -66,16 +76,73 @@ const transformData = data => {
   quantification.value = Object.entries(data).map(([key, materials]) => ({
     key: key,
     materials: materials,
-    expand: false,
-    icon: 'tabler-chevron-down',
   }))
-
-  console.log(quantification.value)
 }
 
-const toggleExpand = index => {
-  quantification.value[index].icon = quantification.value[index].icon === 'tabler-chevron-down' ? 'tabler-chevron-up' : 'tabler-chevron-down'
-  quantification.value[index].expand = !quantification.value[index].expand
+const showSelectColorDrawer = data => {
+  selectedMaterials.value = data.selectedMaterials
+  selectedArea.value = data.selectedArea
+  isSelectColorDrawerVisible.value = true
+}
+
+const assignColor = async color => {
+  isLoadingDialogVisible.value = true
+  try {
+    await $api(`api/quantification/${quantificationId.value}/assign_color`, {
+      method: 'PATCH',
+      body: {
+        'area': selectedArea.value,
+        'color': color.value,
+        'materials': selectedMaterials.value,
+      },
+      onResponse({ response }) {
+        if (response.status === 200) {
+          updated.value = true
+          if (response._data.hasOwnProperty('quantification'))
+            transformData(response._data.quantification)
+        } else {
+          updated.value = false
+          isNotificationVisible.value = true
+          notificationMessage.value = response._data
+        }
+      },
+    })
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
+}
+
+const showChangeAreaDrawer = data => {
+  selectedMaterials.value = data.selectedMaterials
+  selectedArea.value = data.selectedArea
+  isChangeAreaDrawerVisible.value = true
+}
+
+const changeArea = async area => {
+  isLoadingDialogVisible.value = true
+  try {
+    await $api(`api/quantification/${quantificationId.value}/change_area`, {
+      method: 'PATCH',
+      body: {
+        'area': selectedArea.value,
+        'destination': area.value,
+        'materials': selectedMaterials.value,
+      },
+      onResponse({ response }) {
+        if (response.status === 200) {
+          updated.value = true
+          if (response._data.hasOwnProperty('quantification'))
+            transformData(response._data.quantification)
+        } else {
+          updated.value = false
+          isNotificationVisible.value = true
+          notificationMessage.value = response._data
+        }
+      },
+    })
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
 }
 </script>
 
@@ -136,34 +203,49 @@ const toggleExpand = index => {
           </VCol>
         </VRow>
       </VCardText>
-      <VCard
-        v-for="(q, index) in quantification"
-        :key="index"
-        class="v-card-expandable"
-      >
-        <VCardTitle class="d-flex align-center justify-space-between">
-          <div>{{ q.key }}</div>
-          <div>
-            <VBtn
-              :icon="q.icon"
-              variant="text"
-              @click="toggleExpand(index)"
-            />
-          </div>
-        </VCardTitle>
-        <VCardText
-          v-show="q.expand"
-          style=" padding-inline: 0;"
+      <div v-show="quantification.length > 0">
+        <VTabs
+          v-model="currentTab"
+          class="mt-5"
         >
-          <DataTable :quantification="q.materials" />
-        </VCardText>
-      </VCard>
+          <VTab>PRODUCCIÓN SOLO COCINA</VTab>
+          <VTab>PRODUCCIÓN SIN COCINA</VTab>
+          <VTab>INSTALACIÓN SOLO COCINA</VTab>
+          <VTab>INSTALACIÓN SIN COCINA</VTab>
+          <VTab>CARPINTERÍA</VTab>
+          <VTab>EQUIPOS</VTab>
+        </VTabs>
+
+        <VWindow v-model="currentTab">
+          <VWindowItem
+            v-for="(q, index) in quantification"
+            :key="index"
+          >
+            <DataTable
+              :quantification="q.materials"
+              :area="q.key"
+              :updated="updated"
+              @show-select-color-drawer="showSelectColorDrawer"
+              @show-change-area-drawer="showChangeAreaDrawer"
+            />
+          </VWindowItem>
+        </VWindow>
+      </div>
     </VCard>
   </section>
   <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
   <Notification
     v-model:is-notification-visible="isNotificationVisible"
     :message="notificationMessage"
+  />
+  <SelectColorDrawer
+    v-model:is-drawer-open="isSelectColorDrawerVisible"
+    @assign-color="assignColor"
+  />
+  <ChangeAreaDrawer
+    v-model:is-drawer-open="isChangeAreaDrawerVisible"
+    v-model:source="selectedArea"
+    @change-area="changeArea"
   />
 </template>
 
