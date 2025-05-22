@@ -6,9 +6,6 @@ const props = defineProps({
     default: () => ({
       rfc: '',
       name: '',
-      taxRegime: '',
-      postalCode: '',
-      taxAddress: '',
       constancy: null,
     }),
   },

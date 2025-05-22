@@ -19,8 +19,7 @@ const emit = defineEmits([
 const isFormValid = ref(false)
 const refForm = ref()
 const refreshRate = ref(props.refreshRate)
-const { data: refreshRateOptions } = await useApi('api/catalogs?name=Frecuencua de actulización')
-const currentDate = new Date().toISOString().split('T')[0]
+const { data: refreshRateOptions } = await useApi('api/catalogs?name=Frecuencia de actualización')
 const today = new Date()
 const yesterday = new Date(today)
 
