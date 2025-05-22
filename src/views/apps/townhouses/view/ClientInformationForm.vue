@@ -28,75 +28,77 @@ const onSubmit = () => {
 </script>
 
 <template>
-  <VForm
-    ref="refForm"
-    v-model="isFormValid"
-    @submit.prevent="onSubmit"
-  >
-    <VRow>
-      <VCol
-        cols="12"
-        md="12"
-      >
-        <AppTextField
-          v-model="client.name"
-          label="Nombre"
-          placeholder="Nombre"
-          :rules="[requiredValidator]"
-          class="font-weight-bold"
-        />
-      </VCol>
-
-      <VCol
-        cols="12"
-        md="6"
-      >
-        <AppTextField
-          v-model="client.address"
-          label="Dirección"
-          placeholder="Dirección"
-        />
-      </VCol>
-
-      <VCol
-        cols="12"
-        md="6"
-      >
-        <AppTextField
-          v-model="client.email"
-          label="Correo electrónico"
-          placeholder="Correo electrónico"
-        />
-      </VCol>
-
-      <VCol
-        cols="12"
-        md="6"
-      >
-        <AppTextField
-          v-model="client.phone"
-          label="Teléfono"
-          placeholder="Teléfono"
-        />
-      </VCol>
-
-      <VCol
-        cols="12"
-        class="d-flex gap-4"
-      >
-        <VBtn type="submit">
-          Actualizar
-        </VBtn>
-
-        <VBtn
-          type="reset"
-          color="secondary"
-          variant="tonal"
-          :to="{name:'apps-townhouses-list'}"
+  <div style="padding: 24px;">
+    <VForm
+      ref="refForm"
+      v-model="isFormValid"
+      @submit.prevent="onSubmit"
+    >
+      <VRow>
+        <VCol
+          cols="12"
+          md="12"
         >
-          Cancelar
-        </VBtn>
-      </VCol>
-    </VRow>
-  </VForm>
+          <AppTextField
+            v-model="client.name"
+            label="Nombre"
+            placeholder="Nombre"
+            :rules="[requiredValidator]"
+            class="font-weight-bold"
+          />
+        </VCol>
+
+        <VCol
+          cols="12"
+          md="6"
+        >
+          <AppTextField
+            v-model="client.address"
+            label="Dirección"
+            placeholder="Dirección"
+          />
+        </VCol>
+
+        <VCol
+          cols="12"
+          md="6"
+        >
+          <AppTextField
+            v-model="client.email"
+            label="Correo electrónico"
+            placeholder="Correo electrónico"
+          />
+        </VCol>
+
+        <VCol
+          cols="12"
+          md="6"
+        >
+          <AppTextField
+            v-model="client.phone"
+            label="Teléfono"
+            placeholder="Teléfono"
+          />
+        </VCol>
+
+        <VCol
+          cols="12"
+          class="d-flex gap-4"
+        >
+          <VBtn type="submit">
+            Actualizar
+          </VBtn>
+
+          <VBtn
+            type="reset"
+            color="secondary"
+            variant="tonal"
+            :to="{name:'apps-townhouses-list'}"
+          >
+            Cancelar
+          </VBtn>
+        </VCol>
+      </VRow>
+    </VForm>
+  </div>
 </template>

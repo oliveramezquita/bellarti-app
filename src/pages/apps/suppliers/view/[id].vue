@@ -13,7 +13,7 @@ import TaxDataInformationForm from '@/views/apps/suppliers/view/TaxDataInformati
 
 const route = useRoute('apps-suppliers-view-id')
 const { data: supplierInfo } = await useApi(`api/supplier/${ route.params.id }`)
-const { data: taxDataInfo } = await useApi(`api/tax_data/${ route.params.id }`)
+const { data: taxDataInfo } = await useApi(`api/tax_data/supplier/${ route.params.id }`)
 const { data: bankDataInfo } = await useApi(`api/bank_data/${ route.params.id }`)
 const { data: refreshRate } = await useApi(`api/refresh_rate/${ route.params.id }`)
 const currentTab = ref('tab-1')
@@ -52,7 +52,7 @@ const saveTaxData = async taxData => {
       }
     }
 
-    await $api(`api/tax_data/${ route.params.id }`, {
+    await $api(`api/tax_data/supplier/${ route.params.id }`, {
       method: 'POST',
       body: newTaxData,
       onResponse({ response }) {
