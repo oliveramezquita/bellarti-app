@@ -191,6 +191,7 @@ const onSubmit = () => {
     border="start"
     border-color="error"
     class="mt-2"
+    closable
   >
     <p
       v-for="error in errorRespond"

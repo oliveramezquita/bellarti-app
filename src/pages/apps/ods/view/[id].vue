@@ -1,3 +1,4 @@
+<!-- eslint-disable camelcase -->
 <script setup>
 definePage({
   meta: {
@@ -9,7 +10,7 @@ definePage({
 import excelPath from '@/assets/documents/FORMATO_LOTES_OD.xlsx'
 import MaterialTable from '@/views/apps/ods/MaterialTable.vue'
 
-const LotesFormat = excelPath
+const lotesFormat = excelPath
 
 const route = useRoute('apps-ods-view-id')
 
@@ -19,6 +20,7 @@ const {
 
 const { data: lotsData } = useApi(`api/lots/${ homeProductionData.value._id }`)
 const { data: prototypeCatalog }= await useApi('api/prototypes?itemsPerPage=1000')
+const { data: statusData }= await useApi('api/catalogs?name=Estatus OD')
 
 const {
   data: materialsData,
@@ -35,21 +37,30 @@ const excelFile = ref()
 const successful = ref([])
 const warnings = ref([])
 const errors = ref()
+const statusList = ref()
 
-const status = [
-  {
-    name: 'Pendiente',
-    value: 0,
-  },
-  {
-    name: 'En Progreso',
-    value: 1,
-  },
-  {
-    name: 'Finalizado',
-    value: 2,
-  },
-]
+const buildStatusObject = () => {
+  const result = {}
+
+  lots.value.forEach((lot, index) => {
+    const area = lot.current_status?.area
+    const statusList = []
+
+    if (area && OD_STATUS[area]) {
+      for (const key in OD_STATUS[area]) {
+        if (key !== 'total') {
+          statusList.push(key)
+        }
+      }
+    }
+
+    result[index] = statusList
+  })
+  console.log(result)
+  statusList.value = result
+}
+
+buildStatusObject()
 
 const addNewLot = () => {
   lots.value.push({
@@ -57,7 +68,14 @@ const addNewLot = () => {
     lot: null,
     laid: null,
     prototype: null,
-    status: null,
+    area_status: null,
+    status: OD_STATUS,
+    percentage: null,
+    current_status: {
+      area: null,
+      status: null,
+      percentage: null,
+    },
   })
 }
 
@@ -89,7 +107,7 @@ const saveLots = async () => {
     isLoadingDialogVisible.value = true
 
     try {
-      const keysToExclude = ['_id', 'home_production_id']
+      const keysToExclude = ['home_production_id']
       const filtered = lots.value.map(obj => Object.fromEntries(Object.entries(obj).filter(([k, v]) => !keysToExclude.includes(k) && v !== null)))
 
       await $api(`api/lots/${homeProductionData.value._id}`, {
@@ -99,6 +117,8 @@ const saveLots = async () => {
         }, onResponse({ response }) {
           if (response.status === 200 && response._data.hasOwnProperty('success')) {
             lots.value = response._data.success
+            isNotificationVisible.value = true
+            notificationMessage.value = "Lotes guardados de manera correcta."
             fetchMaterials()
           } else {
             isNotificationVisible.value = true
@@ -131,27 +151,26 @@ const isValid = () => {
   return valid
 }
 
-const updateStatus = async (id, status) => {
-  if (id) {
-    isLoadingDialogVisible.value = true
-
-    try {
-      await $api(`api/lot/${id}`, {
-        method: 'PATCH',
-        body: {
-          status: status,
-        }, onResponse({ response }) {
-          if (response.status === 200) {
-            fetchHomeProduction()
-          } else {
-            isNotificationVisible.value = true
-            notificationMessage.value = response._data
-          }
-        },
-      })
-    } finally {
-      isLoadingDialogVisible.value = false
-    }
+const updateStatus = async (i, lot) => {
+  try {
+    const currentStatus = lot.current_status
+    
+    await $api(`api/lot/${lot._id}`, {
+      method: 'PATCH',
+      body: currentStatus,
+      onResponse({ response }) {
+        if (response.status === 200) {
+          fetchHomeProduction()
+          lots.value[i].status[currentStatus.area][currentStatus.status] = currentStatus.percentage
+        } else {
+          isNotificationVisible.value = true
+          notificationMessage.value = response._data
+        }
+      },
+    })
+  } catch (error) {
+    isNotificationVisible.value = true
+    notificationMessage.value = error.message
   }
 }
 
@@ -182,6 +201,25 @@ const uploadLots = async () => {
   } finally {
     isLoadingDialogVisible.value = false
   }
+}
+
+const selectStatus = (i, area) => {
+  statusList.value[i] = statusData.value.values[area]
+  lots.value[i].current_status.status = null
+  lots.value[i].current_status.percentage = null
+}
+
+const changeStatus = (i, status) => {
+  const area = lots.value[i].current_status.area
+
+  lots.value[i].current_status.percentage = lots.value[i].status[area][status]
+}
+
+const sanitizeInteger = i => {
+  let val = lots.value[i].current_status.percentage
+
+  if (val > 100) val = 100
+  lots.value[i].current_status.percentage = Math.max(0, parseInt(val) || 0)
 }
 </script>
 
@@ -261,7 +299,7 @@ const uploadLots = async () => {
           >
             <VCol
               cols="12"
-              md="2"
+              md="1"
               class="narrow-column"
             >
               <AppTextField
@@ -271,7 +309,7 @@ const uploadLots = async () => {
             </VCol>
             <VCol
               cols="12"
-              md="2"
+              md="1"
               class="narrow-column"
             >
               <AppTextField
@@ -307,19 +345,47 @@ const uploadLots = async () => {
               class="narrow-column"
             >
               <AppSelect
-                v-model="lots[i].status"
+                v-model="lots[i].current_status.area"
+                placeholder="Área"
+                clearable
+                :items="Object.keys(statusData.values)"
+                @update:model-value="selectStatus(i, lots[i].current_status.area)"
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="2"
+              class="narrow-column"
+            >
+              <AppSelect
+                v-model="lots[i].current_status.status"
                 placeholder="Estatus"
-                :item-title="item => item.name"
-                :item-value="item => item.value"
-                :items="status"
-                @update:model-value="updateStatus(lots[i].hasOwnProperty('_id') ? lots[i]._id: null, lots[i].status)"
+                :items="statusList[i]"
+                clearable
+                @update:model-value="changeStatus(i, lots[i].current_status.status)"
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="1"
+              class="narrow-column"
+            >
+              <AppTextField
+                v-model="lots[i].current_status.percentage"
+                type="number"
+                min="0"
+                max="100"
+                placeholder="%"
+                :disabled="!lots[i].current_status.status"
+                @input="sanitizeInteger(i)"
+                @blur="updateStatus(i, lots[i])"
               />
             </VCol>
             <VCol
               cols="12"
               md="1"
             >
-              <IconBtn v-if="lots[i].status < 1">
+              <IconBtn v-if="lots[i].status.total === 0">
                 <VIcon
                   icon="tabler-trash"
                   @click="removeLot(i)"
@@ -327,8 +393,11 @@ const uploadLots = async () => {
               </IconBtn>
             </VCol>
           </VRow>
-          <VRow v-if="homeProductionData.status < 2">
-            <VCol cols="12">
+          <VRow v-if="homeProductionData.progress < 100">
+            <VCol
+              cols="12"
+              class="mt-3"
+            >
               <div class="d-flex align-center flex-wrap gap-4">
                 <VBtn
                   prepend-icon="tabler-plus"
@@ -353,19 +422,19 @@ const uploadLots = async () => {
         </VWindowItem>
       </VWindow>
     </VCardText>
-    <VDivider v-if="homeProductionData.status < 2" />
+    <VDivider v-if="homeProductionData.progress < 100" />
     <VCardItem
-      v-if="homeProductionData.status < 2"
+      v-if="homeProductionData.progress < 100"
       class="pb-4"
     >
       <VCardTitle>Subir por archivo</VCardTitle>
     </VCardItem>
-    <VCardText v-if="homeProductionData.status < 2">
+    <VCardText v-if="homeProductionData.progress < 100">
       <VRow>
         <VCol cols="12">
           <p>
             Para cargar información a través de un archivo debe ser de formato <b>EXCEL</b> y debe tener un formato en específico, el cual para los materiales es el siguiente: <a
-              :href="LotesFormat"
+              :href="lotesFormat"
               target="_blank"
               rel="noopener noreferrer"
             >FORMATO LOTES</a>

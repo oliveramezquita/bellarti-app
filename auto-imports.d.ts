@@ -13,6 +13,7 @@ declare global {
   const EXTRACT_STORAGE_PERMISSIONS: typeof import('./src/@core/composable/useCookie.js')['EXTRACT_STORAGE_PERMISSIONS']
   const EffectScope: typeof import('vue')['EffectScope']
   const NOTIFICATIONS: typeof import('./src/utils/getNotifications.js')['NOTIFICATIONS']
+  const OD_STATUS: typeof import('./src/utils/constants.js')['OD_STATUS']
   const SAVE_COOKIE_PERMISSIONS: typeof import('./src/@core/composable/useCookie.js')['SAVE_COOKIE_PERMISSIONS']
   const SAVE_STORAGE_PERMISSIONS: typeof import('./src/@core/composable/useCookie.js')['SAVE_STORAGE_PERMISSIONS']
   const STATUS: typeof import('./src/utils/constants.js')['STATUS']
@@ -384,6 +385,7 @@ declare module 'vue' {
     readonly COMMON_STATUS: UnwrapRef<typeof import('./src/utils/constants.js')['COMMON_STATUS']>
     readonly COOKIE_MAX_AGE_1_YEAR: UnwrapRef<typeof import('./src/utils/constants.js')['COOKIE_MAX_AGE_1_YEAR']>
     readonly EffectScope: UnwrapRef<typeof import('vue')['EffectScope']>
+    readonly OD_STATUS: UnwrapRef<typeof import('./src/utils/constants.js')['OD_STATUS']>
     readonly USER_STATUS: UnwrapRef<typeof import('./src/utils/constants.js')['USER_STATUS']>
     readonly acceptHMRUpdate: UnwrapRef<typeof import('pinia')['acceptHMRUpdate']>
     readonly alphaDashValidator: UnwrapRef<typeof import('./src/@core/utils/validators.js')['alphaDashValidator']>

@@ -374,6 +374,7 @@
     "extractStoragePermissions": true,
     "notifications": true,
     "NOTIFICATIONS": true,
-    "getNotifications": true
+    "getNotifications": true,
+    "OD_STATUS": true
   }
 }

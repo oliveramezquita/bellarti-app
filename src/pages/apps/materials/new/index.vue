@@ -229,6 +229,7 @@ const differentiatePrices = () => {
                   v-model="material.internal_code"
                   label="Código Interno"
                   placeholder="Código Interno"
+                  disabled="disabled"
                 />
               </VCol>
 
