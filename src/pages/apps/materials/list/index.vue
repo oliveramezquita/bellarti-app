@@ -30,6 +30,10 @@ const headers = [
     key: 'supplier_code',
   },
   {
+    title: 'Código Interno',
+    key: 'internal_code',
+  },
+  {
     title: 'Unidad de Medida',
     key: 'measurement',
   },

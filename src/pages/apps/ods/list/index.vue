@@ -34,10 +34,6 @@ const headers = [
     key: 'lots',
   },
   {
-    title: 'Estatus',
-    key: 'status',
-  },
-  {
     title: 'Progreso',
     key: 'progress',
   },
@@ -47,12 +43,6 @@ const headers = [
     sortable: false,
   },
 ]
-
-const status = {
-  0: 'Pendiente',
-  1: 'En Progreso',
-  2: 'Finalizado',
-}
 
 const {
   data: homeProductionData,
@@ -225,12 +215,6 @@ const deleteHomeProduction = async id => {
         <template #item.lots="{ item }">
           <div class="text-body-1 text-high-emphasis">
             {{ item.lots.hasOwnProperty('total') ? item.lots.total : 0 }}
-          </div>
-        </template>
-
-        <template #item.status="{ item }">
-          <div class="text-body-1 text-high-emphasis">
-            {{ status[item.status] }}
           </div>
         </template>
 

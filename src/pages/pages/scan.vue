@@ -1,4 +1,10 @@
 <script setup>
+definePage({
+  meta: {
+    action: 'read',
+    subject: 'Scan',
+  },
+})
 import { ref, watchEffect } from 'vue'
 import { QrcodeStream } from 'vue-qrcode-reader'
 

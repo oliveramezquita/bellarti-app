@@ -48,8 +48,13 @@ const editMateiral = async() => {
       method: 'PATCH',
       body: filteredObject,
       onResponse({ response }) {
-        isNotificationVisible.value = true
-        notificationMessage.value = response._data
+        if (response.status === 200) {
+          notificationMessage.value = "Material actualizado correctamente."
+          material.value = response._data
+        } else {
+          isNotificationVisible.value = true
+          notificationMessage.value = response._data
+        }
       },
     })
   } finally {

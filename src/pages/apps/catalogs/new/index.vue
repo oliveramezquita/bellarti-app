@@ -15,16 +15,10 @@ const catalogType = ref()
 const catalogName = ref()
 const catalogValues = ref()
 const textArray = ref([])
-const newText = ref()
 const listArray = ref([])
 const isLoadingDialogVisible = ref(false)
 const isNotificationVisible = ref(false)
 const notificationMessage = ref('')
-
-const newList = ref({
-  index: '',
-  values: '',
-})
 
 const catalogTypes = ref([
   {
@@ -47,15 +41,20 @@ const onSubmit = () => {
 const createCatalog = async () => {
   isLoadingDialogVisible.value = true
   try {
-    if (catalogType.value === 'list') 
+    if (catalogType.value === 'list') {
       catalogValues.value = Object.values(textArray.value)
-    else if(catalogType.value === 'dict')
+    } else if(catalogType.value === 'dict') {
       catalogValues.value = listArray.value.reduce((acc, item) => {
-        acc[item.index] = item.values.split(',').map(v => v.trim())
+        if (item.index && item.values) {
+          acc[item.index] = item.values
+            .split(',')
+            .map(v => v.trim())
+            .filter(v => v)
+        }
         
         return acc
       }, {})
-    
+    }
     await $api('api/catalogs', {
       method: 'POST',
       body: {
@@ -78,21 +77,15 @@ const createCatalog = async () => {
    
 }
 
-const addNewText = () => {
-  if(newText.value !== '') {
-    textArray.value.push(newText.value)
-    newText.value = null
+const addNewElement = () => {
+  if(catalogType.value === 'list') {
+    textArray.value.push(null)
   }
-}
-
-const addNewList = () => {
-  if (newList.value.index !== '' && newList.value.values !== '') {
+  else {
     listArray.value.push({
-      index: newList.value.index,
-      values: newList.value.values,
+      index: null,
+      values: null,
     })
-    newList.value.index = ''
-    newList.value.values = ''
   }
 }
 
@@ -177,30 +170,6 @@ const removeList = i => {
             </IconBtn>
           </VCol>
         </VRow>
-        <VRow v-show="catalogType === 'list'">
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <AppTextField
-              v-model="newText"
-              label="Nuevo valor"
-              placeholder="Nuevo valor"
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="1"
-            class="pt-8"
-          >
-            <IconBtn>
-              <VIcon
-                icon="tabler-plus"
-                @click="addNewText"
-              />
-            </IconBtn>
-          </VCol>
-        </VRow>
         <VRow
           v-for="(_, i) in listArray"
           v-show="catalogType === 'dict'"
@@ -223,6 +192,7 @@ const removeList = i => {
               v-model="listArray[i].values"
               :label="`Valores ${i + 1}`"
             />
+            <small>Separar los valores por una coma: ','</small>
           </VCol>
           <VCol
             cols="12"
@@ -237,43 +207,15 @@ const removeList = i => {
             </IconBtn>
           </VCol>
         </VRow>
-        <VRow v-show="catalogType === 'dict'">
-          <VCol
-            cols="12"
-            md="4"
-          >
-            <AppTextField
-              v-model="newList.index"
-              label="Nuevo índice"
-              placeholder="Nuevo índice"
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="7"
-          >
-            <AppTextField
-              v-model="newList.values"
-              label="Nuevos valores"
-              placeholder="Nuevos valores"
-            />
-            <small>Separar los valores por una coma: ','</small>
-          </VCol>
-          <VCol
-            cols="12"
-            md="1"
-            class="pt-8"
-          >
-            <IconBtn>
-              <VIcon
-                icon="tabler-plus"
-                @click="addNewList"
-              />
-            </IconBtn>
-          </VCol>
-        </VRow>
         <VRow>
           <VCol cols="12">
+            <VBtn
+              variant="tonal"
+              class="mr-5"
+              @click="addNewElement"
+            >
+              Añadir nuevo elemento
+            </VBtn>
             <VBtn
               type="submit"
               :disabled="textArray.length === 0 && listArray.length === 0"
