@@ -193,6 +193,9 @@ const deleteSupplier = async id => {
 
         <!-- Actions -->
         <template #item.actions="{ item }">
+          <IconBtn :to="{ name: 'apps-suppliers-view-id', params: { id: item._id } }">
+            <VIcon icon="tabler-eye" />
+          </IconBtn>
           <IconBtn @click="viewEditSupplierDrawer(item)">
             <VIcon icon="tabler-pencil" />
           </IconBtn>

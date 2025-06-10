@@ -140,7 +140,7 @@ export default [
   },
   {
     title: 'Órdenes de Compra',
-    icon: { icon: 'tabler-credit-card-pay' },
+    icon: { icon: 'tabler-shopping-cart' },
     to: 'apps-purchase-orders-list',
     action: 'read',
     subject: 'OC',

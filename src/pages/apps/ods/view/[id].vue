@@ -56,7 +56,6 @@ const buildStatusObject = () => {
 
     result[index] = statusList
   })
-  console.log(result)
   statusList.value = result
 }
 
