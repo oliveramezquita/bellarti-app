@@ -13,9 +13,21 @@ const props = defineProps({
     required: false,
     default: true,
   },
+  go: {
+    type: String,
+    required: false,
+  },
 })
  
 const icon = ref(`tabler-${props.icon}`)
+const router = useRouter()
+
+const goBack = () => {
+  if (props.go)
+    router.replace(props.go)
+  else
+    router.go(-1)
+}
 </script>
 
 <template>
@@ -36,7 +48,7 @@ const icon = ref(`tabler-${props.icon}`)
         v-if="props.return"
         color="secondary"
         variant="tonal"
-        @click="$router.go(-1)"
+        @click="goBack"
       >
         <VIcon
           start

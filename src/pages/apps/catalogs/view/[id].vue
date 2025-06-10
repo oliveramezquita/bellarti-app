@@ -105,6 +105,7 @@ const removeList = i => {
   <Breadcrumb
     :items="[{ title: 'Catálogos', to: { name: 'apps-catalogs-list' }, class: 'text-underline' }, { title: catalog.name }]"
     icon="files"
+    go="/apps/catalogs/list"
   />
   <VCard class="py-3">
     <VCardItem>

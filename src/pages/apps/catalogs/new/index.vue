@@ -101,6 +101,7 @@ const removeList = i => {
 <template>
   <Breadcrumb
     :items="breadcrumbItems"
+    go="/apps/catalogs/list"
     icon="files"
   />
   <VCard class="py-3">

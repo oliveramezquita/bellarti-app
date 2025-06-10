@@ -215,6 +215,9 @@ const deleteClient = async id => {
 
         <!-- Actions -->
         <template #item.actions="{ item }">
+          <IconBtn :to="{ name: 'apps-townhouses-view-id', params: { id: item._id } }">
+            <VIcon icon="tabler-eye" />
+          </IconBtn>
           <IconBtn @click="viewEditClientDrawer(item)">
             <VIcon icon="tabler-pencil" />
           </IconBtn>
