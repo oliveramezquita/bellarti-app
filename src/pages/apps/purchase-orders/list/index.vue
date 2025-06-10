@@ -12,6 +12,8 @@ const itemsPerPage = ref(10)
 const page = ref(1)
 const isDeletePurchaseOrderDialogVisible = ref(false)
 const selectedPurchaseOrder = ref()
+const { data: supplierList } = await useApi('api/suppliers?itemsPerPage=100')
+const selectedSupplier = ref()
 
 const headers = [
   {
@@ -78,6 +80,7 @@ const {
 } = await useApi(createUrl('api/purchase_orders', {
   query: {
     q: searchQuery,
+    supplier: selectedSupplier,
     itemsPerPage,
     page,
   },
@@ -125,39 +128,38 @@ const formatDate = fechaISO => {
   />
   <section>
     <VCard>
-      <!--
-        <VCardItem class="pb-4">
+      <VCardItem class="pb-4">
         <VCardTitle>Filtros</VCardTitle>
-        </VCardItem>
-        <VCardText>
+      </VCardItem>
+      <VCardText>
         <VRow>
-        <VCol
-        cols="12"
-        sm="6"
-        >
-        <AppSelect
-        v-model="selectedSupplier"
-        placeholder="Seleccionar proveedor"
-        :items="supplierList.data"
-        :item-title="item => item.name"
-        :item-value="item => item._id"
-        clearable
-        clear-icon="tabler-x"
-        />
-        </VCol>
-        <VCol
-        cols="12"
-        sm="6"
-        >
-        <AppTextField
-        v-model="searchQuery"
-        placeholder="Buscar"
-        />
-        </VCol>
+          <VCol
+            cols="12"
+            sm="6"
+          >
+            <AppSelect
+              v-model="selectedSupplier"
+              placeholder="Seleccionar proveedor"
+              :items="supplierList.data"
+              :item-title="item => item.name"
+              :item-value="item => item._id"
+              clearable
+              clear-icon="tabler-x"
+            />
+          </VCol>
+          <VCol
+            cols="12"
+            sm="6"
+          >
+            <AppTextField
+              v-model="searchQuery"
+              placeholder="Buscar"
+            />
+          </VCol>
         </VRow>
-        </VCardText>
-        <VDivider /> 
-      -->
+      </VCardText>
+      <VDivider /> 
+     
       <VCardText class="d-flex flex-wrap gap-4">
         <div class="d-flex gap-2 align-center">
           <p class="text-body-1 mb-0">
@@ -246,6 +248,10 @@ const formatDate = fechaISO => {
 
         <template #item.created="{ item }">
           <label>{{ formatDate(item.created) }}</label>
+        </template>
+
+        <template #item.approved_date="{ item }">
+          <label>{{ formatDate(item.approved_date) }}</label>
         </template>
 
         <template #item.status="{ item }">
