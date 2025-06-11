@@ -1,6 +1,7 @@
 <!-- eslint-disable camelcase -->
 <script setup>
 import { useApi } from '@/composables/useApi'
+import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
 
 const props = defineProps({
   isDrawerOpen: {

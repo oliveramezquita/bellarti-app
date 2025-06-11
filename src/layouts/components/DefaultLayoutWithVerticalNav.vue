@@ -5,7 +5,6 @@ import navItems from '@/navigation/vertical'
 import Footer from '@/layouts/components/Footer.vue'
 import NavBarNotifications from '@/layouts/components/NavBarNotifications.vue'
 import NavSearchBar from '@/layouts/components/NavSearchBar.vue'
-import Scan from '@/layouts/components/Scan.vue'
 import UserProfile from '@/layouts/components/UserProfile.vue'
 
 // @layouts plugin
@@ -32,7 +31,6 @@ import { VerticalNavLayout } from '@layouts'
 
         <VSpacer />
 
-        <Scan />
         <NavBarNotifications class="me-1" />
         <UserProfile />
       </div>
