@@ -70,6 +70,7 @@ const onSubmit = () => {
         total_quantity: amount.value,
         unit_price: material.value.unit_price,
         source: 'purchase_order',
+        delivered: 0,
       })
       emit('update:isDrawerOpen', false)
       nextTick(() => {
