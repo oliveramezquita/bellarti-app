@@ -8,6 +8,7 @@ definePage({
 })
 import AddMaterialDrawer from '@/views/apps/purchase-orders/AddMaterialDrawer.vue'
 import EditMaterialDrawer from '@/views/apps/purchase-orders/EditMaterialDrawer.vue'
+import InputMaterialsDialog from '@/views/apps/purchase-orders/InputMaterialsDialog.vue'
 
 const userData = useCookie('userData')
 const route = useRoute('apps-purchase-orders-view-id')
@@ -16,6 +17,7 @@ const { data: projects } = await useApi('api/purchase_orders/get_projects')
 const isAddNewMaterialDrawerVisible = ref(false)
 const isEditMaterialDrawerVisible = ref(false)
 const isDeleteMaterialDialogVisible = ref(false)
+const isInputMaterialDialogVisible = ref(false)
 const isLoadingDialogVisible = ref(false)
 const isNotificationVisible = ref(false)
 const notificationMessage = ref('')
@@ -269,11 +271,42 @@ const viewPDFfile = () => {
     window.open(purchaseOrderData.value.pdf_file, '_blank')
 }
 
+const inputEntryRegister = async inputs => {
+  if (selectedRows.value) {
+    
+    isLoadingDialogVisible.value = true
+    try {
+      await $api(`api/purchase_orders/input_register/${route.params.id}`, {
+        method: 'PATCH',
+        body: {
+          'items': inputs,
+        },
+        onResponse({ response }) {
+          if (response.status === 200)
+            fetchPurchaseOrder()
+          isNotificationVisible.value = true
+          notificationMessage.value = response._data
+        },
+      })
+    } finally {
+      isLoadingDialogVisible.value = false
+    }
+  }
+}
+
+const inputMaterialsView = () => {
+  isInputMaterialDialogVisible.value = true
+}
+
 if (route.query.new) {
   const messageStatus = purchaseOrderData.value.status === 0 ? 'guardada' : 'generada'
 
   notificationMessage.value = `La orden de compra ha sido ${messageStatus} con éxito`
   isNotificationVisible.value = true
+}
+
+if (route.query.input) {
+  isInputMaterialDialogVisible.value = true
 }
 
 extractData()
@@ -701,6 +734,13 @@ watch(selectedRows, val => {
         </div>
         <div v-if="purchaseOrderData.status === 2">
           <div class="d-flex align-center flex-wrap gap-4">
+            <!-- 👉 INPUT OF MATERIALS -->
+            <VBtn
+              prepend-icon="tabler-package-export"
+              @click="inputMaterialsView"
+            >
+              ENTRADA DE MATERIALES
+            </VBtn>
             <!-- 👉 EXCEL -->
             <VBtn
               prepend-icon="tabler-file-spreadsheet"
@@ -777,6 +817,11 @@ watch(selectedRows, val => {
         </VCardText>
       </VCard>
     </VDialog>
+    <InputMaterialsDialog
+      v-model:is-dialog-open="isInputMaterialDialogVisible"
+      v-model:purchase-order-data="purchaseOrderData"
+      @input-entry-register="inputEntryRegister"
+    />
   </section>
 </template>
 

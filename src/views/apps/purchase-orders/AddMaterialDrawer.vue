@@ -1,6 +1,7 @@
 <!-- eslint-disable camelcase -->
 <script setup>
 import { useApi } from '@/composables/useApi'
+import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
 
 const props = defineProps({
   isDrawerOpen: {
@@ -70,7 +71,11 @@ const onSubmit = () => {
         total_quantity: amount.value,
         unit_price: material.value.unit_price,
         source: 'purchase_order',
-        delivered: 0,
+        delivered: {
+          quantity: 0,
+          notes: null,
+          registration_date: null,
+        },
       })
       emit('update:isDrawerOpen', false)
       nextTick(() => {
