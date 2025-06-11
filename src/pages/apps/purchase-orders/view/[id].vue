@@ -99,8 +99,6 @@ const getProjectInformation = async () => {
 
   if (purchaseOrderData.value.status === 0)
     headers.push({ title: 'Acciones', key: 'actions', sortable: false })
-
-  console.log(purchaseOrderData.value)
 }
 
 const formatCurrency = valor => {
@@ -264,6 +262,11 @@ const downloadExcel = () => {
     link.click()
     document.body.removeChild(link)
   }
+}
+
+const viewPDFfile = () => {
+  if (purchaseOrderData.value.hasOwnProperty('pdf_file'))
+    window.open(purchaseOrderData.value.pdf_file, '_blank')
 }
 
 if (route.query.new) {
@@ -710,6 +713,7 @@ watch(selectedRows, val => {
             <VBtn
               prepend-icon="tabler-file-text"
               variant="outlined"
+              @click="viewPDFfile"
             >
               PDF
             </VBtn>
