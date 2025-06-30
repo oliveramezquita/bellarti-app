@@ -28,6 +28,7 @@ const supplier = ref()
 const subject = ref()
 const costs = ref()
 const items = ref()
+const materialsList = ref([])
 const itemsPerPage = ref(10)
 const page = ref(1)
 const selectedRows = ref()
@@ -88,10 +89,11 @@ const getProjectInformation = async () => {
 }
 
 const getMaterials = async () => {
-  const response = await $api(`api/purchase_orders/get_materials/${supplier.value}`, { method: 'GET' })
+  const response = await $api(`api/purchase_orders/get_materials/${project.value.home_production_id}/${supplier.value}`, { method: 'GET' })
   
   costs.value = response.costs
   items.value = response.items
+  materialsList.value = items.value.map(item => item.material_id)
   totalItems.value = response.items.length
 } 
 
@@ -506,6 +508,8 @@ watch(selectedRows, val => {
     />
     <AddMaterialDrawer
       v-model:is-drawer-open="isAddNewMaterialDrawerVisible"
+      v-model:supplier-id="supplier"
+      v-model:materials-list="materialsList"
       @add-material="addMaterial"
     />
     <EditMaterialDrawer

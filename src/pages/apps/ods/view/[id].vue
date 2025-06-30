@@ -8,6 +8,7 @@ definePage({
   },
 })
 import excelPath from '@/assets/documents/FORMATO_LOTES_OD.xlsx'
+import LotStatusDialog from '@/views/apps/ods/LotStatusDialog.vue'
 import MaterialTable from '@/views/apps/ods/MaterialTable.vue'
 
 const lotesFormat = excelPath
@@ -18,9 +19,8 @@ const {
   data: homeProductionData,
   execute: fetchHomeProduction } = await useApi(`api/home-production/${ route.params.id }`)
 
-const { data: lotsData } = useApi(`api/lots/${ homeProductionData.value._id }`)
+const { data: lotsData, execute: fetchLots } = useApi(`api/lots/${ homeProductionData.value._id }`)
 const { data: prototypeCatalog }= await useApi('api/prototypes?itemsPerPage=1000')
-const { data: statusData }= await useApi('api/catalogs?name=Estatus OD')
 
 const {
   data: materialsData,
@@ -32,34 +32,14 @@ const lots = ref(lotsData.value ? lotsData.value : [])
 const isLoadingDialogVisible = ref(false)
 const isNotificationVisible = ref(false)
 const notificationMessage = ref('')
+const isLotStatusDialogVisible = ref(false)
 const currentTab = ref('tab-1')
 const excelFile = ref()
 const successful = ref([])
 const warnings = ref([])
 const errors = ref()
-const statusList = ref()
-
-const buildStatusObject = () => {
-  const result = {}
-
-  lots.value.forEach((lot, index) => {
-    const area = lot.current_status?.area
-    const statusList = []
-
-    if (area && OD_STATUS[area]) {
-      for (const key in OD_STATUS[area]) {
-        if (key !== 'total') {
-          statusList.push(key)
-        }
-      }
-    }
-
-    result[index] = statusList
-  })
-  statusList.value = result
-}
-
-buildStatusObject()
+const lotId = ref()
+const progressSelected = ref([])
 
 const addNewLot = () => {
   lots.value.push({
@@ -67,14 +47,7 @@ const addNewLot = () => {
     lot: null,
     laid: null,
     prototype: null,
-    area_status: null,
-    status: OD_STATUS,
-    percentage: null,
-    current_status: {
-      area: null,
-      status: null,
-      percentage: null,
-    },
+    percentage: '0.00',
   })
 }
 
@@ -150,26 +123,25 @@ const isValid = () => {
   return valid
 }
 
-const updateStatus = async (i, lot) => {
+const saveProgress = async data => {
+  isLoadingDialogVisible.value = true
+  
   try {
-    const currentStatus = lot.current_status
-    
-    await $api(`api/lot/${lot._id}`, {
+    await $api(`api/lot/${data.id}`, {
       method: 'PATCH',
-      body: currentStatus,
+      body: {
+        percentage: data.total_percentage,
+        progress: data.progress,
+      },
       onResponse({ response }) {
-        if (response.status === 200) {
-          fetchHomeProduction()
-          lots.value[i].status[currentStatus.area][currentStatus.status] = currentStatus.percentage
-        } else {
-          isNotificationVisible.value = true
-          notificationMessage.value = response._data
-        }
+        if (response.status === 200)
+          fetchLots()
+        isNotificationVisible.value = true
+        notificationMessage.value = response._data
       },
     })
-  } catch (error) {
-    isNotificationVisible.value = true
-    notificationMessage.value = error.message
+  } finally {
+    isLoadingDialogVisible.value = false
   }
 }
 
@@ -202,24 +174,15 @@ const uploadLots = async () => {
   }
 }
 
-const selectStatus = (i, area) => {
-  statusList.value[i] = statusData.value.values[area]
-  lots.value[i].current_status.status = null
-  lots.value[i].current_status.percentage = null
+const setLotProgress = (id, progress) => {
+  lotId.value = id
+  progressSelected.value = progress
+  isLotStatusDialogVisible.value = true
 }
 
-const changeStatus = (i, status) => {
-  const area = lots.value[i].current_status.area
-
-  lots.value[i].current_status.percentage = lots.value[i].status[area][status]
-}
-
-const sanitizeInteger = i => {
-  let val = lots.value[i].current_status.percentage
-
-  if (val > 100) val = 100
-  lots.value[i].current_status.percentage = Math.max(0, parseInt(val) || 0)
-}
+watch(lotsData, newData => {
+  lots.value = [...newData]
+})
 </script>
 
 <template>
@@ -298,7 +261,7 @@ const sanitizeInteger = i => {
           >
             <VCol
               cols="12"
-              md="1"
+              md="2"
               class="narrow-column"
             >
               <AppTextField
@@ -308,7 +271,7 @@ const sanitizeInteger = i => {
             </VCol>
             <VCol
               cols="12"
-              md="1"
+              md="2"
               class="narrow-column"
             >
               <AppTextField
@@ -318,7 +281,7 @@ const sanitizeInteger = i => {
             </VCol>
             <VCol
               cols="12"
-              md="2"
+              md="3"
               class="narrow-column"
             >
               <AppSelect
@@ -329,7 +292,7 @@ const sanitizeInteger = i => {
             </VCol>
             <VCol
               cols="12"
-              md="2"
+              md="3"
               class="narrow-column"
             >
               <AppSelect
@@ -340,51 +303,26 @@ const sanitizeInteger = i => {
             </VCol>
             <VCol
               cols="12"
-              md="2"
-              class="narrow-column"
-            >
-              <AppSelect
-                v-model="lots[i].current_status.area"
-                placeholder="Área"
-                clearable
-                :items="Object.keys(statusData.values)"
-                @update:model-value="selectStatus(i, lots[i].current_status.area)"
-              />
-            </VCol>
-            <VCol
-              cols="12"
-              md="2"
-              class="narrow-column"
-            >
-              <AppSelect
-                v-model="lots[i].current_status.status"
-                placeholder="Estatus"
-                :items="statusList[i]"
-                clearable
-                @update:model-value="changeStatus(i, lots[i].current_status.status)"
-              />
-            </VCol>
-            <VCol
-              cols="12"
               md="1"
               class="narrow-column"
             >
               <AppTextField
-                v-model="lots[i].current_status.percentage"
-                type="number"
-                min="0"
-                max="100"
-                placeholder="%"
-                :disabled="!lots[i].current_status.status"
-                @input="sanitizeInteger(i)"
-                @blur="updateStatus(i, lots[i])"
+                :model-value="`${lots[i].percentage}%`"
+                readonly
               />
             </VCol>
             <VCol
               cols="12"
               md="1"
+              class="d-flex align-center"
             >
-              <IconBtn v-if="lots[i].status.total === 0">
+              <IconBtn
+                v-if="lots[i].hasOwnProperty('_id') && lots[i]._id"
+                @click="setLotProgress(lots[i]._id, lots[i].progress)"
+              >
+                <VIcon icon="tabler-list-check" />
+              </IconBtn>
+              <IconBtn v-if="lots[i].percentage === '0.00'">
                 <VIcon
                   icon="tabler-trash"
                   @click="removeLot(i)"
@@ -506,6 +444,12 @@ const sanitizeInteger = i => {
   <Notification
     v-model:is-notification-visible="isNotificationVisible"
     :message="notificationMessage"
+  />
+  <LotStatusDialog
+    v-model:is-dialog-visible="isLotStatusDialogVisible"
+    v-model:lot-id="lotId"
+    v-model:progress-data="progressSelected"
+    @save-progress="saveProgress"
   />
 </template>
 

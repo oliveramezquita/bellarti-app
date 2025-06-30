@@ -19,7 +19,7 @@ const selectedSupplier = ref()
 const headers = [
   {
     title: 'Nombre / Descripción',
-    key: 'name',
+    key: 'concept',
   },
   {
     title: 'Proveedor',
@@ -30,8 +30,8 @@ const headers = [
     key: 'supplier_code',
   },
   {
-    title: 'Código Interno',
-    key: 'internal_code',
+    title: 'SKU',
+    key: 'sku',
   },
   {
     title: 'Unidad de Medida',
@@ -104,7 +104,7 @@ const download = async() => {
             cols="12"
             sm="6"
           >
-            <AppSelect
+            <AppAutocomplete
               v-model="selectedSupplier"
               placeholder="Seleccionar proveedor"
               :items="supplierList.data"
@@ -195,7 +195,7 @@ const download = async() => {
         class="text-no-wrap"
         @update:options="updateOptions"
       >
-        <template #item.name="{ item }">
+        <template #item.concept="{ item }">
           <div class="d-flex align-center gap-x-4">
             <div class="d-flex flex-column">
               <h6
@@ -206,7 +206,7 @@ const download = async() => {
                   :to="{ name: 'apps-materials-view-id', params: { id: item._id } }"
                   class="font-weight-medium text-link"
                 >
-                  {{ item.name }}
+                  {{ item.concept }}
                 </RouterLink>
               </h6>
             </div>
@@ -243,7 +243,7 @@ const download = async() => {
       <!-- Dialog Content -->
       <VCard title="Eliminar material">
         <VCardText>
-          ¿Estás seguro de eliminar el material: <b>{{ selectedMaterial.name }}</b>?
+          ¿Estás seguro de eliminar el material: <b>{{ selectedMaterial.concept }}</b>?
         </VCardText>
 
         <VCardText class="d-flex justify-end">

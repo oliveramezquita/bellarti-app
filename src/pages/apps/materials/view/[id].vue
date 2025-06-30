@@ -15,6 +15,7 @@ const router = useRouter()
 const { data: materialData } = await useApi(`api/material/${ route.params.id }`)
 const { data: suppliers } = await useApi('api/suppliers?itemsPerPage=1000')
 const { data: unitsOfMeasurement }= await useApi('api/catalogs?name=Unidades de medida')
+const { data: divisions } = await useApi('api/catalogs?name=División de materiales')
 const currentTab = ref('tab-1')
 const isFormValid = ref(false)
 const refForm = ref()
@@ -24,8 +25,42 @@ const notificationMessage = ref('')
 const material = ref(materialData.value)
 const isDeleteUserDialogVisible = ref(false)
 
+const concept = computed(() => {
+  const fields = [material.value.name, material.value.espec1, material.value.espec2, material.value.espec3, material.value.espec4, material.value.espec5]
+  
+  return fields
+    .filter(val => val && val.trim() !== '')
+    .map(val => val.toUpperCase())
+    .join(' ')
+})
+
+const sku = computed(() => {
+  if (!material.value.division || !material.value.name) return ''
+
+  const parts = []
+
+  const addPart = (value, limit) => {
+    if (!value || value.trim() === '') return
+    const trimmed = value.trim().toUpperCase()
+    if (limit) {
+      parts.push(trimmed.slice(0, limit))
+    } else {
+      parts.push(trimmed)
+    }
+  }
+
+  addPart(material.value.division, 3)
+  addPart(material.value.name, 3)
+  addPart(material.value.espec1, 3)
+  addPart(material.value.espec2, 3)
+  addPart(material.value.espec3, 7)
+  addPart(material.value.espec4, 7)
+
+  return parts.join('-')
+})
+
 if (route.query.new) {
-  notificationMessage.value = `El material ${materialData.value.name} ha sido agregado con éxito`
+  notificationMessage.value = `El material ${materialData.value.concept} ha sido agregado con éxito`
   isNotificationVisible.value = true
 }
 
@@ -39,8 +74,11 @@ const onSubmit = () => {
 }
 
 const editMateiral = async() => {
+  material.value.concept = concept.value
+  material.value.sku = sku.value
+
   const filteredObject = Object.fromEntries(
-    Object.entries(material.value).filter(([key, value]) => key !== '_id' && value !== null),
+    Object.entries(material.value).filter(([key, _]) => key !== '_id'),
   )
 
   try {
@@ -48,11 +86,11 @@ const editMateiral = async() => {
       method: 'PATCH',
       body: filteredObject,
       onResponse({ response }) {
+        isNotificationVisible.value = true
         if (response.status === 200) {
           notificationMessage.value = "Material actualizado correctamente."
           material.value = response._data
         } else {
-          isNotificationVisible.value = true
           notificationMessage.value = response._data
         }
       },
@@ -130,7 +168,7 @@ const deleteImages = async images => {
 
 <template>
   <Breadcrumb
-    :items="[{ title: 'Materiales', class: 'text-primary' }, { title: 'Materiales', to: { name: 'apps-materials-list' }, class: 'text-underline' }, { title: materialData.name }]"
+    :items="[{ title: 'Materiales', class: 'text-primary' }, { title: 'Materiales', to: { name: 'apps-materials-list' }, class: 'text-underline' }, { title: materialData.concept }]"
     icon="password-user"
   />
   <VCard class="py-3">
@@ -164,14 +202,91 @@ const deleteImages = async images => {
             v-model="isFormValid"
             @submit.prevent="onSubmit"
           >
+            <VCard class="mb-5">
+              <VCardTitle>SKU</VCardTitle>
+              <VCardItem>
+                <VRow>
+                  <VCol
+                    cols="12"
+                    md="3"
+                  >
+                    <AppSelect
+                      v-model="material.division"
+                      label="División"
+                      :rules="[requiredValidator]"
+                      :items="divisions.values"
+                      class="font-weight-bold"
+                    />
+                  </VCol>
+                  <VCol
+                    cols="12"
+                    md="3"
+                  >
+                    <AppTextField
+                      v-model="material.name"
+                      label="Material"
+                      :rules="[requiredValidator]"
+                      class="font-weight-bold"
+                    />
+                  </VCol>
+                  <VCol
+                    cols="12"
+                    md="3"
+                  >
+                    <AppTextField
+                      v-model="material.espec1"
+                      label="Espec. 1"
+                    />
+                  </VCol>
+                  <VCol
+                    cols="12"
+                    md="3"
+                  >
+                    <AppTextField
+                      v-model="material.espec2"
+                      label="Espec. 2"
+                    />
+                  </VCol>
+                </vrow>
+                <VRow>
+                  <VCol
+                    cols="12"
+                    md="4"
+                  >
+                    <AppTextField
+                      v-model="material.espec3"
+                      label="Espec. 3 (Larga)"
+                    />
+                  </VCol>
+                  <VCol
+                    cols="12"
+                    md="4"
+                  >
+                    <AppTextField
+                      v-model="material.espec4"
+                      label="Espec. 4 (Larga)"
+                    />
+                  </VCol>
+                  <VCol
+                    cols="12"
+                    md="4"
+                  >
+                    <AppTextField
+                      v-model="material.espec5"
+                      label="Espec. 5 Concepto"
+                    />
+                  </VCol>
+                </VRow>
+              </VCardItem>
+            </VCard>
             <VRow>
-              <!-- 👉 Name -->
+              <!-- 👉 Concept -->
               <VCol
                 cols="12"
                 md="8"
               >
                 <AppTextField
-                  v-model="material.name"
+                  v-model="concept"
                   label="Descripción del producto"
                   placeholder="Descripción del producto"
                   :rules="[requiredValidator]"
@@ -211,7 +326,7 @@ const deleteImages = async images => {
                 cols="12"
                 md="6"
               >
-                <AppSelect
+                <AppAutocomplete
                   v-model="material.supplier_id"
                   label="Proveedor"
                   placeholder="Proveedor"
@@ -267,7 +382,7 @@ const deleteImages = async images => {
                 md="6"
               >
                 <AppTextField
-                  v-model="material.internal_code"
+                  v-model="sku"
                   label="Código Interno"
                   placeholder="Código Interno"
                 />
@@ -419,7 +534,7 @@ const deleteImages = async images => {
     <!-- Dialog Content -->
     <VCard title="Eliminar Material">
       <VCardText>
-        ¿Estás seguro de eliminar el material <b>{{ materialData.name }}</b>?
+        ¿Estás seguro de eliminar el material <b>{{ materialData.concept }}</b>?
       </VCardText>
 
       <VCardText class="d-flex justify-end">

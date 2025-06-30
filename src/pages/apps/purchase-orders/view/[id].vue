@@ -28,8 +28,10 @@ const suppliers = ref()
 const estimatedDelivery = ref()
 const created = ref(purchaseOrderData.value.created)
 const supplier = ref(purchaseOrderData.value.supplier_id)
+const supplierId = ref()
 const subject = ref(purchaseOrderData.value.subject)
 const selectedMaterial = ref()
+const materialsList = ref([])
 
 const costs = ref({
   subtotal: purchaseOrderData.value.subtotal,
@@ -205,6 +207,12 @@ const getSupplierNameById = item => {
     return item.supplier_name
   else
     return supplier ? supplier.name : null
+}
+
+const viewAddMaterial = () => {
+  supplierId.value = supplier.value
+  materialsList.value = items.value.map(item => item.material_id)
+  isAddNewMaterialDrawerVisible.value = true
 }
 
 const addMaterial = material => {
@@ -688,7 +696,7 @@ watch(selectedRows, val => {
             <VBtn
               prepend-icon="tabler-package-export"
               variant="outlined"
-              @click="isAddNewMaterialDrawerVisible = true"
+              @click="viewAddMaterial"
             >
               Añadir material
             </VBtn>
@@ -790,6 +798,8 @@ watch(selectedRows, val => {
     />
     <AddMaterialDrawer
       v-model:is-drawer-open="isAddNewMaterialDrawerVisible"
+      v-model:supplier-id="supplierId"
+      v-model:materials-list="materialsList"
       @add-material="addMaterial"
     />
     <EditMaterialDrawer
