@@ -385,7 +385,6 @@ declare module 'vue' {
     readonly COMMON_STATUS: UnwrapRef<typeof import('./src/utils/constants.js')['COMMON_STATUS']>
     readonly COOKIE_MAX_AGE_1_YEAR: UnwrapRef<typeof import('./src/utils/constants.js')['COOKIE_MAX_AGE_1_YEAR']>
     readonly EffectScope: UnwrapRef<typeof import('vue')['EffectScope']>
-    readonly OD_STATUS: UnwrapRef<typeof import('./src/utils/constants.js')['OD_STATUS']>
     readonly USER_STATUS: UnwrapRef<typeof import('./src/utils/constants.js')['USER_STATUS']>
     readonly acceptHMRUpdate: UnwrapRef<typeof import('pinia')['acceptHMRUpdate']>
     readonly alphaDashValidator: UnwrapRef<typeof import('./src/@core/utils/validators.js')['alphaDashValidator']>

@@ -18,14 +18,21 @@ const notificationMessage = ref('')
 const router = useRouter()
 
 const material = ref({
+  division: null,
   name: null,
+  espec1: null,
+  espec2: null,
+  espec3: null,
+  espec4: null,
+  espec5: null,
+  concept: null,
   measurement: null,
   presentation: null,
   supplier_id: null,
   area: null,
   reference: null,
   supplier_code: null,
-  internal_code: null,
+  sku: null,
   minimum: null,
   maximum: null,
   unit_price: null,
@@ -35,8 +42,43 @@ const material = ref({
   automation: false,
 })
 
+const concept = computed(() => {
+  const fields = [material.value.name, material.value.espec1, material.value.espec2, material.value.espec3, material.value.espec4, material.value.espec5]
+  
+  return fields
+    .filter(val => val && val.trim() !== '')
+    .map(val => val.toUpperCase())
+    .join(' ')
+})
+
+const sku = computed(() => {
+  if (!material.value.division || !material.value.name) return ''
+
+  const parts = []
+
+  const addPart = (value, limit) => {
+    if (!value || value.trim() === '') return
+    const trimmed = value.trim().toUpperCase()
+    if (limit) {
+      parts.push(trimmed.slice(0, limit))
+    } else {
+      parts.push(trimmed)
+    }
+  }
+
+  addPart(material.value.division, 3)
+  addPart(material.value.name, 3)
+  addPart(material.value.espec1, 3)
+  addPart(material.value.espec2, 3)
+  addPart(material.value.espec3, 7)
+  addPart(material.value.espec4, 7)
+
+  return parts.join('-')
+}) 
+
 const { data: suppliers } = await useApi('api/suppliers?itemsPerPage=1000')
 const { data: unitsOfMeasurement }= await useApi('api/catalogs?name=Unidades de medida')
+const { data: divisions } = await useApi('api/catalogs?name=División de materiales')
 
 const onSubmit = () => {
   isLoadingDialogVisible.value = true
@@ -50,14 +92,13 @@ const onSubmit = () => {
 }
 
 const createMateiral = async() => {
-  const filteredObject = Object.fromEntries(
-    Object.entries(material.value).filter(([_, value]) => value !== null),
-  )
+  material.value.concept = concept.value
+  material.value.sku = sku.value
 
   try {
     await $api('api/materials', {
       method: 'POST',
-      body: filteredObject,
+      body: material.value,
       onResponse({ response }) {
         if (response.status === 201) {
           nextTick(() => { 
@@ -123,18 +164,95 @@ const differentiatePrices = () => {
             v-model="isFormValid"
             @submit.prevent="onSubmit"
           >
+            <VCard class="mb-5">
+              <VCardTitle>SKU</VCardTitle>
+              <VCardItem>
+                <VRow>
+                  <VCol
+                    cols="12"
+                    md="3"
+                  >
+                    <AppSelect
+                      v-model="material.division"
+                      label="División"
+                      :rules="[requiredValidator]"
+                      :items="divisions.values"
+                      class="font-weight-bold"
+                    />
+                  </VCol>
+                  <VCol
+                    cols="12"
+                    md="3"
+                  >
+                    <AppTextField
+                      v-model="material.name"
+                      label="Material"
+                      :rules="[requiredValidator]"
+                      class="font-weight-bold"
+                    />
+                  </VCol>
+                  <VCol
+                    cols="12"
+                    md="3"
+                  >
+                    <AppTextField
+                      v-model="material.espec1"
+                      label="Espec. 1"
+                    />
+                  </VCol>
+                  <VCol
+                    cols="12"
+                    md="3"
+                  >
+                    <AppTextField
+                      v-model="material.espec2"
+                      label="Espec. 2"
+                    />
+                  </VCol>
+                </vrow>
+                <VRow>
+                  <VCol
+                    cols="12"
+                    md="4"
+                  >
+                    <AppTextField
+                      v-model="material.espec3"
+                      label="Espec. 3 (Larga)"
+                    />
+                  </VCol>
+                  <VCol
+                    cols="12"
+                    md="4"
+                  >
+                    <AppTextField
+                      v-model="material.espec4"
+                      label="Espec. 4 (Larga)"
+                    />
+                  </VCol>
+                  <VCol
+                    cols="12"
+                    md="4"
+                  >
+                    <AppTextField
+                      v-model="material.espec5"
+                      label="Espec. 5 Concepto"
+                    />
+                  </VCol>
+                </VRow>
+              </VCardItem>
+            </VCard>
+              
             <VRow>
-              <!-- 👉 Name -->
+              <!-- 👉 Concept -->
               <VCol
                 cols="12"
                 md="8"
               >
                 <AppTextField
-                  v-model="material.name"
-                  label="Descripción del producto"
-                  placeholder="Descripción del producto"
+                  :model-value="concept"
+                  label="Concepto"
+                  placeholder="Concepto"
                   :rules="[requiredValidator]"
-                  class="font-weight-bold"
                 />
               </VCol>
 
@@ -170,7 +288,7 @@ const differentiatePrices = () => {
                 cols="12"
                 md="6"
               >
-                <AppSelect
+                <AppAutocomplete
                   v-model="material.supplier_id"
                   label="Proveedor"
                   placeholder="Proveedor"
@@ -220,16 +338,16 @@ const differentiatePrices = () => {
                 />
               </VCol>
 
-              <!-- 👉 Internal code -->
+              <!-- 👉 SKU -->
               <VCol
                 cols="12"
                 md="6"
               >
                 <AppTextField
-                  v-model="material.internal_code"
-                  label="Código Interno"
-                  placeholder="Código Interno"
-                  disabled="disabled"
+                  :model-value="sku"
+                  label="SKU"
+                  placeholder="SKU"
+                  :rules="[requiredValidator]"
                 />
               </VCol>
 

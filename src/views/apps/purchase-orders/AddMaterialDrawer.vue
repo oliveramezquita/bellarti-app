@@ -8,10 +8,20 @@ const props = defineProps({
     type: Boolean,
     required: true,
   },
+  supplierId: {
+    type: String,
+    required: true,
+  },
+  materialsList: {
+    type: Array,
+    required: true,
+  },
 })
 
 const emit = defineEmits([
   'update:isDrawerOpen',
+  'update:supplierId',
+  'update:materialsList',
   'addMaterial',
 ])
 
@@ -22,6 +32,7 @@ const { data: colors } = await useApi('api/catalogs?name=Colores')
 const supplier = ref()
 const materials = ref([])
 const material = ref()
+const items = ref([])
 const color = ref()
 const internalCode = ref()
 const supplierCode = ref()
@@ -33,9 +44,9 @@ const reference = ref()
 const total = ref()
 
 const getMaterials = async () => {
-  const response = await $api(`api/materials/supplier/${supplier.value._id}`, { method: 'GET' })
+  const response = await $api(`api/materials/supplier/${supplier.value}`, { method: 'GET' })
 
-  materials.value = response
+  materials.value = response.filter(item => !Object.values(items.value).includes(item._id))
 }
 
 const getMaterialData = () => {
@@ -64,8 +75,8 @@ const onSubmit = () => {
         quantity: null,
         reference: material.value.hasOwnProperty('reference') ? material.value.reference : null,
         required: amount.value,
-        supplier_id: supplier.value._id,
-        supplier_name: supplier.value.name,
+        supplier_id: supplier.value,
+        supplier_name: suppliers.value.data.find(item => item._id === supplier.value)?.name || '',
         supplier_code: material.value.hasOwnProperty('supplier_code') ? material.value.supplier_code : null,
         total: total.value,
         total_quantity: amount.value,
@@ -117,6 +128,19 @@ watch(price, val => {
   else
     total.value = ''
 })
+
+watch(() => props.supplierId, newValue => {
+  if (newValue) {
+    supplier.value =  newValue
+    getMaterials()
+  }
+})
+
+watch(() => props.materialsList, newValue => {
+  if (newValue) {
+    items.value =  newValue
+  }
+})
 </script>
 
 <template>
@@ -153,11 +177,11 @@ watch(price, val => {
                   v-model="supplier"
                   label="Proveedor"
                   :item-title="item => item.name"
-                  :item-value="item => item"
+                  :item-value="item => item._id"
                   :items="suppliers.data"
                   placeholder="Seleccionar proveedor"
                   :rules="[requiredValidator]"
-                  @update:model-value="getMaterials"
+                  disabled="disabled"
                 />
               </VCol>
               <!-- 👉 Materials -->
