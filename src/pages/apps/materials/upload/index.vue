@@ -77,7 +77,7 @@ const onSubmit = () => {
             cols="12"
             md="6"
           >
-            <AppSelect
+            <AppAutocomplete
               v-model="supplier"
               label="Proveedor"
               placeholder="Proveedor"
