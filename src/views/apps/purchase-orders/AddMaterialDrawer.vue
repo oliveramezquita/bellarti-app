@@ -189,7 +189,7 @@ watch(() => props.materialsList, newValue => {
                 <AppSelect
                   v-model="material"
                   label="Materiales"
-                  :item-title="item => item.name"
+                  :item-title="item => item.concept"
                   :item-value="item => item"
                   :items="materials"
                   placeholder="Seleccionar material"
