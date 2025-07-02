@@ -34,7 +34,7 @@ const materials = ref([])
 const material = ref()
 const items = ref([])
 const color = ref()
-const internalCode = ref()
+const sku = ref()
 const supplierCode = ref()
 const measurement = ref()
 const presentation = ref()
@@ -51,7 +51,7 @@ const getMaterials = async () => {
 
 const getMaterialData = () => {
   if (material.value) {
-    internalCode.value = material.value.hasOwnProperty('internal_code') ? material.value.internal_code : null
+    sku.value = material.value.hasOwnProperty('sku') ? material.value.sku : null
     supplierCode.value = material.value.supplier_code
     measurement.value = material.value.measurement
     presentation.value = material.value.presentation
@@ -64,7 +64,7 @@ const onSubmit = () => {
     if (valid) {
       emit('addMaterial', {
         color: color.value ? color.value : null,
-        internal_code: material.value.hasOwnProperty('internal_code') ? material.value.internal_code : null,
+        sku: material.value.hasOwnProperty('sku') ? material.value.sku : null,
         inventory_price: material.value.inventory_price,
         market_price: material.value.market_price,
         measurement: material.value.measurement,
@@ -189,7 +189,7 @@ watch(() => props.materialsList, newValue => {
                 <AppSelect
                   v-model="material"
                   label="Materiales"
-                  :item-title="item => item.name"
+                  :item-title="item => item.concept"
                   :item-value="item => item"
                   :items="materials"
                   placeholder="Seleccionar material"
@@ -206,11 +206,11 @@ watch(() => props.materialsList, newValue => {
                   :items="colors.values"
                 />
               </VCol>
-              <!-- 👉 Internal Code -->
+              <!-- 👉 SKU -->
               <VCol cols="12">
                 <AppTextField
-                  v-model="internalCode"
-                  label="Código interno"
+                  v-model="sku"
+                  label="SKU"
                   disabled="disabled"
                 />
               </VCol>

@@ -26,15 +26,15 @@ let extendedHeaders = []
 const headers = [
   {
     title: 'CONCEPTO',
-    key: 'material.name',
+    key: 'material.concept',
   },
   {
     title: 'UNIDAD DE MEDIDA',
     key: 'material.measurement',
   },
   {
-    title: 'CÓDIGO INTERNO',
-    key: 'material.internal_code',
+    title: 'SKU',
+    key: 'material.sku',
   },
 ]
 
@@ -119,11 +119,11 @@ watch(() => props.updated, newValue => {
     :items-length="totalQuantification"
     class="text-no-wrap"
   >
-    <template #item.material.name="{ item }">
+    <template #item.material.concept="{ item }">
       <div class="d-flex align-center gap-x-4">
         <div class="d-flex flex-column">
           <h6 class="text-base">
-            <label class="font-weight-medium text-link">{{ item.material.name }}</label>
+            <label class="font-weight-medium text-link">{{ item.material.concept }}</label>
           </h6>
           <div class="text-sm">
             {{ item.material.color }}

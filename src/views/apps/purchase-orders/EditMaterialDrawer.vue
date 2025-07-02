@@ -157,8 +157,7 @@ watch(price, val => {
               <!-- 👉 Materials -->
               <VCol cols="12">
                 <AppTextField
-                  v-model="material.name"
-                  label="Código interno"
+                  v-model="material.concept"
                   disabled="disabled"
                 />
               </VCol>
@@ -171,11 +170,11 @@ watch(price, val => {
                   :items="colors.values"
                 />
               </VCol>
-              <!-- 👉 Internal Code -->
+              <!-- 👉 SKU -->
               <VCol cols="12">
                 <AppTextField
-                  v-model="material.internal_code"
-                  label="Código interno"
+                  v-model="material.sku"
+                  label="SKU"
                   disabled="disabled"
                 />
               </VCol>

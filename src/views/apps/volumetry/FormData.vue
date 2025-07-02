@@ -40,7 +40,7 @@ const VolumetryFormat = excelPath
 const { data: materials } = await useApi('api/materials?itemsPerPage=9999')
 const { data: areas } = await useApi('api/catalogs?name=Áreas')
 const measurement = ref()
-const internalCode = ref()
+const sku = ref()
 const reference = ref()
 const prototypes = props.prototypes
 const newElement = ref()
@@ -79,11 +79,12 @@ const materialChange = async () => {
     }))
   }
   
+  console.log(material.value)
   measurement.value = material.value.measurement
-  if (material.value.hasOwnProperty('internal_code'))
-    internalCode.value = material.value.measurement.internal_code
+  if (material.value.hasOwnProperty('sku'))
+    sku.value = material.value.sku
   if (material.value.hasOwnProperty('reference'))
-    reference.value = material.value.measurement.reference
+    reference.value = material.value.reference
 }
 
 const addElement = () => {
@@ -250,7 +251,7 @@ watch(() => props.responseUploadedFile, newResponse => {
                   v-model="material"
                   label="Material"
                   :items="materials.data"
-                  :item-title="item => item.name"
+                  :item-title="item => item.concept"
                   :item-value="item => item"
                   :rules="[requiredValidator]"
                   placeholder="Seleccionar material"
@@ -264,7 +265,7 @@ watch(() => props.responseUploadedFile, newResponse => {
                 <AppTextField
                   v-model="measurement"
                   label="Unidad de medida"
-                  disabled="True"
+                  disabled
                 />
               </VCol>
               <VCol
@@ -272,9 +273,9 @@ watch(() => props.responseUploadedFile, newResponse => {
                 md="6"
               >
                 <AppTextField
-                  v-model="internalCode"
-                  label="Código Interno"
-                  disabled="True"
+                  v-model="sku"
+                  label="SKU"
+                  disabled
                 />
               </VCol>
               <VCol
