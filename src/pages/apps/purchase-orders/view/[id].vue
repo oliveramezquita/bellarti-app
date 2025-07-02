@@ -59,8 +59,8 @@ const headers = [
     key: 'supplier_code',
   },
   {
-    title: 'CÓDIGO INTERNO',
-    key: 'internal_code',
+    title: 'SKU',
+    key: 'sku',
   },
   {
     title: 'UNIDAD DE MEDIDA',
@@ -817,7 +817,7 @@ watch(selectedRows, val => {
       <!-- Dialog Content -->
       <VCard title="Eliminar orden de compra">
         <VCardText>
-          ¿Estás seguro de eliminar material de la orde de compra: <b>{{ selectedMaterial.name }}</b>?
+          ¿Estás seguro de eliminar material de la orde de compra: <b>{{ selectedMaterial.concept }}</b>?
         </VCardText>
 
         <VCardText class="d-flex justify-end">

@@ -376,15 +376,15 @@ const deleteImages = async images => {
                 />
               </VCol>
 
-              <!-- 👉 Internal code -->
+              <!-- 👉 SKU -->
               <VCol
                 cols="12"
                 md="6"
               >
                 <AppTextField
                   v-model="sku"
-                  label="Código Interno"
-                  placeholder="Código Interno"
+                  label="SKU"
+                  placeholder="SKU"
                 />
               </VCol>
 
@@ -502,7 +502,7 @@ const deleteImages = async images => {
                   variant="tonal"
                   :to="{name:'apps-materials-list'}"
                 >
-                  Cancelar
+                  Regresar
                 </VBtn>
               </VCol>
             </VRow>

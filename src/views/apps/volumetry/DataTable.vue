@@ -21,15 +21,15 @@ const headers = [
   },
   {
     title: 'MATERIAL',
-    key: 'material.name',
+    key: 'material.concept',
   },
   {
     title: 'UNIDAD DE MEDIDA',
     key: 'material.measurement',
   },
   {
-    title: 'CÓDIGO INTERNO',
-    key: 'material.internal_code',
+    title: 'SKU',
+    key: 'material.sku',
   },
   {
     title: 'TOTAL',
