@@ -17,7 +17,6 @@ const notificationMessage = ref('')
 const { data: clients } = await useApi('api/clients/VS?itemsPerPage=1000')
 const client = ref()
 const front = ref()
-const prototype = ref()
 const fronts = ref([])
 const prototypes = ref([])
 const volumetry = ref([])
@@ -138,7 +137,7 @@ const deleteVolumetry = async i => {
           <!-- 👉 Clients -->
           <VCol
             cols="12"
-            md="4"
+            md="6"
           >
             <AppSelect
               v-model="client"
@@ -154,7 +153,7 @@ const deleteVolumetry = async i => {
           <!-- 👉 Fronts -->
           <VCol
             cols="12"
-            md="4"
+            md="6"
           >
             <AppSelect
               v-model="front"
