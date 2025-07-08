@@ -214,7 +214,7 @@ const formatDate = fechaISO => {
         class="text-no-wrap"
         @update:options="updateOptions"
       >
-        <template #item.name="{ item }">
+        <template #item.project="{ item }">
           <div class="d-flex align-center gap-x-4">
             <div class="d-flex flex-column">
               <h6

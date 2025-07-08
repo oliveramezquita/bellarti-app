@@ -287,8 +287,8 @@ const deleteImages = async images => {
               >
                 <AppTextField
                   v-model="concept"
-                  label="Descripción del producto"
-                  placeholder="Descripción del producto"
+                  label="Concepto"
+                  placeholder="Concepto"
                   :rules="[requiredValidator]"
                   class="font-weight-bold"
                 />
