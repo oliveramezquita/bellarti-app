@@ -18,7 +18,7 @@ const selectedSupplier = ref()
 
 const headers = [
   {
-    title: 'Nombre / Descripción',
+    title: 'Concepto',
     key: 'concept',
   },
   {

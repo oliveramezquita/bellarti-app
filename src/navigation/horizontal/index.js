@@ -127,7 +127,7 @@ export default [
       },
       {
         title: 'Entradas',
-        to: 'apps-inputs-list',
+        to: 'apps-inbounds-list',
         action: 'read',
         subject: 'AlmEntradas',
       },

@@ -719,7 +719,7 @@ watch(selectedRows, val => {
               color="success"
               @click="approve"
             >
-              APROVAR
+              APROBAR
             </VBtn>
             <!-- 👉 Decline -->
             <VBtn
