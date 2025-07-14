@@ -29,6 +29,7 @@ declare module 'vue-router/auto-routes' {
     'apps-catalogs-new': RouteRecordInfo<'apps-catalogs-new', '/apps/catalogs/new', Record<never, never>, Record<never, never>>,
     'apps-catalogs-view-id': RouteRecordInfo<'apps-catalogs-view-id', '/apps/catalogs/view/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     'apps-chat': RouteRecordInfo<'apps-chat', '/apps/chat', Record<never, never>, Record<never, never>>,
+    'apps-companies': RouteRecordInfo<'apps-companies', '/apps/companies', Record<never, never>, Record<never, never>>,
     'apps-contacts-list': RouteRecordInfo<'apps-contacts-list', '/apps/contacts/list', Record<never, never>, Record<never, never>>,
     'apps-ecommerce-customer-details-id': RouteRecordInfo<'apps-ecommerce-customer-details-id', '/apps/ecommerce/customer/details/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     'apps-ecommerce-customer-list': RouteRecordInfo<'apps-ecommerce-customer-list', '/apps/ecommerce/customer/list', Record<never, never>, Record<never, never>>,

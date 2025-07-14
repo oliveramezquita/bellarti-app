@@ -202,6 +202,12 @@ export default [
         action: 'read',
         subject: 'AdmSecciones',
       },
+      {
+        title: 'Compañías',
+        to: 'apps-companies',
+        action: 'read',
+        subject: 'AdmCompanias',
+      },
     ],
   },
 ]

@@ -196,7 +196,7 @@ const download = async() => {
         @update:options="updateOptions"
       >
         <template #item.concept="{ item }">
-          <div class="d-flex align-center gap-x-4">
+          <div class="d-flex gap-x-4">
             <div class="d-flex flex-column">
               <h6
                 class="text-base"
