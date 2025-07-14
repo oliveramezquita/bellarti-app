@@ -70,8 +70,8 @@ const sku = computed(() => {
   addPart(material.value.name, 3)
   addPart(material.value.espec1, 3)
   addPart(material.value.espec2, 3)
-  addPart(material.value.espec3, 7)
-  addPart(material.value.espec4, 7)
+  addPart(material.value.espec3, 15)
+  addPart(material.value.espec4, 15)
 
   return parts.join('-')
 }) 

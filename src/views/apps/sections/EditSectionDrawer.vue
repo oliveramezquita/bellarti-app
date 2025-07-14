@@ -1,5 +1,5 @@
+<!-- eslint-disable camelcase -->
 <script setup>
-import { toRaw } from 'vue'
 import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
 
 const props = defineProps({
@@ -7,56 +7,44 @@ const props = defineProps({
     type: Boolean,
     required: true,
   },
-  clientsList: {
-    type: Array,
-    required: true,
-  },
-  prototypeInfo: {
+  sectionInfo: {
     type: Object,
     required: true,
     default: () => ({
-      name: '',
+      parent: '',
     }),
   },
 })
 
 const emit = defineEmits([
   'update:isDrawerOpen',
-  'update:clientList',
-  'prototypeData',
+  'update:sectionInfo',
+  'sectionData',
 ])
 
-const clientsList = ref(props.clientsList)
 
 const isFormValid = ref(false)
 const refForm = ref()
 
-const prototype = ref({
-  name: '',
+const section = ref({
+  parent: '',
 })
-
-const client = ref('')
 
 watch(props, () => {
-  prototype.value = structuredClone(toRaw(props.prototypeInfo))
-  client.value = props.prototypeInfo.client_id
+  section.value = structuredClone(toRaw(props.sectionInfo))
 })
 
-// 👉 drawer close
 const closeNavigationDrawer = () => {
   emit('update:isDrawerOpen', false)
-
 }
 
 const onSubmit = () => {
   refForm.value?.validate().then(({ valid }) => {
     if (valid) {
-      emit('prototypeData', {
-        id: prototype.value._id,
-        // eslint-disable-next-line camelcase
-        client_id: client.value,
-        name: prototype.value.name,
-        front: prototype.value.front,
+      emit('sectionData', {
+        parent: section.value.parent,
+        level_1: section.value.level_1 || null,
+        value: section.value.value,
       })
       emit('update:isDrawerOpen', false)
     }
@@ -80,7 +68,7 @@ const handleDrawerModelValueUpdate = val => {
   >
     <!-- 👉 Title -->
     <AppDrawerHeaderSection
-      title="Modificar Prototipo"
+      title="Agrear Nuevo Sección"
       @cancel="closeNavigationDrawer"
     />
 
@@ -96,35 +84,32 @@ const handleDrawerModelValueUpdate = val => {
             @submit.prevent="onSubmit"
           >
             <VRow>
-              <!-- 👉 Role -->
+              <!-- 👉 Parent -->
               <VCol cols="12">
-                <AppSelect
-                  v-model="client"
-                  label="Seleccionar cliente"
-                  placeholder="Seleccionar cliente"
+                <AppTextField
+                  v-model="section.parent"
                   :rules="[requiredValidator]"
-                  :item-title="item => item.name"
-                  :item-value="item => item._id"
-                  :items="clientsList"
+                  label="Sección"
+                  placeholder="Sección"
                 />
               </VCol>
 
-              <!-- 👉 Name -->
+              <!-- 👉 Level_1 -->
               <VCol cols="12">
                 <AppTextField
-                  v-model="prototype.name"
-                  :rules="[requiredValidator]"
-                  label="Nombre"
-                  placeholder="Nombre"
+                  v-model="section.level_1"
+                  label="Subsección"
+                  placeholder="Subsección"
                 />
               </VCol>
 
-              <!-- 👉 Front -->
+              <!-- 👉 Value -->
               <VCol cols="12">
                 <AppTextField
-                  v-model="prototype.front"
-                  label="Frente / Fraccionamiento"
-                  placeholder="Frente / Fraccionamiento"
+                  v-model="section.value"
+                  :rules="[requiredValidator]"
+                  label="Clave"
+                  placeholder="Clave"
                 />
               </VCol>
 
@@ -139,7 +124,7 @@ const handleDrawerModelValueUpdate = val => {
                 <VBtn
                   type="reset"
                   variant="tonal"
-                  color="secondary"
+                  color="error"
                   @click="closeNavigationDrawer"
                 >
                   Regresar

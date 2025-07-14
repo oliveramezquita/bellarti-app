@@ -1,5 +1,5 @@
+<!-- eslint-disable camelcase -->
 <script setup>
-import { toRaw } from 'vue'
 import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
 
 const props = defineProps({
@@ -7,58 +7,41 @@ const props = defineProps({
     type: Boolean,
     required: true,
   },
-  clientsList: {
-    type: Array,
-    required: true,
-  },
-  prototypeInfo: {
-    type: Object,
-    required: true,
-    default: () => ({
-      name: '',
-    }),
-  },
 })
 
 const emit = defineEmits([
   'update:isDrawerOpen',
-  'update:clientList',
-  'prototypeData',
+  'sectionData',
 ])
 
-const clientsList = ref(props.clientsList)
 
 const isFormValid = ref(false)
 const refForm = ref()
+const parent = ref('')
+const level_1 = ref()
+const value = ref()
 
-const prototype = ref({
-  name: '',
-})
-
-const client = ref('')
-
-watch(props, () => {
-  prototype.value = structuredClone(toRaw(props.prototypeInfo))
-  client.value = props.prototypeInfo.client_id
-})
-
-// 👉 drawer close
 const closeNavigationDrawer = () => {
   emit('update:isDrawerOpen', false)
-
+  nextTick(() => {
+    refForm.value?.reset()
+    refForm.value?.resetValidation()
+  })
 }
 
 const onSubmit = () => {
   refForm.value?.validate().then(({ valid }) => {
     if (valid) {
-      emit('prototypeData', {
-        id: prototype.value._id,
-        // eslint-disable-next-line camelcase
-        client_id: client.value,
-        name: prototype.value.name,
-        front: prototype.value.front,
+      emit('sectionData', {
+        parent: parent.value,
+        level_1: level_1.value,
+        value: value.value,
       })
       emit('update:isDrawerOpen', false)
+      nextTick(() => {
+        refForm.value?.reset()
+        refForm.value?.resetValidation()
+      })
     }
   })
 }
@@ -80,7 +63,7 @@ const handleDrawerModelValueUpdate = val => {
   >
     <!-- 👉 Title -->
     <AppDrawerHeaderSection
-      title="Modificar Prototipo"
+      title="Agrear Nuevo Sección"
       @cancel="closeNavigationDrawer"
     />
 
@@ -96,35 +79,32 @@ const handleDrawerModelValueUpdate = val => {
             @submit.prevent="onSubmit"
           >
             <VRow>
-              <!-- 👉 Role -->
+              <!-- 👉 Parent -->
               <VCol cols="12">
-                <AppSelect
-                  v-model="client"
-                  label="Seleccionar cliente"
-                  placeholder="Seleccionar cliente"
+                <AppTextField
+                  v-model="parent"
                   :rules="[requiredValidator]"
-                  :item-title="item => item.name"
-                  :item-value="item => item._id"
-                  :items="clientsList"
+                  label="Sección"
+                  placeholder="Sección"
                 />
               </VCol>
 
-              <!-- 👉 Name -->
+              <!-- 👉 Level_1 -->
               <VCol cols="12">
                 <AppTextField
-                  v-model="prototype.name"
-                  :rules="[requiredValidator]"
-                  label="Nombre"
-                  placeholder="Nombre"
+                  v-model="level_1"
+                  label="Subsección"
+                  placeholder="Subsección"
                 />
               </VCol>
 
-              <!-- 👉 Front -->
+              <!-- 👉 Value -->
               <VCol cols="12">
                 <AppTextField
-                  v-model="prototype.front"
-                  label="Frente / Fraccionamiento"
-                  placeholder="Frente / Fraccionamiento"
+                  v-model="value"
+                  :rules="[requiredValidator]"
+                  label="Clave"
+                  placeholder="Clave"
                 />
               </VCol>
 
@@ -134,12 +114,12 @@ const handleDrawerModelValueUpdate = val => {
                   type="submit"
                   class="me-3"
                 >
-                  Modificar
+                  Guardar
                 </VBtn>
                 <VBtn
                   type="reset"
                   variant="tonal"
-                  color="secondary"
+                  color="error"
                   @click="closeNavigationDrawer"
                 >
                   Regresar

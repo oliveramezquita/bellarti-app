@@ -14,8 +14,17 @@ const isDeletePurchaseOrderDialogVisible = ref(false)
 const selectedPurchaseOrder = ref()
 const { data: supplierList } = await useApi('api/suppliers?itemsPerPage=100')
 const selectedSupplier = ref()
+const selectedStatus = ref()
 
 const headers = [
+  {
+    title: '',
+    key: 'data-table-expand',
+  },
+  {
+    title: 'Número de orden',
+    key: 'number',
+  },
   {
     title: 'Proyecto',
     key: 'project',
@@ -37,22 +46,6 @@ const headers = [
     key: 'total',
   },
   {
-    title: 'Solicita',
-    key: 'request_by_name',
-  },
-  {
-    title: 'Fecha',
-    key: 'created',
-  },
-  {
-    title: 'Autoriza',
-    key: 'approved_by_name',
-  },
-  {
-    title: 'Fecha',
-    key: 'approved_date',
-  },
-  {
     title: 'Estatus',
     key: 'status',
   },
@@ -63,15 +56,17 @@ const headers = [
   },
 ]
 
-const statusName = (status, key) => {
-  const statusList = {
-    0: { name: 'Pendiente', color: 'secondary' },
-    1: { name: 'Generada', color: 'primary' },
-    2: { name: 'Aprobada', color: 'success' },
-    3: { name: 'Rechazada', color: 'error' },
-  }
+const statusList = [
+  { name: 'Borrador', color: 'secondary', icon: 'tabler-shopping-cart-pause', value: 0 },
+  { name: 'Pendiente de aprobar', color: 'info', icon: 'tabler-shopping-cart-up', value: 1 },
+  { name: 'Aprobada', color: 'success', icon: 'tabler-shopping-cart-copy', value: 2 },
+  { name: 'Cancelada', color: 'error', icon: 'tabler-shopping-cart-x', value: 3 },
+]
 
-  return statusList[status][key]
+const getStatusValue = (value, key) => {
+  const status = statusList.find(item => item.value === value)
+  
+  return status ? status[key] : null
 }
 
 const {
@@ -81,6 +76,7 @@ const {
   query: {
     q: searchQuery,
     supplier: selectedSupplier,
+    status: selectedStatus,
     itemsPerPage,
     page,
   },
@@ -139,7 +135,7 @@ const formatDate = fechaISO => {
         <VRow>
           <VCol
             cols="12"
-            sm="6"
+            sm="4"
           >
             <AppSelect
               v-model="selectedSupplier"
@@ -153,7 +149,21 @@ const formatDate = fechaISO => {
           </VCol>
           <VCol
             cols="12"
-            sm="6"
+            sm="4"
+          >
+            <AppSelect
+              v-model="selectedStatus"
+              placeholder="Seleccionar estatus"
+              :items="statusList"
+              :item-title="item => item.name"
+              :item-value="item => item.value"
+              clearable
+              clear-icon="tabler-x"
+            />
+          </VCol>
+          <VCol
+            cols="12"
+            sm="4"
           >
             <AppTextField
               v-model="searchQuery"
@@ -212,10 +222,60 @@ const formatDate = fechaISO => {
         :items-length="totalPurchaseOrders"
         :headers="headers"
         class="text-no-wrap"
+        expand-on-click
         @update:options="updateOptions"
       >
-        <template #item.name="{ item }">
-          <div class="d-flex align-center gap-x-4">
+        <!-- Expanded Row Data -->
+        <template #expanded-row="slotProps">
+          <tr class="v-data-table__tr">
+            <td :colspan="headers.length">
+              <div class="inner-table">
+                <div class="row header">
+                  <div class="cell">
+                    Solicita
+                  </div>
+                  <div class="cell">
+                    Fecha
+                  </div>
+                  <div class="cell">
+                    Autoriza
+                  </div>
+                  <div class="cell">
+                    Fecha
+                  </div>
+                  <div class="cell">
+                    Estatus
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="cell">
+                    {{ slotProps.item.request_by_name }}
+                  </div>
+                  <div class="cell">
+                    {{ formatDate(slotProps.item.created) }}
+                  </div>
+                  <div class="cell">
+                    {{ slotProps.item.approved_by_name }}
+                  </div>
+                  <div class="cell">
+                    {{ formatDate(slotProps.item.approved_date) }}
+                  </div>
+                  <div class="cell">
+                    <VChip :color="getStatusValue(slotProps.item.status, 'color')">
+                      <VIcon
+                        start
+                        :icon="getStatusValue(slotProps.item.status, 'icon')"
+                      />
+                      {{ getStatusValue(slotProps.item.status, 'name') }}
+                    </VChip>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </template>
+        <template #item.number="{ item }">
+          <div class="d-flex gap-x-4">
             <div class="d-flex flex-column">
               <h6
                 class="text-base"
@@ -225,7 +285,7 @@ const formatDate = fechaISO => {
                   :to="{ name: 'apps-purchase-orders-view-id', params: { id: item._id } }"
                   class="font-weight-medium text-link"
                 >
-                  {{ item.project }}
+                  {{ item.number }}
                 </RouterLink>
               </h6>
             </div>
@@ -259,9 +319,14 @@ const formatDate = fechaISO => {
         </template>
 
         <template #item.status="{ item }">
-          <VChip :color="statusName(item.status, 'color')">
-            {{ statusName(item.status, 'name') }}
-          </VChip>
+          <div class="align-center">
+            <VAvatar
+              :color="getStatusValue(item.status, 'color')"
+              :icon="getStatusValue(item.status, 'icon')"
+              size="small"
+              variant="text"
+            />
+          </div>
         </template>
 
         <!-- Actions -->
@@ -324,5 +389,45 @@ const formatDate = fechaISO => {
   display: flex;
   align-items: center;
   justify-content: end;
+}
+
+.align-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inner-table {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #ccc;
+  inline-size: 100%;
+  margin-block: 20px;
+  margin-inline: auto;
+
+  .row {
+    display: flex;
+    border-block-end: 1px solid #ccc;
+  }
+
+  .cell {
+    flex: 1;
+    padding: 10px;
+    border-inline-end: 1px solid #ccc;
+    text-align: center;
+  }
+
+  .row:last-child {
+    border-block-end: none;
+  }
+
+  .cell:last-child {
+    border-inline-end: none;
+  }
+
+  .header {
+    background-color: #f5f5f5;
+    font-weight: bold;
+  }
 }
 </style>

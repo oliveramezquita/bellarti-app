@@ -176,10 +176,10 @@ watch(() => props.prototypesCatalog, newPrototypesCatalog => {
                 <VBtn
                   type="reset"
                   variant="tonal"
-                  color="error"
+                  color="secondary"
                   @click="closeNavigationDrawer"
                 >
-                  Cancelar
+                  Regresar
                 </VBtn>
               </VCol>
             </VRow>

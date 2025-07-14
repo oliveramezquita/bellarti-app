@@ -127,7 +127,7 @@ export default [
       },
       {
         title: 'Entradas',
-        to: 'apps-inputs-list',
+        to: 'apps-inbounds-list',
         action: 'read',
         subject: 'AlmEntradas',
       },
@@ -203,6 +203,12 @@ export default [
         to: 'apps-sections',
         action: 'read',
         subject: 'AdmSecciones',
+      },
+      {
+        title: 'Compañías',
+        to: 'apps-companies',
+        action: 'read',
+        subject: 'AdmCompanias',
       },
     ],
   },

@@ -12,6 +12,9 @@ import EditMaterialDrawer from '@/views/apps/purchase-orders/EditMaterialDrawer.
 const userData = useCookie('userData')
 const breadcrumbItems = ref([{ title: 'Órdenes de Compra', to: { name: 'apps-purchase-orders-list' }, class: 'text-underline' }, { title: 'Nuevo' }])
 const { data: projects } = await useApi('api/purchase_orders/get_projects')
+const { data: companiesList } = await useApi('api/companies?itemsPerPage=100')
+const { data: purchaseOrdersLIst } =  await useApi('api/purchase_orders?status=processed&itemsPerPage=100')
+const { data: divisionsList } = await useApi('api/catalogs?name=División de materiales')
 const isAddNewMaterialDrawerVisible = ref(false)
 const isEditMaterialDrawerVisible = ref(false)
 const isDeleteMaterialDialogVisible = ref(false)
@@ -24,7 +27,11 @@ const estimatedDelivery = ref()
 const today = new Date()
 const yesterday = new Date(today)
 const created = ref(today)
+const purchaseOrderLinked = ref()
+const purchaseOrderNumber = ref()
+const company = ref()
 const supplier = ref()
+const selectedDivisions = ref([])
 const subject = ref()
 const costs = ref()
 const items = ref()
@@ -38,12 +45,8 @@ const selectedMaterial = ref()
 
 const headers = [
   {
-    title: 'PROVEEDOR',
-    key: 'supplier_id',
-  },
-  {
     title: 'MATERIAL',
-    key: 'name',
+    key: 'concept',
   },
   {
     title: 'CÓDIGO PROVEEDOR',
@@ -84,20 +87,40 @@ yesterday.setDate(today.getDate() - 1)
 
 const getProjectInformation = async () => {
   const response = await $api(`api/purchase_orders/get_suppliers/${project.value.home_production_id}`, { method: 'GET' })
-
-  suppliers.value = response
+  const now = new Date()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const year = String(now.getFullYear()).slice(-2)
+  
+  if (!purchaseOrderNumber.value || purchaseOrderNumber.value == '')
+    purchaseOrderNumber.value = `${response.last_consecutive}-OD${project.value.od}-${month}-${year}`
+  suppliers.value = response.suppliers_list
 }
 
 const getMaterials = async () => {
-  const response = await $api(`api/purchase_orders/get_materials/${project.value.home_production_id}/${supplier.value}`, { method: 'GET' })
+  isLoadingDialogVisible.value = true
+  try {
+    let filter = ''
+    if (selectedDivisions.value)
+      filter = `?division=${selectedDivisions.value.join(',')}`
+
+    if (supplier.value) {
+      const response = await $api(`api/purchase_orders/get_materials/${project.value.home_production_id}/${supplier.value}${filter}`, { method: 'GET' })
   
-  costs.value = response.costs
-  items.value = response.items
-  materialsList.value = items.value.map(item => item.material_id)
-  totalItems.value = response.items.length
-} 
+      costs.value = response.costs
+      items.value = response.items
+      materialsList.value = items.value.map(item => item.material_id)
+      totalItems.value = response.items.length
+    } else {
+      items.value = null
+    }
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
+}
 
 const formatCurrency = valor => {
+  valor = parseFloat(valor).toFixed(2)
+  
   return new Intl.NumberFormat('es-MX', {
     style: 'currency',
     currency: 'MXN',
@@ -121,7 +144,11 @@ const addPurchaseOrder = async status => {
         method: 'POST',
         body: {
           'supplier_id': supplier.value,
+          'linked_id': purchaseOrderLinked.value,
+          'number': purchaseOrderNumber.value,
+          'company_id': company.value, 
           'home_production_id': project.value.home_production_id,
+          'division': selectedDivisions.value,
           'request_by': userData.value._id,
           'created': created.value,
           'estimated_delivery': estimatedDelivery.value,
@@ -149,18 +176,10 @@ const addPurchaseOrder = async status => {
   }
 }
 
-const getSupplierNameById = item => {
-  const supplier = suppliers.value.find(obj => obj.id === item.supplier_id)
-
-  if (item.hasOwnProperty('supplier_name'))
-    return item.supplier_name
-  else
-    return supplier ? supplier.name : null
-}
-
 const addMaterial = material => {
   material.id = items.value.length
   items.value.push(material)
+  materialsList.value.push(material.material_id)
   totalItems.value = items.value.length
 
   if (!selectedRows.value) {
@@ -200,9 +219,27 @@ const deleteMaterial = id => {
 }
 
 const updateCosts = subtotal => {
-  costs.value.subtotal = subtotal.toFixed(2)
+  costs.value.subtotal = parseFloat(subtotal).toFixed(2)
   costs.value.iva = parseFloat((subtotal * 0.16).toFixed(2))
   costs.value.total = parseFloat((subtotal * 1.16).toFixed(2))
+}
+
+const changePurchaseOrderNUmber = number => {
+  const parts = number.split("-")
+  const lastPart = parts[parts.length - 1]
+  const isLetter = /^[A-Z]$/.test(lastPart)
+
+  let letter
+  if (isLetter) {
+    letter = lastPart
+    if (letter === 'Z') throw new Error("Max letter reached (Z)")
+    letter = String.fromCharCode(letter.charCodeAt(0) + 1)
+    parts[parts.length - 1] = letter
+  } else {
+    parts.push('A')
+  }
+
+  purchaseOrderNumber.value = parts.join("-")
 }
 
 watch(selectedRows, val => {
@@ -220,14 +257,14 @@ watch(selectedRows, val => {
       icon="credit-card-pay"
     />
     <VCard class="mb-2">
-      <VCardText class="d-flex align-center justify-space-between py-4">
+      <VCardText>
         <VRow>
           <!-- 👉 Project -->
           <VCol
             cols="12"
-            md="4"
+            md="6"
           >
-            <AppSelect
+            <AppAutocomplete
               v-model="project"
               label="Proyecto"
               placeholder="Proyecto"
@@ -260,6 +297,33 @@ watch(selectedRows, val => {
               placeholder="Fecha estimada de entrega"
             />
           </VCol>
+        </VRow>
+        <VRow>
+          <VCol
+            cols="12"
+            md="6"
+          >
+            <!-- 👉 Assign to purchase order -->
+            <AppAutocomplete
+              v-model="purchaseOrderLinked"
+              label="Asignar a orden de compra"
+              placeholder="Asignar a orden de compra"
+              :item-title="item => item.number"
+              :item-value="item => item.number"
+              :items="purchaseOrdersLIst.data"
+              @update:model-value="changePurchaseOrderNUmber"
+            />
+          </VCol>
+          <VCol
+            cols="12"
+            md="4"
+          >
+            <!-- 👉 Purchase order number -->
+            <AppTextField
+              v-model="purchaseOrderNumber"
+              label="Número de orden"
+            />
+          </VCol>
           <!-- 👉 Status -->
           <VCol
             cols="12"
@@ -272,7 +336,7 @@ watch(selectedRows, val => {
             >Estatus</label>
             <VBtn
               variant="outlined"
-              disabled="disabled"
+              disabled
               color="secondary"
             >
               <VIcon
@@ -286,26 +350,40 @@ watch(selectedRows, val => {
       <VDivider v-if="project" />
       <VCardText v-if="project">
         <VRow>
+          <VCol
+            cols="12"
+            md="4"
+          >
+            <!-- 👉 Company -->
+            <AppSelect
+              v-model="company"
+              label="Razón social"
+              placeholder="Razón social"
+              :item-title="item => item.name"
+              :item-value="item => item._id"
+              :items="companiesList.data"
+            />
+          </VCol>
           <!-- 👉 OD -->
           <VCol
             cols="12"
-            md="6"
+            md="4"
           >
             <AppTextField
               v-model="project.od"
               label="OD"
-              disabled="disabled"
+              disabled
             />
           </VCol>
           <!-- 👉 Front -->
           <VCol
             cols="12"
-            md="6"
+            md="4"
           >
             <AppTextField
               v-model="project.front"
               label="Ubicación"
-              disabled="disabled"
+              disabled
             />
           </VCol>
         </VRow>
@@ -320,7 +398,7 @@ watch(selectedRows, val => {
             <AppTextField
               :model-value="amount"
               :label="prototype"
-              disabled="disabled"
+              disabled
             />
           </VCol>
         </VRow>
@@ -340,17 +418,34 @@ watch(selectedRows, val => {
               :item-title="item => item.name"
               :item-value="item => item.id"
               :items="suppliers"
+              clearable
+              clear-icon="tabler-x"
               @update:model-value="getMaterials"
             />
           </VCol>
-          <!-- 👉 Subject -->
+          <!-- 👉 Divisions -->
           <VCol
             cols="12"
             md="6"
           >
+            <AppSelect
+              v-model="selectedDivisions"
+              label="Producto a entregar"
+              placeholder="Producto a entregar"
+              :items="divisionsList.values"
+              chips
+              multiple
+              closable-chips
+              @update:model-value="getMaterials"
+            />
+          </VCol>
+        </VRow>
+        <VRow>
+          <!-- 👉 Subject -->
+          <VCol cols="12">
             <AppTextField
               v-model="subject"
-              label="Asunto"
+              label="Asunto / Nota / Comentario"
             />
           </VCol>
         </VRow>
@@ -384,18 +479,14 @@ watch(selectedRows, val => {
         :items-length="totalItems"
         class="text-no-wrap"
       >
-        <template #item.supplier_id="{ item }">
-          <label>{{ getSupplierNameById(item) }}</label>
-        </template>
-
-        <template #item.name="{ item }">
+        <template #item.concept="{ item }">
           <div
-            class="d-flex align-center gap-x-4"
+            class="d-flex gap-x-4"
             :class="item.hasOwnProperty('modified') && item.modified === 1 ? 'modified': null"
           >
             <div class="d-flex flex-column">
               <h6 class="text-base">
-                <label class="font-weight-medium text-link">{{ item.name }}</label>
+                <label class="font-weight-medium text-link">{{ item.concept }}</label>
               </h6>
               <small v-if="item.color">{{ item.color }}</small>
             </div>
@@ -415,10 +506,7 @@ watch(selectedRows, val => {
         </template>
 
         <template #item.total="{ item }">
-          <div
-            class="align-right"
-            :class="item.hasOwnProperty('modified') && item.modified === 1 ? 'modified': null"
-          >
+          <div class="align-right">
             <label>{{ formatCurrency(item.total) }}</label>
           </div>
         </template>
@@ -462,11 +550,11 @@ watch(selectedRows, val => {
       <VDivider v-if="costs && items" />
       <VCardText v-if="costs && items">
         <div>
-          <div class="d-flex align-center flex-wrap gap-4">
+          <div class="d-flex flex-wrap gap-4">
             <!-- 👉 Generate purchase order -->
             <VBtn
               prepend-icon="tabler-shopping-cart-plus"
-              :disabled="!selectedRows || selectedRows.length === 0"
+              :disabled="(!selectedRows || selectedRows.length === 0) || !company"
               @click="addPurchaseOrder(1)"
             >
               Generar orden de compra
@@ -478,7 +566,7 @@ watch(selectedRows, val => {
               :disabled="!selectedRows || selectedRows.length === 0"
               @click="addPurchaseOrder(0)"
             >
-              Guardar orden de compra
+              Guardar borrador
             </VBtn>
             <!-- 👉 Add material -->
             <VBtn
@@ -510,6 +598,7 @@ watch(selectedRows, val => {
       v-model:is-drawer-open="isAddNewMaterialDrawerVisible"
       v-model:supplier-id="supplier"
       v-model:materials-list="materialsList"
+      v-model:selected-divisions="selectedDivisions"
       @add-material="addMaterial"
     />
     <EditMaterialDrawer

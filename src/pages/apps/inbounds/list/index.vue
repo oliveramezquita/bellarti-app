@@ -2,40 +2,35 @@
 definePage({
   meta: {
     action: 'read',
-    subject: 'Materiales',
-    navActiveLink: 'apps-materials-list',
+    subject: 'AlmEntradas',
   },
 })
 
-const breadcrumbItems = ref([{ title: 'Materiales', class: 'text-primary' }, { title: 'Materiales' }])
-const { data: supplierList } = await useApi('api/suppliers?itemsPerPage=100')
+const breadcrumbItems = ref([{ title: 'Almacén', class: 'text-primary' }, { title: 'Entradas' }])
 const searchQuery = ref('')
 const itemsPerPage = ref(10)
 const page = ref(1)
-const isDeleteMaterialDialogVisible = ref(false)
-const selectedMaterial = ref()
-const selectedSupplier = ref()
+const protectTypes = ['Vivienda en Serie', 'Proyecto Especial', 'Sin proyecto']
+const projectType = ref()
+const selectedProject = ref()
+const projects = ref([])
 
 const headers = [
   {
-    title: 'Concepto',
-    key: 'concept',
+    title: 'Orde de comppra',
+    key: 'purchase_order',
   },
   {
-    title: 'Proveedor',
-    key: 'supplier',
+    title: 'Proyecto',
+    key: 'project.name',
   },
   {
-    title: 'Código Proveedor',
-    key: 'supplier_code',
+    title: 'Total',
+    key: 'total_items',
   },
   {
-    title: 'SKU',
-    key: 'sku',
-  },
-  {
-    title: 'Unidad de Medida',
-    key: 'measurement',
+    title: 'Fecha de registro',
+    key: 'created_at',
   },
   {
     title: 'Acciones',
@@ -45,44 +40,33 @@ const headers = [
 ]
 
 const {
-  data: materialsData,
-  execute: fetchMaterials,
-} = await useApi(createUrl('api/materials', {
+  data: inboundsData,
+  execute: fetchInbounds,
+} = await useApi(createUrl('api/inbounds', {
   query: {
     q: searchQuery,
-    supplier: selectedSupplier,
+    supplier: selectedProject,
     itemsPerPage,
     page,
   },
 }))
 
-const materials = computed(() => materialsData.value.data)
-const totalMaterials = computed(() => materialsData.value.total_elements)
+const inbounds = computed(() => inboundsData.value.data)
+const totalinbounds = computed(() => inboundsData.value.total_elements)
 
-const viewDeleteMaterialDialog = material => {
-  selectedMaterial.value = material
-  isDeleteMaterialDialogVisible.value = true
-}
+const formatDate = fechaISO => {
+  if (fechaISO) {
+    const date = new Date(fechaISO)
+  
+    const day = String(date.getUTCDate()).padStart(2, '0')
+    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+    const monthAbbrev = months[date.getUTCMonth()]
+    const year = String(date.getUTCFullYear()).slice(-2)
 
-const deleteMaterial = async id => {
-  await $api(`api/material/${id}`, { method: 'DELETE' })
-  isDeleteMaterialDialogVisible.value = false
-  fetchMaterials()
-}
-
-const download = async() => {
-  const apiUrl = selectedSupplier.value ? `api/exportar-materiales?supplier=${selectedSupplier.value}` : 'api/exportar-materiales'
-  const response = await $api(apiUrl, { method: 'GET' })
-
-  const url = URL.createObjectURL(response)
-  const link = document.createElement('a')
-
-  link.href = url
-  link.setAttribute('download', 'materiales.xlsx')
-  document.body.appendChild(link)
-  link.click()
-  link.remove()
-  URL.revokeObjectURL(url)
+    return `${day}/${monthAbbrev}/${year}`
+  } else {
+    return ''
+  }
 }
 </script>
 
@@ -90,7 +74,7 @@ const download = async() => {
   <Breadcrumb
     :items="breadcrumbItems"
     :return="false"
-    icon="package"
+    icon="building-warehouse"
   />
   <section>
     <VCard>
@@ -99,15 +83,28 @@ const download = async() => {
       </VCardItem>
       <VCardText>
         <VRow>
-          <!-- 👉 Select Supplier -->
           <VCol
             cols="12"
-            sm="6"
+            sm="4"
           >
+            <AppSelect
+              v-model="projectType"
+              placeholder="Seleccionar tipo de proyecto"
+              :items="protectTypes"
+              clearable
+              clear-icon="tabler-x"
+            />
+          </VCol>
+          <VCol
+            cols="12"
+            sm="4"
+          >
+            <!-- 👉 Select project -->
             <AppAutocomplete
-              v-model="selectedSupplier"
-              placeholder="Seleccionar proveedor"
-              :items="supplierList.data"
+              v-if="projectType === 'Vivienda en Serie' || projectType === 'Proyecto Especial'"
+              v-model="selectedProject"
+              placeholder="Seleccionar proyecto"
+              :items="projects"
               :item-title="item => item.name"
               :item-value="item => item._id"
               clearable
@@ -116,12 +113,12 @@ const download = async() => {
           </VCol>
           <VCol
             cols="12"
-            sm="6"
+            sm="4"
           >
             <!-- 👉 Search  -->
             <AppTextField
               v-model="searchQuery"
-              placeholder="Buscar material"
+              placeholder="Buscar entrada"
             />
           </VCol>
         </VRow>
@@ -150,29 +147,12 @@ const download = async() => {
         <VSpacer />
 
         <div class="d-flex align-center flex-wrap gap-4">
-          <!-- 👉 Add material button -->
+          <!-- 👉 Add inbound button -->
           <VBtn
             prepend-icon="tabler-plus"
-            :to="{name: 'apps-materials-new'}"
+            :to="{name: 'apps-inbounds-new'}"
           >
             Agregar
-          </VBtn>
-          <!-- 👉 Upload material button -->
-          <VBtn
-            prepend-icon="tabler-upload"
-            variant="outlined"
-            :to="{name: 'apps-materials-upload'}"
-          >
-            Subir
-          </VBtn>
-          <!-- 👉 Download material button -->
-          <VBtn
-            prepend-icon="tabler-download"
-            color="secondary"
-            variant="outlined"
-            @click="download"
-          >
-            Descargar
           </VBtn>
         </div>
       </VCardText>
@@ -189,33 +169,17 @@ const download = async() => {
           { value: 50, title: '50' },
           { value: -1, title: '$vuetify.dataFooter.itemsPerPageAll' },
         ]"
-        :items="materials"
-        :items-length="totalMaterials"
+        :items="inbounds"
+        :items-length="totalinbounds"
         :headers="headers"
         class="text-no-wrap"
         @update:options="updateOptions"
       >
-        <template #item.concept="{ item }">
-          <div class="d-flex gap-x-4">
-            <div class="d-flex flex-column">
-              <h6
-                class="text-base"
-                style="font-weight: normal;"
-              >
-                <RouterLink
-                  :to="{ name: 'apps-materials-view-id', params: { id: item._id } }"
-                  class="font-weight-medium text-link"
-                >
-                  {{ item.concept }}
-                </RouterLink>
-              </h6>
-            </div>
-          </div>
+        <template #item.created_at="{ item }">
+          <label>{{ formatDate(item.created_at) }}</label>
         </template>
-
-        <!-- Actions -->
         <template #item.actions="{ item }">
-          <IconBtn :to="{name: 'apps-materials-view-id', params: {id: item._id}}">
+          <IconBtn :to="{name: 'apps-inventory-view-id', params: {id: item._id}}">
             <VIcon icon="tabler-eye" />
           </IconBtn>
           <IconBtn @click="viewDeleteMaterialDialog(item)">
@@ -227,7 +191,7 @@ const download = async() => {
           <TablePagination
             v-model:page="page"
             :items-per-page="itemsPerPage"
-            :total-items="totalMaterials"
+            :total-items="totalinbounds"
           />
         </template>
       </VDataTableServer>

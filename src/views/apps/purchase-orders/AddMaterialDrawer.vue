@@ -16,12 +16,18 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  selectedDivisions: {
+    type: Array,
+    required: false,
+    default: () => ([]),
+  },
 })
 
 const emit = defineEmits([
   'update:isDrawerOpen',
   'update:supplierId',
   'update:materialsList',
+  'update:selectedDivisions',
   'addMaterial',
 ])
 
@@ -29,7 +35,9 @@ const isFormValid = ref(false)
 const refForm = ref()
 const { data: suppliers } = await useApi('api/suppliers?itemsPerPage=1000')
 const { data: colors } = await useApi('api/catalogs?name=Colores')
+const { data: divisionsList } = await useApi('api/catalogs?name=División de materiales')
 const supplier = ref()
+const division = ref([])
 const materials = ref([])
 const material = ref()
 const items = ref([])
@@ -44,9 +52,15 @@ const reference = ref()
 const total = ref()
 
 const getMaterials = async () => {
-  const response = await $api(`api/materials/supplier/${supplier.value}`, { method: 'GET' })
+  let filter = ''
+  if (division.value && division.value.length > 0)
+    filter = `?division=${division.value.join(',')}`
 
-  materials.value = response.filter(item => !Object.values(items.value).includes(item._id))
+  if (supplier.value) {
+    const response = await $api(`api/materials/supplier/${supplier.value}${filter}`, { method: 'GET' })
+
+    materials.value = response.filter(item => !Object.values(items.value).includes(item._id))
+  }
 }
 
 const getMaterialData = () => {
@@ -67,9 +81,11 @@ const onSubmit = () => {
         sku: material.value.hasOwnProperty('sku') ? material.value.sku : null,
         inventory_price: material.value.inventory_price,
         market_price: material.value.market_price,
+        material_id: material.value._id,
         measurement: material.value.measurement,
         modified: 1,
-        name: material.value.name,
+        concept: material.value.concept,
+        division: material.value.division,
         presentation: material.value.presentation,
         price_difference: material.value.price_difference,
         quantity: null,
@@ -89,6 +105,7 @@ const onSubmit = () => {
         },
       })
       emit('update:isDrawerOpen', false)
+
       nextTick(() => {
         refForm.value?.reset()
         refForm.value?.resetValidation()
@@ -99,6 +116,7 @@ const onSubmit = () => {
 
 const closeNavigationDrawer = () => {
   emit('update:isDrawerOpen', false)
+
   nextTick(() => {
     refForm.value?.reset()
     refForm.value?.resetValidation()
@@ -115,31 +133,25 @@ const isValidNumber = value => {
   return regex.test(value)
 }
 
+watch(props, () => {
+  division.value = structuredClone(toRaw(props.selectedDivisions))
+  supplier.value = structuredClone(toRaw(props.supplierId))
+  items.value = structuredClone(toRaw(props.materialsList))
+  getMaterials()
+})
+
 watch(amount, val => {
-  if (isValidNumber(val)) 
+  if (isValidNumber(val) && price.value) 
     total.value = parseFloat((val * price.value).toFixed(2))
   else
     total.value = ''
 })
 
 watch(price, val => {
-  if (isValidNumber(val)) 
+  if (isValidNumber(val) && amount.value) 
     total.value = parseFloat((val * amount.value).toFixed(2))
   else
     total.value = ''
-})
-
-watch(() => props.supplierId, newValue => {
-  if (newValue) {
-    supplier.value =  newValue
-    getMaterials()
-  }
-})
-
-watch(() => props.materialsList, newValue => {
-  if (newValue) {
-    items.value =  newValue
-  }
 })
 </script>
 
@@ -147,7 +159,7 @@ watch(() => props.materialsList, newValue => {
   <VNavigationDrawer
     data-allow-mismatch
     temporary
-    :width="400"
+    :width="500"
     location="end"
     class="scrollable-content"
     :model-value="props.isDrawerOpen"
@@ -182,6 +194,19 @@ watch(() => props.materialsList, newValue => {
                   placeholder="Seleccionar proveedor"
                   :rules="[requiredValidator]"
                   disabled="disabled"
+                />
+              </VCol>
+              <!-- 👉 Division -->
+              <VCol cols="12">
+                <AppSelect
+                  v-model="division"
+                  label="División"
+                  placeholder="División"
+                  :items="divisionsList.values"
+                  chips
+                  multiple
+                  closable-chips
+                  disabled
                 />
               </VCol>
               <!-- 👉 Materials -->
@@ -271,12 +296,11 @@ watch(() => props.materialsList, newValue => {
                   Agregar
                 </VBtn>
                 <VBtn
-                  type="reset"
                   variant="tonal"
                   color="secondary"
                   @click="closeNavigationDrawer"
                 >
-                  Cancelar
+                  Regresar
                 </VBtn>
               </VCol>
             </VRow>
