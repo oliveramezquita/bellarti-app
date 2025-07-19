@@ -17,28 +17,16 @@ const selectedSupplier = ref()
 
 const headers = [
   {
-    title: 'Rack',
-    key: 'rack',
-  },
-  {
-    title: 'Nivel',
-    key: 'level',
-  },
-  {
-    title: 'Módulo',
-    key: 'module',
-  },
-  {
-    title: 'Proveedor',
-    key: 'material.supplier_id',
+    title: 'Concepto',
+    key: 'material.concept',
   },
   {
     title: 'SKU',
     key: 'material.sku',
   },
   {
-    title: 'Concepto',
-    key: 'material.concept',
+    title: 'Proveedor',
+    key: 'material.supplier_id',
   },
   {
     title: 'Unidad',
@@ -191,6 +179,23 @@ const download = async() => {
         class="text-no-wrap"
         @update:options="updateOptions"
       >
+        <template #item.material.concept="{ item }">
+          <div class="d-flex gap-x-4">
+            <div class="d-flex flex-column">
+              <h6
+                class="text-base"
+                style="font-weight: normal;"
+              >
+                <RouterLink
+                  :to="{ name: 'apps-inventory-view-id', params: { id: item._id } }"
+                  class="font-weight-medium text-link"
+                >
+                  {{ item.material.concept }}
+                </RouterLink>
+              </h6>
+            </div>
+          </div>
+        </template>
         <template #item.material.supplier_id="{ item }">
           {{ supplierList.data.find(s => s._id === item.material.supplier_id)?.name || null }}
         </template>

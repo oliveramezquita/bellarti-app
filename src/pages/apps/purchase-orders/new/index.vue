@@ -416,7 +416,7 @@ watch(selectedRows, val => {
               label="Proveedor"
               placeholder="Proveedor"
               :item-title="item => item.name"
-              :item-value="item => item.id"
+              :item-value="item => item._id"
               :items="suppliers"
               clearable
               clear-icon="tabler-x"

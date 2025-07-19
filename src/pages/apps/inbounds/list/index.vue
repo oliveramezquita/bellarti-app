@@ -17,6 +17,10 @@ const projects = ref([])
 
 const headers = [
   {
+    title: 'ID',
+    key: 'folio',
+  },
+  {
     title: 'Orde de comppra',
     key: 'purchase_order',
   },
@@ -58,7 +62,7 @@ const formatDate = fechaISO => {
   if (fechaISO) {
     const date = new Date(fechaISO)
   
-    const day = String(date.getUTCDate()).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
     const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
     const monthAbbrev = months[date.getUTCMonth()]
     const year = String(date.getUTCFullYear()).slice(-2)
@@ -152,7 +156,7 @@ const formatDate = fechaISO => {
             prepend-icon="tabler-plus"
             :to="{name: 'apps-inbounds-new'}"
           >
-            Agregar
+            Agregar entrada
           </VBtn>
         </div>
       </VCardText>
@@ -175,11 +179,28 @@ const formatDate = fechaISO => {
         class="text-no-wrap"
         @update:options="updateOptions"
       >
+        <template #item.folio="{ item }">
+          <div class="d-flex gap-x-4">
+            <div class="d-flex flex-column">
+              <h6
+                class="text-base"
+                style="font-weight: normal;"
+              >
+                <RouterLink
+                  :to="{ name: 'apps-inbounds-view-id', params: { id: item._id } }"
+                  class="font-weight-medium text-link"
+                >
+                  {{ item.folio }}
+                </RouterLink>
+              </h6>
+            </div>
+          </div>
+        </template>
         <template #item.created_at="{ item }">
           <label>{{ formatDate(item.created_at) }}</label>
         </template>
         <template #item.actions="{ item }">
-          <IconBtn :to="{name: 'apps-inventory-view-id', params: {id: item._id}}">
+          <IconBtn :to="{name: 'apps-inbounds-view-id', params: {id: item._id}}">
             <VIcon icon="tabler-eye" />
           </IconBtn>
           <IconBtn @click="viewDeleteMaterialDialog(item)">
