@@ -13,9 +13,6 @@ import InputMaterialsDialog from '@/views/apps/purchase-orders/InputMaterialsDia
 const userData = useCookie('userData')
 const route = useRoute('apps-purchase-orders-view-id')
 const { data: purchaseOrderData, execute: fetchPurchaseOrder } = await useApi(`api/purchase_order/${ route.params.id }`)
-
-console.log(purchaseOrderData.value)
-
 const { data: projects } = await useApi('api/purchase_orders/get_projects')
 const { data: purchaseOrdersLIst } =  await useApi('api/purchase_orders?status=processed&itemsPerPage=100')
 const { data: companiesList } = await useApi('api/companies?itemsPerPage=100')
@@ -528,7 +525,7 @@ watch(selectedRows, val => {
               label="Proveedor"
               placeholder="Proveedor"
               :item-title="item => item.name"
-              :item-value="item => item.id"
+              :item-value="item => item._id"
               :items="suppliers"
               disabled="disabled"
             />

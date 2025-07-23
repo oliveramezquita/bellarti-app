@@ -22,30 +22,6 @@ const closeNavigationDialog = () => {
   emit('update:isDialogOpen', false)
 }
 
-const formatDate = fechaISO => {
-  if (fechaISO) {
-    const date = new Date(fechaISO)
-  
-    const day = String(date.getUTCDate()).padStart(2, '0')
-    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
-    const monthAbbrev = months[date.getUTCMonth()]
-    const year = String(date.getUTCFullYear()).slice(-2)
-
-    return `${day}/${monthAbbrev}/${year}`
-  } else {
-    return 'S/D'
-  }
-}
-
-const formatMaterialName = item => {
-  let name = ''
-  if (item.hasOwnProperty('supplier_code') && item.supplier_code)
-    name = `${item.supplier_code} - `
-  name += item.name
-  
-  return name
-}
-
 const formatMeasurement = item => {
   let measurement = ''
   measurement += item.measurement
@@ -208,9 +184,10 @@ const saveInputRegister = () => {
           >
             <div>
               <span
-                style="display: block;"
+                style="font-weight: bold;"
                 class="mb-1"
-              >{{ formatMaterialName(item) }}</span>
+              >{{ item.concept }}</span> - <span>{{ item.sku }}</span>
+              <br>
               <small>{{ formatMeasurement(item) }}</small>
             </div>
           </VExpansionPanelTitle>
@@ -254,20 +231,44 @@ const saveInputRegister = () => {
             <VRow>
               <VCol
                 cols="12"
-                md="4"
+                md="3"
+              >
+                <VTextField
+                  v-model="items[i].delivered.rack"
+                  label="Rack"
+                />
+              </VCol>
+              <VCol
+                cols="12"
+                md="3"
+              >
+                <VTextField
+                  v-model="items[i].delivered.level"
+                  label="Nivel"
+                />
+              </VCol>
+              <VCol
+                cols="12"
+                md="3"
+              >
+                <VTextField
+                  v-model="items[i].delivered.module"
+                  label="Módulo"
+                />
+              </VCol>
+              <VCol
+                cols="12"
+                md="3"
               >
                 <VTextField
                   v-model="items[i].delivered.quantity"
                   label="Entrada a registrar"
                 />
               </VCol>
-              <VCol
-                cols="12"
-                md="8"
-              >
+              <VCol cols="12">
                 <VTextField
                   v-model="items[i].delivered.notes"
-                  label="Observaciiones"
+                  label="Observaciones"
                 />
               </VCol>
             </VRow>
