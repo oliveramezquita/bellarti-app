@@ -14,6 +14,8 @@ const protectTypes = ['Vivienda en Serie', 'Proyecto Especial', 'Sin proyecto']
 const projectType = ref()
 const selectedProject = ref()
 const projects = ref([])
+const selectedInbound = ref()
+const isDeleteInboundDialogVisible = ref(false)
 
 const headers = [
   {
@@ -58,19 +60,15 @@ const {
 const inbounds = computed(() => inboundsData.value.data)
 const totalinbounds = computed(() => inboundsData.value.total_elements)
 
-const formatDate = fechaISO => {
-  if (fechaISO) {
-    const date = new Date(fechaISO)
-  
-    const day = String(date.getDate()).padStart(2, '0')
-    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
-    const monthAbbrev = months[date.getUTCMonth()]
-    const year = String(date.getUTCFullYear()).slice(-2)
+const viewDeleteInboundDialog = inbound => {
+  selectedInbound.value = inbound
+  isDeleteInboundDialogVisible.value = true
+}
 
-    return `${day}/${monthAbbrev}/${year}`
-  } else {
-    return ''
-  }
+const deleteInbound = async id => {
+  await $api(`api/inbound/${id}`, { method: 'DELETE' })
+  isDeleteInboundDialogVisible.value = false
+  fetchInbounds()
 }
 </script>
 
@@ -203,7 +201,7 @@ const formatDate = fechaISO => {
           <IconBtn :to="{name: 'apps-inbounds-view-id', params: {id: item._id}}">
             <VIcon icon="tabler-eye" />
           </IconBtn>
-          <IconBtn @click="viewDeleteMaterialDialog(item)">
+          <IconBtn @click="viewDeleteInboundDialog(item)">
             <VIcon icon="tabler-trash" />
           </IconBtn>
         </template>
@@ -219,20 +217,20 @@ const formatDate = fechaISO => {
     </VCard>
     <!-- SECTION -->
     <VDialog
-      v-model="isDeleteMaterialDialogVisible"
+      v-model="isDeleteInboundDialogVisible"
       width="500"
     >
       <!-- Dialog close btn -->
-      <DialogCloseBtn @click="isDeleteMaterialDialogVisible = !isDeleteMaterialDialogVisible" />
+      <DialogCloseBtn @click="isDeleteInboundDialogVisible = !isDeleteInboundDialogVisible" />
 
       <!-- Dialog Content -->
-      <VCard title="Eliminar material">
+      <VCard title="Eliminar entrada">
         <VCardText>
-          ¿Estás seguro de eliminar el material: <b>{{ selectedMaterial.concept }}</b>?
+          ¿Estás seguro de eliminar la entrada con el id: <b>{{ selectedInbound.folio }} - Orden de compra: {{ selectedInbound.purchase_order }}</b>?
         </VCardText>
 
         <VCardText class="d-flex justify-end">
-          <VBtn @click="deleteMaterial(selectedMaterial._id)">
+          <VBtn @click="deleteInbound(selectedInbound._id)">
             Eliminar
           </VBtn>
         </VCardText>

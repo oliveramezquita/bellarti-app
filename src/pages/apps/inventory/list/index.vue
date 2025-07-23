@@ -17,6 +17,10 @@ const selectedSupplier = ref()
 
 const headers = [
   {
+    title: '',
+    key: 'data-table-expand',
+  },
+  {
     title: 'Concepto',
     key: 'material.concept',
   },
@@ -177,8 +181,61 @@ const download = async() => {
         :items-length="totalInventory"
         :headers="headers"
         class="text-no-wrap"
+        expand-on-click
         @update:options="updateOptions"
       >
+        <!-- Expanded Row Data -->
+        <template #expanded-row="slotProps">
+          <tr class="v-data-table__tr">
+            <td :colspan="headers.length">
+              <h4 class="mt-3">
+                Última entrada:
+              </h4>
+              <div class="inner-table">
+                <div class="row header">
+                  <div class="cell">
+                    Rack
+                  </div>
+                  <div class="cell">
+                    Nivel
+                  </div>
+                  <div class="cell">
+                    Módulo
+                  </div>
+                  <div class="cell">
+                    Cantidad
+                  </div>
+                  <div class="cell">
+                    Proyecto
+                  </div>
+                  <div class="cell">
+                    Fecha
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="cell">
+                    {{ slotProps.item.last_inbound.rack }}
+                  </div>
+                  <div class="cell">
+                    {{ slotProps.item.last_inbound.level }}
+                  </div>
+                  <div class="cell">
+                    {{ slotProps.item.last_inbound.module }}
+                  </div>
+                  <div class="cell">
+                    {{ slotProps.item.last_inbound.quantity }}
+                  </div>
+                  <div class="cell">
+                    {{ slotProps.item.last_inbound.project.name }}
+                  </div>
+                  <div class="cell">
+                    {{ formatDate(slotProps.item.last_inbound.created_at) }}
+                  </div>
+                </div> 
+              </div>
+            </td>
+          </tr>
+        </template>
         <template #item.material.concept="{ item }">
           <div class="d-flex gap-x-4">
             <div class="d-flex flex-column">
@@ -240,3 +297,51 @@ const download = async() => {
     </VDialog>
   </section>
 </template>
+
+<style lang="scss">
+.align-right {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+}
+
+.align-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inner-table {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #ccc;
+  inline-size: 100%;
+  margin-block: 20px;
+  margin-inline: auto;
+
+  .row {
+    display: flex;
+    border-block-end: 1px solid #ccc;
+  }
+
+  .cell {
+    flex: 1;
+    padding: 10px;
+    border-inline-end: 1px solid #ccc;
+    text-align: center;
+  }
+
+  .row:last-child {
+    border-block-end: none;
+  }
+
+  .cell:last-child {
+    border-inline-end: none;
+  }
+
+  .header {
+    background-color: #f5f5f5;
+    font-weight: bold;
+  }
+}
+</style>

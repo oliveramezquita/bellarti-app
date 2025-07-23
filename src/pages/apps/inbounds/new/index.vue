@@ -89,6 +89,7 @@ const fillItems = material => {
       concept: material.concept,
       material_id: material._id,
       measurement: material.measurement,
+      color: material.color,
       source: 'inbound',
       supplier_id: material.supplier_id,
       supplier_code: material.supplier_code,

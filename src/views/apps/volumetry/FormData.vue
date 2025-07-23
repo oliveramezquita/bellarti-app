@@ -78,8 +78,7 @@ const materialChange = async () => {
       icon: 'tabler-chevron-down',
     }))
   }
-  
-  console.log(material.value)
+
   measurement.value = material.value.measurement
   if (material.value.hasOwnProperty('sku'))
     sku.value = material.value.sku
