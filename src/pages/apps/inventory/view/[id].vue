@@ -125,7 +125,7 @@ const currentTab = ref('tab-1')
         </VTab>
       </VTabs>
 
-      <VCardText>
+      <VCardText style="padding: 0;">
         <VWindow v-model="currentTab">
           <VWindowItem>
             <Inbounds :material-id="inventoryData.material.id" />

@@ -232,7 +232,7 @@ const removeList = i => {
               variant="tonal"
               :to="{name:'apps-catalogs-list'}"
             >
-              Cancelar
+              Regresar
             </VBtn>
           </VCol>
         </VRow>

@@ -31,7 +31,7 @@ const headers = [
   },
   {
     title: 'Proveedor',
-    key: 'supplier',
+    key: 'supplier.name',
   },
   {
     title: 'Subtotal',

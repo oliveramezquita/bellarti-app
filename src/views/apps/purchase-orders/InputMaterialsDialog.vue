@@ -138,7 +138,7 @@ const saveInputRegister = () => {
             md="4"
           >
             <VTextField
-              :model-value="props.purchaseOrderData.supplier"
+              :model-value="props.purchaseOrderData.supplier.name"
               label="Proveedor"
               variant="plain"
               readonly

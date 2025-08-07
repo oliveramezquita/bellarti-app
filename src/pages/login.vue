@@ -57,8 +57,17 @@ const login = async () => {
     useCookie('accessToken').value = accessToken
     useCookie('home').value = home
     localStorage.setItem('notifications', JSON.stringify(notifications)) 
-    await nextTick(() => { 
-      router.replace(route.query.to ? String(route.query.to) : '/')
+    await nextTick(() => {
+      let destination = route.query.to ? String(route.query.to) : '/'
+
+      if (route.query.input !== undefined && route.query.input !== null) {
+        const hasParams = destination.includes('?')
+        const separator = hasParams ? '&' : '?'
+
+        destination += `${separator}input=true`
+      }
+
+      router.replace(destination)
     })
   } finally {
     isLoadingDialogVisible.value = false

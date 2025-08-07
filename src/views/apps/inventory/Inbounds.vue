@@ -5,14 +5,15 @@ const props = defineProps({
     type: String,
     required: true,
   },
-
 })
 
 const emit = defineEmits([
   'update:materialId',
+  'deleteInbound',
 ])
 
 const createdAtDate = ref('')
+const total = ref(0)
 
 const {
   data: ibounds,
@@ -55,19 +56,25 @@ const headers = [
   },
 ]
 
-// watch(createdAtDate, newDate => {
-//   console.log(newDate)
-// })
+const deleteInbound = id => {
+  emit('deleteInbound', id)
+}
 
-// const deleteMaterial = id => {
-//   emit('volumetryData', id)
-// }
+const getTotal = () => {
+  total.value = ibounds.value.reduce((sum, item) => sum + item.quantity, 0)
+}
+
+getTotal()
+
+watch(ibounds, _ => {
+  getTotal()
+})
 </script>
 
 <template>
   <div
-    class="d-flex flex-wrap align-center"
-    style="justify-content: space-between;"
+    class="d-flex align-center justify-space-between"
+    style="padding: 24px;"
   >
     <!-- 👉 Search  -->
     <AppDateTimePicker
@@ -76,14 +83,16 @@ const headers = [
       :config="{ mode: 'range' }"
       style="inline-size: 15.625rem;"
     />
-    <AppTextField
-      v-model="total"
-      label="Total"
-      placeholder="Total"
-      readonly
-      class="ml-3"
-      style="inline-size: 15.625rem;"
-    />
+    <div>
+      <AppTextField
+        v-model="total"
+        label="Total"
+        placeholder="Total"
+        readonly
+        class="ml-3"
+        style="inline-size: 15.625rem;"
+      />
+    </div>
   </div>
   <VDataTable
     :headers="headers"
