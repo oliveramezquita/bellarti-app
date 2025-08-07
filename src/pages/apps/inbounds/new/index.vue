@@ -32,7 +32,7 @@ const getProjects = async pt => {
 
     if (pt === 'Sin proyecto') {
       const { data: response } = await useApi('api/suppliers?itemsPerPage=100')
-
+      
       suppliersList.value = response.value.data
     }
   } else {
@@ -52,15 +52,19 @@ const getSuppliers = async p => {
 
 const getSupplierData = async () => {
   if (supplier.value) {
+    const p = project.value && project.value.hasOwnProperty('_id')
+      ? `&project=${project.value._id}`
+      : ''
+
+    const s = supplier.value
+      ? `&supplier=${supplier.value}`
+      : ''
+
     const responseMaterials = await $api(`api/materials/supplier/${supplier.value}`, { method: 'GET' })
+    const { data: responsePurchaseOrders } = await $api(`api/purchase_orders?status=2&itemsPerPage=1000${p}${s}`)
 
     materialsList.value = responseMaterials
-
-    if (projectType.value !== 'Sin proyecto') {
-      const { data: responsePurchaseOrders } = await $api(`api/purchase_orders?project=${project.value._id}&supplier=${supplier.value}&status=2&itemsPerPage=1000`)
-
-      purchaseOrdersList.value = responsePurchaseOrders
-    }
+    purchaseOrdersList.value = responsePurchaseOrders
   } else {
     resetValues(['purchaseOrder', 'notes', 'material', 'items'])
   }
@@ -261,7 +265,6 @@ watch(selectedMaterial, newVal => {
             v-model="purchaseOrder"
             label="Orden de compra"
             placeholder="Seleccionar orde de compra"
-            :disabled="projectType === 'Sin proyecto'"
             :items="purchaseOrdersList"
             :item-title="item => item.number"
             :item-value="item => item._id"

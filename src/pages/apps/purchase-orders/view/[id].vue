@@ -17,6 +17,9 @@ const { data: projects } = await useApi('api/purchase_orders/get_projects')
 const { data: purchaseOrdersLIst } =  await useApi('api/purchase_orders?status=processed&itemsPerPage=100')
 const { data: companiesList } = await useApi('api/companies?itemsPerPage=100')
 const { data: divisionsList } = await useApi('api/catalogs?name=División de materiales')
+const { data: paymentMethodsList } = await useApi('api/catalogs?name=Métodos de Pago')
+const { data: paymentFormsList  } = await useApi('api/catalogs?name=Formas de Pago')
+const { data: useOfCFDsList } = await useApi('api/catalogs?name=Uso de CFD')
 const isAddNewMaterialDrawerVisible = ref(false)
 const isEditMaterialDrawerVisible = ref(false)
 const isDeleteMaterialDialogVisible = ref(false)
@@ -39,6 +42,10 @@ const supplierId = ref()
 const subject = ref(purchaseOrderData.value.subject)
 const selectedMaterial = ref()
 const materialsList = ref([])
+const paymentMethod = ref(purchaseOrderData.value.payment_method)
+const paymentForm = ref(purchaseOrderData.value.payment_form)
+const cfd = ref(purchaseOrderData.value.cfd)
+const invoiceEmail = ref(purchaseOrderData.value.invoice_email)
 
 const costs = ref({
   subtotal: purchaseOrderData.value.subtotal,
@@ -168,6 +175,10 @@ const approve = async () => {
         'estimated_delivery': estimatedDelivery.value,
         'subject': subject.value,
         'status': 2,
+        'payment_method': paymentMethod.value,
+        'payment_form': paymentForm.value,
+        'cfd': cfd.value,
+        'invoice_email': invoiceEmail.value,
       },
       onResponse({ response }) {
         if (response.status === 200)
@@ -551,6 +562,56 @@ watch(selectedRows, val => {
               v-model="subject"
               label="Asunto / Nota / Comentario"
               :disabled="purchaseOrderData.status > 0"
+            />
+          </VCol>
+        </VRow>
+        <VRow>
+          <!-- 👉 Payment Methods -->
+          <VCol
+            cols="12"
+            md="6"
+          >
+            <AppSelect
+              v-model="paymentMethod"
+              label="Método de pago"
+              placeholder="Método de pago"
+              :items="paymentMethodsList.values"
+            />
+          </VCol>
+          <!-- 👉 Payment Forms -->
+          <VCol
+            cols="12"
+            md="6"
+          >
+            <AppSelect
+              v-model="paymentForm"
+              label="Formas de pago"
+              placeholder="Formas de pago"
+              :items="paymentFormsList.values"
+            />
+          </VCol>
+        </VRow>
+        <VRow>
+          <!-- 👉 Use of CFDs -->
+          <VCol
+            cols="12"
+            md="6"
+          >
+            <AppSelect
+              v-model="cfd"
+              label="Uso de CFD"
+              placeholder="Uso de CFD"
+              :items="useOfCFDsList.values"
+            />
+          </VCol>
+          <!-- 👉 Invoice Email -->
+          <VCol
+            cols="12"
+            md="6"
+          >
+            <AppTextField 
+              v-model="invoiceEmail"
+              label="Enviar factura a"
             />
           </VCol>
         </VRow>
