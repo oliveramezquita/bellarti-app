@@ -7,7 +7,6 @@ definePage({
 })
 
 const route = useRoute('apps-inbounds-view-id')
-const protectTypes = { OD: 'Vivienda en Serie', SP: 'Proyecto Especial', NA: 'Sin proyecto' }
 const { data: inboundData } = await useApi(`api/inbound/${ route.params.id }`)
 </script>
 
@@ -28,7 +27,7 @@ const { data: inboundData } = await useApi(`api/inbound/${ route.params.id }`)
         >
           <!-- 👉 Project type -->
           <AppTextField
-            :model-value="protectTypes[inboundData.project.type]"
+            :model-value="inboundData.project.type"
             label="Tipo de proyecto"
             readonly
           />

@@ -7,7 +7,7 @@ definePage({
   },
 })
 
-const protectTypes = { OD: 'Vivienda en Serie', SP: 'Proyecto Especial', NA: 'Sin proyecto' }
+const protectTypes = { 'Vivienda en Serie': 'Vivienda en Serie', 'Proyecto Especial': 'Proyecto Especial', 'Stock': 'Sin proyecto' }
 const projectType = ref()
 const projects = ref([])
 const project = ref()
@@ -30,7 +30,7 @@ const getProjects = async pt => {
 
     projects.value = response
 
-    if (pt === 'Sin proyecto') {
+    if (pt === 'Stock') {
       const { data: response } = await useApi('api/suppliers?itemsPerPage=100')
       
       suppliersList.value = response.value.data
@@ -122,7 +122,7 @@ const registerInbound = async() => {
     name: projectType.value,
     id: null,
   }
-  if (projectType.value === 'Sin proyecto' && items.value.length === 0) {
+  if (projectType.value === 'Stock' && items.value.length === 0) {
     notificationMessage.value = 'Seleccione al menos un material para registrar una entrada.'
     isNotificationVisible.value = true
 
@@ -134,8 +134,8 @@ const registerInbound = async() => {
 
     return
   } else {
-    projectData.id = project.value._id
-    projectData.name = project.value.name
+    projectData.id = project.value?._id
+    projectData.name = project.value?.name ?? projectData.name
   }
 
   try {
@@ -215,7 +215,7 @@ watch(selectedMaterial, newVal => {
             v-model="projectType"
             label="Tipo de proyecto"
             placeholder="Seleccionar tipo de proyecto"
-            :items="Object.values(protectTypes)"
+            :items="Object.keys(protectTypes)"
             clearable
             clear-icon="tabler-x"
             @update:model-value="getProjects"
@@ -230,7 +230,7 @@ watch(selectedMaterial, newVal => {
             v-model="project"
             label="Proyecto"
             placeholder="Seleccionar proyecto"
-            :disabled="projectType === 'Sin proyecto'"
+            :disabled="projectType === 'Stock'"
             :items="projects"
             :item-title="item => item.name"
             :item-value="item => item"

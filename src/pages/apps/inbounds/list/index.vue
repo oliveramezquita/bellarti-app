@@ -58,7 +58,7 @@ const {
 }))
 
 const inbounds = computed(() => inboundsData.value.data)
-const totalinbounds = computed(() => inboundsData.value.total_elements)
+const totalInbounds = computed(() => inboundsData.value.total_elements)
 
 const viewDeleteInboundDialog = inbound => {
   selectedInbound.value = inbound
@@ -172,7 +172,7 @@ const deleteInbound = async id => {
           { value: -1, title: '$vuetify.dataFooter.itemsPerPageAll' },
         ]"
         :items="inbounds"
-        :items-length="totalinbounds"
+        :items-length="totalInbounds"
         :headers="headers"
         class="text-no-wrap"
         @update:options="updateOptions"
@@ -210,7 +210,7 @@ const deleteInbound = async id => {
           <TablePagination
             v-model:page="page"
             :items-per-page="itemsPerPage"
-            :total-items="totalinbounds"
+            :total-items="totalInbounds"
           />
         </template>
       </VDataTableServer>

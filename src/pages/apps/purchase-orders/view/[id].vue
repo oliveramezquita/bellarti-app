@@ -19,7 +19,7 @@ const { data: companiesList } = await useApi('api/companies?itemsPerPage=100')
 const { data: divisionsList } = await useApi('api/catalogs?name=División de materiales')
 const { data: paymentMethodsList } = await useApi('api/catalogs?name=Métodos de Pago')
 const { data: paymentFormsList  } = await useApi('api/catalogs?name=Formas de Pago')
-const { data: useOfCFDsList } = await useApi('api/catalogs?name=Uso de CFD')
+const { data: useOfCFDIList } = await useApi('api/catalogs?name=Uso de CFDI')
 const isAddNewMaterialDrawerVisible = ref(false)
 const isEditMaterialDrawerVisible = ref(false)
 const isDeleteMaterialDialogVisible = ref(false)
@@ -44,7 +44,7 @@ const selectedMaterial = ref()
 const materialsList = ref([])
 const paymentMethod = ref(purchaseOrderData.value.payment_method)
 const paymentForm = ref(purchaseOrderData.value.payment_form)
-const cfd = ref(purchaseOrderData.value.cfd)
+const cfdi = ref(purchaseOrderData.value.cfdi)
 const invoiceEmail = ref(purchaseOrderData.value.invoice_email)
 
 const costs = ref({
@@ -177,7 +177,7 @@ const approve = async () => {
         'status': 2,
         'payment_method': paymentMethod.value,
         'payment_form': paymentForm.value,
-        'cfd': cfd.value,
+        'cfdi': cfdi.value,
         'invoice_email': invoiceEmail.value,
       },
       onResponse({ response }) {
@@ -598,10 +598,10 @@ watch(selectedRows, val => {
             md="6"
           >
             <AppSelect
-              v-model="cfd"
-              label="Uso de CFD"
-              placeholder="Uso de CFD"
-              :items="useOfCFDsList.values"
+              v-model="cfdi"
+              label="Uso de CFDI"
+              placeholder="Uso de CFDI"
+              :items="useOfCFDIList.values"
             />
           </VCol>
           <!-- 👉 Invoice Email -->
