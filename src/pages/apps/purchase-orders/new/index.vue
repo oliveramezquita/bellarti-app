@@ -17,7 +17,7 @@ const { data: purchaseOrdersLIst } =  await useApi('api/purchase_orders?status=p
 const { data: divisionsList } = await useApi('api/catalogs?name=División de materiales')
 const { data: paymentMethodsList } = await useApi('api/catalogs?name=Métodos de Pago')
 const { data: paymentFormsList  } = await useApi('api/catalogs?name=Formas de Pago')
-const { data: useOfCFDsList } = await useApi('api/catalogs?name=Uso de CFD')
+const { data: useOfCFDIList } = await useApi('api/catalogs?name=Uso de CFDI')
 const isAddNewMaterialDrawerVisible = ref(false)
 const isEditMaterialDrawerVisible = ref(false)
 const isDeleteMaterialDialogVisible = ref(false)
@@ -47,7 +47,7 @@ const router = useRouter()
 const selectedMaterial = ref()
 const paymentMethod = ref()
 const paymentForm = ref()
-const cfd = ref()
+const cfdi = ref()
 const invoiceEmail = ref('facturas@bellarti.com.mx')
 
 const headers = [
@@ -167,7 +167,7 @@ const addPurchaseOrder = async status => {
           'status': status,
           'payment_method': paymentMethod.value,
           'payment_form': paymentForm.value,
-          'cfd': cfd.value,
+          'cfdi': cfdi.value,
           'invoice_email': invoiceEmail.value, 
         },
         onResponse({ response }) {
@@ -493,10 +493,10 @@ watch(selectedRows, val => {
             md="6"
           >
             <AppSelect
-              v-model="cfd"
-              label="Uso de CFD"
-              placeholder="Uso de CFD"
-              :items="useOfCFDsList.values"
+              v-model="cfdi"
+              label="Uso de CFDI"
+              placeholder="Uso de CFDI"
+              :items="useOfCFDIList.values"
             />
           </VCol>
           <!-- 👉 Invoice Email -->
