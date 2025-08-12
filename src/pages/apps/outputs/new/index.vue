@@ -10,10 +10,14 @@ definePage({
 const isLoadingDialogVisible = ref(false)
 const isNotificationVisible = ref(false)
 const notificationMessage = ref('')
-const outputTypes = { quantification: 'Cuantificación', stock: 'En stock' }
+const outputTypes = { quantification: 'Cuantificación', originless: 'Sin asignación' }
 const outputType = ref()
 const { data: clients } = await useApi('api/clients/VS?itemsPerPage=1000')
+const { data: supplierList } = await useApi('api/suppliers?itemsPerPage=100')
+const { data: divisions } = await useApi('api/catalogs?name=División de materiales')
 const client = ref()
+const supplier = ref()
+const division = ref()
 const filters = ref([])
 const fronts = ref([])
 const front = ref()
@@ -26,6 +30,8 @@ const items = ref([])
 const totalItems = ref(0)
 const enableToRegister = ref(false)
 const router = useRouter()
+const materials = ref([])
+const material = ref()
 
 const headers = [
   {
@@ -141,12 +147,12 @@ const registerOutput = async () => {
       method: 'POST',
       body: {
         client_id: client.value,
-        quantification: {
+        quantification: outputType.value === 'Cuantificación' ? {
           id: quantification.value._id,
           front: front.value,
           prototype: prototype.value,
           area: area.value,
-        },
+        } : 'Sin asignación',
         outputs: items.value,
       },
       onResponse({ response }) {
@@ -176,6 +182,33 @@ const resetValues = values => {
   }
   if (values.includes('items')) 
     items.value = []
+}
+
+const getMaterials = async s => {
+  const { data: materialsReponse } = await useApi(`api/inventory?supplier=${s}&itemsPerPage=1000`)
+
+  materials.value = materialsReponse.value.data 
+
+}
+
+const fillItems = item => {
+  const isExist = items.value.some(i => i.id === item.material.id)
+
+  if (!isExist) {
+    items.value.push({
+      id: item.material.id,
+      material: {
+        concept: item.material.concept,
+        measurement: item.material.measurement,
+        sku: item.material.sku,
+      },
+      availability: item.hasOwnProperty('availability') ? item.availability : [],
+      TOTAL: '-',
+      total_output: 0,
+    })
+    totalItems.value = items.value.length
+    material.value = null
+  }
 }
 
 watchEffect(() => {
@@ -210,6 +243,7 @@ watchEffect(() => {
         </VCol>
         <!-- 👉 Clients -->
         <VCol
+          v-if="outputType === 'Cuantificación'"
           cols="12"
           md="4"
         >
@@ -227,6 +261,7 @@ watchEffect(() => {
         </VCol>
         <!-- 👉 Fronts -->
         <VCol
+          v-if="outputType === 'Cuantificación'"
           cols="12"
           md="4"
         >
@@ -242,6 +277,7 @@ watchEffect(() => {
         </VCol>
         <!-- 👉 Prototypes -->
         <VCol
+          v-if="outputType === 'Cuantificación'"
           cols="12"
           md="4"
         >
@@ -257,6 +293,7 @@ watchEffect(() => {
         </VCol>
         <!-- 👉 Areas -->
         <VCol
+          v-if="outputType === 'Cuantificación'"
           cols="12"
           md="4"
         >
@@ -268,6 +305,60 @@ watchEffect(() => {
             :disabled="areas.length === 0"
             class="font-weight-bold"
             @update:model-value="filterByArea"
+          />
+        </VCol>
+        <!-- 👉 Supplier -->
+        <VCol
+          v-if="outputType === 'Sin asignación'"
+          cols="12"
+          md="4"
+        >
+          <AppAutocomplete
+            v-model="supplier"
+            label="Proveedor"
+            placeholder="Seleccionar proveedor"
+            :items="supplierList.data"
+            :item-title="item => item.name"
+            :item-value="item => item._id"
+            @update:model-value="getMaterials"
+          />
+        </VCol>
+        <!-- 👉 Division -->
+        <VCol
+          v-if="outputType === 'Sin asignación'"
+          cols="12"
+          md="4"
+        >
+          <AppSelect
+            v-model="division"
+            label="División"
+            :items="divisions.values"
+          />
+        </VCol>
+        <VCol
+          v-if="outputType"
+          cols="12"
+        >
+          <!-- 👉 Notes -->
+          <AppTextField
+            v-model="notes"
+            label="Asunto / Nota / Comentario"
+            placeholder="Añadir asunto, nota o comentario"
+          />
+        </VCol>
+        <VCol
+          v-if="supplier"
+          cols="12"
+        >
+          <!-- 👉 Material -->
+          <AppAutocomplete
+            v-if="supplier && outputType === 'Sin asignación'"
+            v-model="material"
+            label="Material"
+            :items="materials"
+            :item-title="item => item.material.concept"
+            :item-value="item => item"
+            @update:model-value="fillItems"
           />
         </VCol>
       </VRow>
