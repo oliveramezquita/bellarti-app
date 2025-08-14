@@ -197,7 +197,7 @@ const saveInputRegister = () => {
             <VRow style="padding-block: 25px 0;padding-inline: 0;">
               <VCol
                 cols="12"
-                md="4"
+                md="3"
               >
                 <VTextField
                   :model-value="item.total_quantity"
@@ -208,7 +208,18 @@ const saveInputRegister = () => {
               </VCol>
               <VCol
                 cols="12"
-                md="4"
+                md="3"
+              >
+                <VTextField
+                  :model-value="item.delivered.quantity"
+                  label="Entregado"
+                  variant="plain"
+                  readonly
+                />
+              </VCol>
+              <VCol
+                cols="12"
+                md="3"
               >
                 <VTextField
                   :model-value="formatCurrency(item.inventory_price)"
@@ -219,7 +230,7 @@ const saveInputRegister = () => {
               </VCol>
               <VCol
                 cols="12"
-                md="4"
+                md="3"
               >
                 <VTextField
                   :model-value="formatCurrency(item.total)"
