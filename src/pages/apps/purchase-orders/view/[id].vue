@@ -837,6 +837,7 @@ watch(selectedRows, val => {
           <div class="d-flex flex-wrap gap-4">
             <!-- 👉 INPUT OF MATERIALS -->
             <VBtn
+              v-if="purchaseOrderData.delivered_status < 2"
               prepend-icon="tabler-package-export"
               @click="inputMaterialsView"
             >
