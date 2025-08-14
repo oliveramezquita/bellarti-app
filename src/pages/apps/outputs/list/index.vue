@@ -29,10 +29,23 @@ const headers = [
     key: 'created_at',
   },
   {
+    title: 'Estatus',
+    key: 'status',
+  },
+  {
     title: 'Acciones',
     key: 'actions',
     sortable: false,
   },
+]
+
+const statusList = [
+  { name: 'Solicitada', color: 'secondary', icon: 'tabler-clipboard-plus', value: 0 },
+  { name: 'Aprobada', color: 'success', icon: 'tabler-clipboard-check', value: 1 },
+  { name: 'Devolución solicitada', color: 'warning', icon: 'tabler-clipboard-off', value: 2 },
+  { name: 'Devolución parcial', color: 'warning', icon: 'tabler-clipboard-off', value: 3 },
+  { name: 'Devolución total', color: 'warning', icon: 'tabler-clipboard-off', value: 4 },
+  { name: 'Cancelada', color: 'error', icon: 'tabler-clipboard-x', value: 5 },
 ]
 
 const {
@@ -48,6 +61,12 @@ const {
 
 const outputs = computed(() => outputsData.value.data)
 const totalOutputs = computed(() => outputsData.value.total_elements)
+
+const getStatusValue = (value, key) => {
+  const status = statusList.find(item => item.value === value)
+  
+  return status ? status[key] : null
+}
 </script>
 
 <template>
@@ -126,12 +145,30 @@ const totalOutputs = computed(() => outputsData.value.total_elements)
           </div>
         </template>
         <template #item.quantification="{ item }">
-          <label>{{ item.quantification.front }} - {{ item.quantification.prototype }}</label>
-          <br>
-          <small>{{ item.quantification.area }}</small>
+          <div v-if="typeof item.quantification === 'object'">
+            <label>{{ item.quantification.front }} - {{ item.quantification.prototype }}</label>
+            <br>
+            <small>{{ item.quantification.area }}</small>
+          </div>
+          <div v-else>
+            <label>{{ item.quantification }}</label>
+          </div>
         </template>
         <template #item.created_at="{ item }">
           <label>{{ formatDate(item.created_at) }}</label>
+        </template>
+        <template #item.status="{ item }">
+          <div class="align-center">
+            <VBtn
+              :color="getStatusValue(item.status, 'color')"
+              variant="plain"
+            >
+              <VIcon
+                start
+                :icon="getStatusValue(item.status, 'icon')"
+              />{{ getStatusValue(item.status, 'name') }}
+            </VBtn>
+          </div>
         </template>
         <template #item.actions="{ item }">
           <IconBtn :to="{name: 'apps-outputs-view-id', params: {id: item._id}}">

@@ -26,15 +26,15 @@ const headers = [
     key: 'supplier',
   },
   {
-    title: 'Código Proveedor',
-    key: 'supplier_code',
-  },
-  {
     title: 'SKU',
     key: 'sku',
   },
   {
-    title: 'Unidad de Medida',
+    title: 'División',
+    key: 'division',
+  },
+  {
+    title: 'U. de Medida',
     key: 'measurement',
   },
   {

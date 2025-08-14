@@ -31,6 +31,7 @@ const totalItems = ref(0)
 const enableToRegister = ref(false)
 const router = useRouter()
 const materials = ref([])
+const backupMaterials = ref([])
 const material = ref()
 
 const headers = [
@@ -47,6 +48,10 @@ const headers = [
     key: 'material.sku',
   },
   {
+    title: 'División',
+    key: 'material.division',
+  },
+  {
     title: 'Unidad',
     key: 'material.measurement',
   },
@@ -57,6 +62,11 @@ const headers = [
   {
     title: 'Salida',
     key: 'total_output',
+  },
+  {
+    title: 'Acciones',
+    key: 'actions',
+    sortable: false,
   },
 ]
 
@@ -185,10 +195,20 @@ const resetValues = values => {
 }
 
 const getMaterials = async s => {
-  const { data: materialsReponse } = await useApi(`api/inventory?supplier=${s}&itemsPerPage=1000`)
+  const { data: materialsReponse } = await useApi(`api/inventory?available=true&supplier=${s}&itemsPerPage=1000`)
 
-  materials.value = materialsReponse.value.data 
+  backupMaterials.value = materialsReponse.value.data 
+  materials.value = backupMaterials.value
+}
 
+const filterMaterials = () => {
+  if (division.value) {
+    const leakedMaterials = materials.value.filter(item => item.material.division === division.value)
+
+    materials.value = leakedMaterials
+  } else {
+    materials.value = backupMaterials.value
+  }
 }
 
 const fillItems = item => {
@@ -201,6 +221,7 @@ const fillItems = item => {
         concept: item.material.concept,
         measurement: item.material.measurement,
         sku: item.material.sku,
+        division: item.material.division,
       },
       availability: item.hasOwnProperty('availability') ? item.availability : [],
       TOTAL: '-',
@@ -209,6 +230,12 @@ const fillItems = item => {
     totalItems.value = items.value.length
     material.value = null
   }
+}
+
+const removeItem = itemId => {
+  const result = items.value.filter(item => item.id !== itemId)
+
+  items.value = result
 }
 
 watchEffect(() => {
@@ -333,6 +360,9 @@ watchEffect(() => {
             v-model="division"
             label="División"
             :items="divisions.values"
+            clearable
+            clear-icon="tabler-x"
+            @update:model-value="filterMaterials"
           />
         </VCol>
         <VCol
@@ -529,6 +559,12 @@ watchEffect(() => {
         </template>
         <template #item.total_output="{ item }">
           <b>{{ item.total_output }}</b>
+        </template>
+        <!-- Actions -->
+        <template #item.actions="{ item }">
+          <IconBtn @click="removeItem(item.id)">
+            <VIcon icon="tabler-trash" />
+          </IconBtn>
         </template>
       </VDataTableServer>
     </VCardText>

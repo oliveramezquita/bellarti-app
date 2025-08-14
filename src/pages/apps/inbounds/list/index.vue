@@ -10,12 +10,10 @@ const breadcrumbItems = ref([{ title: 'Almacén', class: 'text-primary' }, { tit
 const searchQuery = ref('')
 const itemsPerPage = ref(10)
 const page = ref(1)
-const protectTypes = ['Vivienda en Serie', 'Proyecto Especial', 'Sin proyecto']
+const protectTypes = ['Vivienda en Serie', 'Proyecto Especial', 'Stock']
 const projectType = ref()
 const selectedProject = ref()
 const projects = ref([])
-const selectedInbound = ref()
-const isDeleteInboundDialogVisible = ref(false)
 
 const headers = [
   {
@@ -31,8 +29,12 @@ const headers = [
     key: 'project.name',
   },
   {
-    title: 'Total',
+    title: 'Materiales',
     key: 'total_items',
+  },
+  {
+    title: 'Estatus',
+    key: 'status',
   },
   {
     title: 'Fecha de registro',
@@ -44,6 +46,18 @@ const headers = [
     sortable: false,
   },
 ]
+
+const statusList = [
+  { name: 'Registrada', color: 'secondary', icon: 'tabler-package-import', value: 0 },
+  { name: 'Almacenada', color: 'success', icon: 'tabler-package-import', value: 1 },
+  { name: 'Cancelada', color: 'error', icon: 'tabler-package-import', value: 2 },
+]
+
+const getStatusValue = (value, key) => {
+  const status = statusList.find(item => item.value === value)
+  
+  return status ? status[key] : null
+}
 
 const {
   data: inboundsData,
@@ -59,17 +73,6 @@ const {
 
 const inbounds = computed(() => inboundsData.value.data)
 const totalInbounds = computed(() => inboundsData.value.total_elements)
-
-const viewDeleteInboundDialog = inbound => {
-  selectedInbound.value = inbound
-  isDeleteInboundDialogVisible.value = true
-}
-
-const deleteInbound = async id => {
-  await $api(`api/inbound/${id}`, { method: 'DELETE' })
-  isDeleteInboundDialogVisible.value = false
-  fetchInbounds()
-}
 </script>
 
 <template>
@@ -91,7 +94,7 @@ const deleteInbound = async id => {
           >
             <AppSelect
               v-model="projectType"
-              placeholder="Seleccionar tipo de proyecto"
+              placeholder="Seleccionar tipo de entrada"
               :items="protectTypes"
               clearable
               clear-icon="tabler-x"
@@ -194,15 +197,30 @@ const deleteInbound = async id => {
             </div>
           </div>
         </template>
+        <template #item.purchase_order="{ item }">
+          <div v-if="item.purchase_order">
+            {{ item.purchase_order }}
+          </div>
+          <div v-else>
+            <label>-</label>
+          </div>
+        </template>
+        <template #item.status="{ item }">
+          <div class="align-center">
+            <VAvatar
+              :color="getStatusValue(item.status, 'color')"
+              :icon="getStatusValue(item.status, 'icon')"
+              size="small"
+              variant="text"
+            />
+          </div>
+        </template>
         <template #item.created_at="{ item }">
           <label>{{ formatDate(item.created_at) }}</label>
         </template>
         <template #item.actions="{ item }">
           <IconBtn :to="{name: 'apps-inbounds-view-id', params: {id: item._id}}">
             <VIcon icon="tabler-eye" />
-          </IconBtn>
-          <IconBtn @click="viewDeleteInboundDialog(item)">
-            <VIcon icon="tabler-trash" />
           </IconBtn>
         </template>
 
@@ -215,26 +233,5 @@ const deleteInbound = async id => {
         </template>
       </VDataTableServer>
     </VCard>
-    <!-- SECTION -->
-    <VDialog
-      v-model="isDeleteInboundDialogVisible"
-      width="500"
-    >
-      <!-- Dialog close btn -->
-      <DialogCloseBtn @click="isDeleteInboundDialogVisible = !isDeleteInboundDialogVisible" />
-
-      <!-- Dialog Content -->
-      <VCard title="Eliminar entrada">
-        <VCardText>
-          ¿Estás seguro de eliminar la entrada con el id: <b>{{ selectedInbound.folio }} - Orden de compra: {{ selectedInbound.purchase_order }}</b>?
-        </VCardText>
-
-        <VCardText class="d-flex justify-end">
-          <VBtn @click="deleteInbound(selectedInbound._id)">
-            Eliminar
-          </VBtn>
-        </VCardText>
-      </VCard>
-    </VDialog>
   </section>
 </template>

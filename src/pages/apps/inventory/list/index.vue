@@ -87,6 +87,16 @@ const download = async() => {
   link.remove()
   URL.revokeObjectURL(url)
 }
+
+const getInboundData = (items, materialId, key) => {
+  const item = items.find(item => item.material_id === materialId)
+
+  return item.delivered[key] ?? null
+}
+
+const getOutputData = (items, materialId) => {
+  return items.find(item => item.id === materialId)?.quantity ?? null
+}
 </script>
 
 <template>
@@ -188,50 +198,110 @@ const download = async() => {
         <template #expanded-row="slotProps">
           <tr class="v-data-table__tr">
             <td :colspan="headers.length">
-              <h4 class="mt-3">
-                Última entrada:
-              </h4>
-              <div class="inner-table">
-                <div class="row header">
-                  <div class="cell">
-                    Rack
+              <div v-if="slotProps.item.last_inbound">
+                <h4 class="mt-3">
+                  Última entrada:
+                </h4>
+                <div class="inner-table">
+                  <div class="row header">
+                    <div class="cell">
+                      Rack
+                    </div>
+                    <div class="cell">
+                      Nivel
+                    </div>
+                    <div class="cell">
+                      Módulo
+                    </div>
+                    <div class="cell">
+                      Cantidad
+                    </div>
+                    <div class="cell">
+                      Proyecto
+                    </div>
+                    <div class="cell">
+                      Fecha
+                    </div>
                   </div>
-                  <div class="cell">
-                    Nivel
+                  <div class="row">
+                    <div class="cell">
+                      {{ getInboundData(
+                        slotProps.item.last_inbound.items,
+                        slotProps.item.material.id,
+                        'rack') }}
+                    </div>
+                    <div class="cell">
+                      {{ getInboundData(
+                        slotProps.item.last_inbound.items,
+                        slotProps.item.material.id,
+                        'level') }}
+                    </div>
+                    <div class="cell">
+                      {{ getInboundData(
+                        slotProps.item.last_inbound.items,
+                        slotProps.item.material.id,
+                        'module') }}
+                    </div>
+                    <div class="cell">
+                      {{ getInboundData(
+                        slotProps.item.last_inbound.items,
+                        slotProps.item.material.id,
+                        'quantity') }}
+                    </div>
+                    <div class="cell">
+                      {{ slotProps.item.last_inbound.project.name }}
+                    </div>
+                    <div class="cell">
+                      {{ formatDate(slotProps.item.last_inbound.created_at) }}
+                    </div>
+                  </div> 
+                </div>
+              </div>
+              <div v-if="slotProps.item.last_output">
+                <h4 class="mt-3">
+                  Última salida:
+                </h4>
+                <div class="inner-table">
+                  <div class="row header">
+                    <div class="cell">
+                      Cliente
+                    </div>
+                    <div class="cell">
+                      Cuantificación
+                    </div>
+                    <div class="cell">
+                      Cantidad
+                    </div>
+                    <div class="cell">
+                      Fecha
+                    </div>
                   </div>
-                  <div class="cell">
-                    Módulo
-                  </div>
-                  <div class="cell">
-                    Cantidad
-                  </div>
-                  <div class="cell">
-                    Proyecto
-                  </div>
-                  <div class="cell">
-                    Fecha
+                  <div class="row">
+                    <div class="cell">
+                      {{ slotProps.item.last_output.client_name ?? '-' }}
+                    </div>
+                    <div
+                      v-if="typeof slotProps.item.last_output?.quantification === 'string'"
+                      class="cell"
+                    >
+                      {{ slotProps.item.last_output.quantification }}
+                    </div>
+                    <div
+                      v-if="typeof slotProps.item.last_output?.quantification === 'object'"
+                      class="cell"
+                    >
+                      <label>{{ slotProps.item.last_output.quantification.front }} - {{ slotProps.item.last_output.quantification.prototype }}</label>
+                      <br>
+                      <small>{{ slotProps.item.last_output.quantification.area }}</small>
+                    </div>
+                    <div class="cell">
+                      {{ getOutputData(slotProps.item.last_output.items, slotProps.item.material.id) }}
+                    </div>
+                    <div class="cell">
+                      {{ formatDate(slotProps.item.last_output.updated_at) }}
+                    </div>
                   </div>
                 </div>
-                <div class="row">
-                  <div class="cell">
-                    {{ slotProps.item.last_inbound.rack }}
-                  </div>
-                  <div class="cell">
-                    {{ slotProps.item.last_inbound.level }}
-                  </div>
-                  <div class="cell">
-                    {{ slotProps.item.last_inbound.module }}
-                  </div>
-                  <div class="cell">
-                    {{ slotProps.item.last_inbound.quantity }}
-                  </div>
-                  <div class="cell">
-                    {{ slotProps.item.last_inbound.project.name }}
-                  </div>
-                  <div class="cell">
-                    {{ formatDate(slotProps.item.last_inbound.created_at) }}
-                  </div>
-                </div> 
               </div>
             </td>
           </tr>
@@ -269,7 +339,7 @@ const download = async() => {
           <TablePagination
             v-model:page="page"
             :items-per-page="itemsPerPage"
-            :total-items="totalMaterials"
+            :total-items="totalInventory"
           />
         </template>
       </VDataTableServer>
@@ -326,7 +396,7 @@ const download = async() => {
 
   .cell {
     flex: 1;
-    padding: 10px;
+    padding: 5px;
     border-inline-end: 1px solid #ccc;
     text-align: center;
   }

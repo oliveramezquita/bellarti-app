@@ -75,6 +75,7 @@ const getItems = async () => {
     const response = await $api(`api/purchase_order/${purchaseOrder.value}`, { method: 'GET' })
 
     items.value = response.items
+    console.log(items.value)
 
     const itemIds = new Set(items.value.map(item => item.material_id))
 
@@ -93,6 +94,7 @@ const fillItems = material => {
       concept: material.concept,
       material_id: material._id,
       measurement: material.measurement,
+      division: material.division,
       color: material.color,
       source: 'inbound',
       supplier_id: material.supplier_id,
@@ -118,8 +120,8 @@ const removeItem = index => {
 
 const registerInbound = async() => {
   let projectData = {
-    type: Object.entries(protectTypes).find(([k, v]) => v === projectType.value)?.[0],
-    name: projectType.value,
+    type: projectType.value,
+    name: 'Sin proyecto',
     id: null,
   }
   if (projectType.value === 'Stock' && items.value.length === 0) {
@@ -213,8 +215,8 @@ watch(selectedMaterial, newVal => {
           <!-- 👉 Project type -->
           <AppSelect
             v-model="projectType"
-            label="Tipo de proyecto"
-            placeholder="Seleccionar tipo de proyecto"
+            label="Tipo de entrada"
+            placeholder="Seleccionar tipo de entrada"
             :items="Object.keys(protectTypes)"
             clearable
             clear-icon="tabler-x"
@@ -307,7 +309,7 @@ watch(selectedMaterial, newVal => {
       <VRow>
         <VCol
           cols="12"
-          md="7"
+          md="6"
         >
           CONCEPTO
         </VCol>
@@ -335,6 +337,12 @@ watch(selectedMaterial, newVal => {
         >
           CANTIDAD
         </VCol>
+        <VCol
+          cols="12"
+          md="1"
+        >
+          REQUERIDO
+        </VCol>
       </VRow>
       <VRow
         v-for="(item, index) in items"
@@ -344,7 +352,7 @@ watch(selectedMaterial, newVal => {
       >
         <VCol
           cols="12"
-          md="7"
+          md="6"
           class="narrow-column"
         >
           <!-- 👉 Item -->
@@ -396,6 +404,19 @@ watch(selectedMaterial, newVal => {
           <AppTextField
             v-model="items[index].delivered.quantity"
             placeholder="Cantidad"
+            class="quantity-input"
+          />
+        </VCol>
+        <VCol
+          cols="12"
+          md="1"
+          class="narrow-column"
+        >
+          <!-- 👉 Required -->
+          <AppTextField
+            v-model="items[index].total_quantity"
+            disabled
+            class="quantity-input"
           />
         </VCol>
         <VCol
@@ -455,6 +476,12 @@ watch(selectedMaterial, newVal => {
 
   .v-field {
     border-radius: 0 !important;
+  }
+}
+
+.quantity-input {
+  input {
+    text-align: end;
   }
 }
 </style>

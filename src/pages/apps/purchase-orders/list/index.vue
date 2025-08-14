@@ -50,6 +50,14 @@ const headers = [
     key: 'status',
   },
   {
+    title: 'Factura',
+    key: 'invoiced_status',
+  },
+  {
+    title: 'Entrega',
+    key: 'delivered_status',
+  },
+  {
     title: 'Acciones',
     key: 'actions',
     sortable: false,
@@ -63,8 +71,19 @@ const statusList = [
   { name: 'Cancelada', color: 'error', icon: 'tabler-shopping-cart-x', value: 3 },
 ]
 
-const getStatusValue = (value, key) => {
-  const status = statusList.find(item => item.value === value)
+const invoicedStatusList = [
+  { name: 'Pendiente', color: 'secondary', icon: 'tabler-receipt-2', value: false },
+  { name: 'Facturada', color: 'success', icon: 'tabler-receipt-2', value: true },
+]
+
+const deliveredStatusList = [
+  { name: 'Pendiente', color: 'secondary', icon: 'tabler-alert-circle', value: 0 },
+  { name: 'Entrega parcial', color: 'info', icon: 'tabler-parking-circle', value: 1 },
+  { name: 'Entrega total', color: 'success', icon: 'tabler-circle-check', value: 2 },
+]
+
+const getStatusValue = (list, value, key) => {
+  const status = list.find(item => item.value === value)
   
   return status ? status[key] : null
 }
@@ -246,12 +265,12 @@ const formatCurrency = valor => {
                     {{ formatDate(slotProps.item.approved_date) }}
                   </div>
                   <div class="cell">
-                    <VChip :color="getStatusValue(slotProps.item.status, 'color')">
+                    <VChip :color="getStatusValue(statusList, slotProps.item.status, 'color')">
                       <VIcon
                         start
-                        :icon="getStatusValue(slotProps.item.status, 'icon')"
+                        :icon="getStatusValue(statusList, slotProps.item.status, 'icon')"
                       />
-                      {{ getStatusValue(slotProps.item.status, 'name') }}
+                      {{ getStatusValue(statusList, slotProps.item.status, 'name') }}
                     </VChip>
                   </div>
                 </div>
@@ -306,8 +325,30 @@ const formatCurrency = valor => {
         <template #item.status="{ item }">
           <div class="align-center">
             <VAvatar
-              :color="getStatusValue(item.status, 'color')"
-              :icon="getStatusValue(item.status, 'icon')"
+              :color="getStatusValue(statusList, item.status, 'color')"
+              :icon="getStatusValue(statusList, item.status, 'icon')"
+              size="small"
+              variant="text"
+            />
+          </div>
+        </template>
+
+        <template #item.invoiced_status="{ item }">
+          <div class="align-center">
+            <VAvatar
+              :color="getStatusValue(invoicedStatusList, item.invoiced_status, 'color')"
+              :icon="getStatusValue(invoicedStatusList, item.invoiced_status, 'icon')"
+              size="small"
+              variant="text"
+            />
+          </div>
+        </template>
+
+        <template #item.delivered_status="{ item }">
+          <div class="align-center">
+            <VAvatar
+              :color="getStatusValue(deliveredStatusList, item.delivered_status, 'color')"
+              :icon="getStatusValue(deliveredStatusList, item.delivered_status, 'icon')"
               size="small"
               variant="text"
             />

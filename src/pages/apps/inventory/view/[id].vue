@@ -7,6 +7,7 @@ definePage({
   },
 })
 import Inbounds from '@/views/apps/inventory/Inbounds.vue'
+import Outputs from '@/views/apps/inventory/Outputs.vue'
 
 const route = useRoute('apps-inventory-view-id')
 const { data: inventoryData } = await useApi(`api/inventory_item/${ route.params.id }`)
@@ -131,7 +132,7 @@ const currentTab = ref('tab-1')
             <Inbounds :material-id="inventoryData.material.id" />
           </VWindowItem>
           <VWindowItem>
-            Salidas
+            <Outputs :material-id="inventoryData.material.id" />
           </VWindowItem>
         </VWindow>
       </VCardText>
