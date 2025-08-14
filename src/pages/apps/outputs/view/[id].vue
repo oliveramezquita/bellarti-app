@@ -1,3 +1,4 @@
+<!-- eslint-disable camelcase -->
 <script setup>
 definePage({
   meta: {
@@ -7,7 +8,7 @@ definePage({
 })
 
 const route = useRoute('apps-outputs-view-id')
-const { data: outputData } = await useApi(`api/output/${ route.params.id }`)
+const { data: outputData, execute: fetchOutput } = await useApi(`api/output/${ route.params.id }`)
 const { data: clients } = await useApi('api/clients/VS?itemsPerPage=1000')
 
 const headers = [
@@ -33,10 +34,83 @@ const headers = [
   },
 ]
 
+const statusList = [
+  { name: 'Solicitada', color: 'secondary', icon: 'tabler-clipboard-plus', value: 0 },
+  { name: 'Aprobada', color: 'success', icon: 'tabler-clipboard-check', value: 1 },
+  { name: 'Devolución solicitada', color: 'warning', icon: 'tabler-clipboard-off', value: 2 },
+  { name: 'Devolución parcial', color: 'warning', icon: 'tabler-clipboard-off', value: 3 },
+  { name: 'Devolución total', color: 'warning', icon: 'tabler-clipboard-off', value: 4 },
+  { name: 'Cancelada', color: 'error', icon: 'tabler-clipboard-x', value: 5 },
+]
+
 const itemsPerPage = ref(10)
 const page = ref(1)
-const items = outputData.value.items
-const totalItems = outputData.value.total_items
+const items = ref(outputData.value.items)
+const totalItems = ref(outputData.value.total_items)
+const selectedItems = ref(outputData.value.selected_items)
+const isRefundOutputDialogVisible = ref(false)
+const isLoadingDialogVisible = ref(false)
+const isNotificationVisible = ref(false)
+const notificationMessage = ref('')
+const showSelect = ref(outputData.value?.status < 3)
+
+const getStatusValue = (value, key) => {
+  const status = statusList.find(item => item.value === value)
+  
+  return status ? status[key] : null
+}
+
+const approveOutput = () => {
+  updateOutput({
+    selected_items: selectedItems.value,
+    status: 1,
+  })
+}
+
+const cancelOutput = () => {
+  updateOutput({ status: 5 })
+}
+
+const requestToRefundOutput = () => {
+  updateOutput({
+    selected_items: selectedItems.value,
+    status: 2,
+  })
+}
+
+const refundOutput = () => {
+  const status = Object.keys(selectedItems.value).length === totalItems.value ? 4 : 3
+
+  updateOutput({
+    selected_items: selectedItems.value,
+    status: status,
+  })
+  isRefundOutputDialogVisible.value = false
+}
+
+const updateOutput = async body => {
+  isLoadingDialogVisible.value = true
+  try {
+    await $api(`api/output/${route.params.id}`, {
+      method: 'PATCH',
+      body: body,
+      onResponse({ response }) {
+        if (response.status === 200)
+          fetchOutput()
+        isNotificationVisible.value = true
+        notificationMessage.value = response._data
+      },
+    })
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
+}
+
+watch(() => outputData.value, newVal => {
+  items.value = newVal?.items || []
+  totalItems.value = newVal?.total_items || 0
+  selectedItems.value = newVal?.selected_items || []
+})
 </script>
 
 <template>
@@ -56,13 +130,14 @@ const totalItems = outputData.value.total_items
         >
           <!-- 👉 Output type -->
           <AppTextField
-            :model-value="outputData.quantification.id ? 'Cuantificación' : 'En Stock'"
+            :model-value="outputData.quantification.id ? 'Cuantificación' : 'Sin asignación'"
             label="Tipo de salida"
             readonly
           />
         </VCol>
         <!-- 👉 Clients -->
         <VCol
+          v-if="outputData.quantification.id"
           cols="12"
           md="4"
         >
@@ -78,6 +153,7 @@ const totalItems = outputData.value.total_items
         </VCol>
         <!-- 👉 Fronts -->
         <VCol
+          v-if="outputData.quantification.id"
           cols="12"
           md="4"
         >
@@ -89,6 +165,7 @@ const totalItems = outputData.value.total_items
         </VCol>
         <!-- 👉 Prototypes -->
         <VCol
+          v-if="outputData.quantification.id"
           cols="12"
           md="4"
         >
@@ -100,6 +177,7 @@ const totalItems = outputData.value.total_items
         </VCol>
         <!-- 👉 Areas -->
         <VCol
+          v-if="outputData.quantification.id"
           cols="12"
           md="4"
         >
@@ -108,6 +186,26 @@ const totalItems = outputData.value.total_items
             label="Área"
             readonly
           />
+        </VCol>
+        <!-- 👉 Status -->
+        <VCol
+          cols="12"
+          md="4"
+        >
+          <label
+            class="v-label mb-1 text-body-2"
+            style="display: block;"
+          >Estatus</label>
+          <VBtn
+            variant="outlined"
+            disabled="disabled"
+            :color="getStatusValue(outputData.status, 'color')"
+          >
+            <VIcon
+              start
+              :icon="getStatusValue(outputData.status, 'icon')"
+            />{{ getStatusValue(outputData.status, 'name') }}
+          </VBtn>
         </VCol>
       </VRow>
     </VCardText>
@@ -120,6 +218,7 @@ const totalItems = outputData.value.total_items
     >
       <VDataTableServer
         v-model:items-per-page="itemsPerPage"
+        v-model:model-value="selectedItems"
         v-model:page="page"
         :items-per-page-options="[
           { value: 10, title: '10' },
@@ -132,6 +231,7 @@ const totalItems = outputData.value.total_items
         :headers="headers"
         class="text-no-wrap"
         expand-on-click
+        :show-select="showSelect"
         @update:options="updateOptions"
       >
         <template #expanded-row="slotProps">
@@ -149,7 +249,7 @@ const totalItems = outputData.value.total_items
               >
                 <VCol
                   cols="12"
-                  md="4"
+                  md="5"
                   class="narrow-column"
                 >
                   PROYECTO
@@ -190,7 +290,7 @@ const totalItems = outputData.value.total_items
               >
                 <VCol
                   cols="12"
-                  md="4"
+                  md="5"
                   class="narrow-column"
                 >
                   <!-- 👉 Project -->
@@ -261,6 +361,42 @@ const totalItems = outputData.value.total_items
           class="d-flex gap-4 mt-2"
         >
           <VBtn
+            v-if="outputData.status === 0"
+            prepend-icon="tabler-clipboard-check"
+            color="success"
+            :disabled="selectedItems.length === 0"
+            @click="approveOutput"
+          >
+            Aprobar
+          </VBtn>
+          <VBtn
+            v-if="outputData.status === 1"
+            prepend-icon="tabler-clipboard-off"
+            color="warning"
+            :disabled="selectedItems.length === 0"
+            @click="requestToRefundOutput"
+          >
+            Devolver
+          </VBtn>
+          <VBtn
+            v-if="outputData.status === 2"
+            prepend-icon="tabler-clipboard-off"
+            color="warning"
+            :disabled="selectedItems.length === 0"
+            @click="isRefundOutputDialogVisible = true"
+          >
+            Aprobar devolución
+          </VBtn>
+          <VBtn
+            v-if="outputData.status === 0"
+            prepend-icon="tabler-clipboard-x"
+            color="error"
+            @click="cancelOutput"
+          >
+            Cancelar
+          </VBtn>
+          <VBtn
+            prepend-icon="tabler-arrow-narrow-left"
             color="secondary"
             variant="tonal"
             :to="{name:'apps-outputs-list'}"
@@ -271,6 +407,31 @@ const totalItems = outputData.value.total_items
       </VRow>
     </VCardText>
   </VCard>
+  <VDialog
+    v-model="isRefundOutputDialogVisible"
+    width="500"
+  >
+    <!-- Dialog close btn -->
+    <DialogCloseBtn @click="isRefundOutputDialogVisible = !isRefundOutputDialogVisible" />
+
+    <!-- Dialog Content -->
+    <VCard title="Aprobar devolución">
+      <VCardText>
+        ¿Desea aprobar la devolución solicitada? La cantidad correspondiente de estos materiales será reintegrada al inventario.
+      </VCardText>
+
+      <VCardText class="d-flex justify-end">
+        <VBtn @click="refundOutput">
+          Aprobar
+        </VBtn>
+      </VCardText>
+    </VCard>
+  </VDialog>
+  <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
+  <Notification
+    v-model:is-notification-visible="isNotificationVisible"
+    :message="notificationMessage"
+  />
 </template>
 
 <style lang="scss">

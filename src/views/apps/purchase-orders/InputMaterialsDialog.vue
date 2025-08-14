@@ -17,6 +17,7 @@ const emit = defineEmits([
 ])
 
 const items = ref(props.purchaseOrderData.items)
+const notes = ref()
 
 const closeNavigationDialog = () => {
   emit('update:isDialogOpen', false)
@@ -47,7 +48,7 @@ const formatCurrency = valor => {
 }
 
 const saveInputRegister = () => {
-  emit('inputEntryRegister', items.value)
+  emit('inputEntryRegister', { items: items.value, notes: notes.value })
   emit('update:isDialogOpen', false)
 }
 </script>
@@ -265,17 +266,24 @@ const saveInputRegister = () => {
                   label="Entrada a registrar"
                 />
               </VCol>
-              <VCol cols="12">
-                <VTextField
-                  v-model="items[i].delivered.notes"
-                  label="Observaciones"
-                />
-              </VCol>
             </VRow>
           </VExpansionPanelText>
         </VExpansionPanel>
       </vexpansionpanels>
       <VDivider />
+      <div
+        class="mt-6 mb-4"
+        style="padding-inline: 20px;"
+      >
+        <VRow>
+          <VCol cols="12">
+            <VTextField
+              v-model="notes"
+              label="Asunto / Nota / Comentario"
+            />
+          </VCol>
+        </VRow>
+      </div>
       <div
         class="mt-6 mb-8"
         style="padding-inline: 20px;"

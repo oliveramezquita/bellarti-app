@@ -7,7 +7,90 @@ definePage({
 })
 
 const route = useRoute('apps-inbounds-view-id')
-const { data: inboundData } = await useApi(`api/inbound/${ route.params.id }`)
+const { data: inboundData, execute: fetchInbound } = await useApi(`api/inbound/${ route.params.id }`)
+const inboundItems = ref(inboundData.value.items)
+const notes = ref(inboundData.value?.notes ?? null)
+const selectedIds = ref([])
+const isLoadingDialogVisible = ref(false)
+const isNotificationVisible = ref(false)
+const notificationMessage = ref('')
+
+const statusList = [
+  { name: 'Registrada', color: 'secondary', icon: 'tabler-package-import', value: 0 },
+  { name: 'Almacenada', color: 'success', icon: 'tabler-package-import', value: 1 },
+  { name: 'Cancelada', color: 'error', icon: 'tabler-package-import', value: 2 },
+]
+
+const getStatusValue = (value, key) => {
+  const status = statusList.find(item => item.value === value)
+  
+  return status ? status[key] : null
+}
+
+const allSelected = computed({
+  get: () => {
+    const items = inboundData.value?.items || []
+    
+    return items.length > 0 && selectedIds.value.length === items.length
+  },
+  set: value => {
+    if (value) {
+      selectedIds.value = (inboundData.value?.items || []).map(item => item.material_id)
+    } else {
+      selectedIds.value = []
+    }
+  },
+})
+
+const store = async () => {
+  const filtered = inboundData.value.items.filter(item => Object.values(selectedIds.value).includes(item.material_id))
+
+  isLoadingDialogVisible.value = true
+  try {
+    await $api(`api/inbound/${route.params.id}`, {
+      method: 'PATCH',
+      body: {
+        items: filtered,
+        status: 1,
+        notes: notes.value,
+      },
+      onResponse({ response }) {
+        if (response.status === 200)
+          fetchInbound()
+        isNotificationVisible.value = true
+        notificationMessage.value = response._data
+      },
+    })
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
+}
+
+const cancel = async () => {
+  isLoadingDialogVisible.value = true
+  try {
+    await $api(`api/inbound/${route.params.id}`, {
+      method: 'PATCH',
+      body: {
+        status: 2,
+        notes: notes.value,
+      },
+      onResponse({ response }) {
+        if (response.status === 200)
+          fetchInbound()
+        isNotificationVisible.value = true
+        notificationMessage.value = response._data
+      },
+    })
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
+}
+
+watch(() => inboundData.value, newVal => {
+  inboundItems.value = newVal?.items || []
+  selectedIds.value = []
+})
 </script>
 
 <template>
@@ -16,8 +99,15 @@ const { data: inboundData } = await useApi(`api/inbound/${ route.params.id }`)
     icon="building-warehouse"
   />
   <VCard class="py-3">
-    <VCardTitle class="mb-2">
-      Información
+    <VCardTitle class="mb-2 d-flex align-center justify-space-between">
+      <div>Información</div>
+      <VChip :color="getStatusValue(inboundData.status, 'color')">
+        <VIcon
+          start
+          :icon="getStatusValue(inboundData.status, 'icon')"
+        />
+        {{ getStatusValue(inboundData.status, 'name') }}
+      </VChip>
     </VCardTitle>
     <VCardText>
       <VRow>
@@ -28,7 +118,7 @@ const { data: inboundData } = await useApi(`api/inbound/${ route.params.id }`)
           <!-- 👉 Project type -->
           <AppTextField
             :model-value="inboundData.project.type"
-            label="Tipo de proyecto"
+            label="Tipo de entrada"
             readonly
           />
         </VCol>
@@ -68,9 +158,9 @@ const { data: inboundData } = await useApi(`api/inbound/${ route.params.id }`)
         <VCol cols="12">
           <!-- 👉 Subject -->
           <AppTextField
-            :model-value="inboundData.notes"
-            label="Asunto"
-            readonly
+            :model-value="notes"
+            label="Asunto / Nota / Comentario"
+            :readonly="inboundData.status === 1"
           />
         </VCol>
         <VCol
@@ -96,6 +186,9 @@ const { data: inboundData } = await useApi(`api/inbound/${ route.params.id }`)
       <VTable class="text-no-wrap">
         <thead>
           <tr>
+            <th v-if="inboundData.status === 0">
+              <VCheckbox v-model="allSelected" />
+            </th>
             <th>
               CONCEPTO
             </th>
@@ -111,28 +204,68 @@ const { data: inboundData } = await useApi(`api/inbound/${ route.params.id }`)
             <th>
               CANTIDAD
             </th>
+            <th>
+              REQUERIDO
+            </th>
           </tr>
         </thead>
 
         <tbody>
           <tr
-            v-for="item in inboundData.items"
-            :key="item.id"
+            v-for="(_,i) in inboundItems"
+            :key="inboundItems[i].material_id"
           >
-            <td>
-              {{ item.concept }}
+            <td v-if="inboundData.status === 0">
+              <VCheckbox
+                :model-value="selectedIds.includes(inboundItems[i].material_id)"
+                @update:model-value="checked => {
+                  if (checked) {
+                    if (!selectedIds.includes(inboundItems[i].material_id)) {
+                      selectedIds = [...selectedIds, inboundItems[i].material_id]
+                    }
+                  } else {
+                    selectedIds = selectedIds.filter(id => id !== inboundItems[i].material_id)
+                  }
+                }"
+              />
             </td>
             <td>
-              {{ item.delivered.rack }}
+              {{ inboundItems[i].concept }}
             </td>
             <td>
-              {{ item.delivered.level }}
+              <span v-if="inboundData.status === 1">{{ inboundItems[i].delivered.rack }}</span>
+              <AppTextField
+                v-if="inboundData.status === 0"
+                v-model="inboundItems[i].delivered.rack"
+                class="quantity-input"
+              />
             </td>
             <td>
-              {{ item.delivered.module }}
+              <span v-if="inboundData.status === 1">{{ inboundItems[i].delivered.level }}</span>
+              <AppTextField
+                v-if="inboundData.status === 0"
+                v-model="inboundItems[i].delivered.level"
+                class="quantity-input"
+              />
             </td>
             <td>
-              {{ item.delivered.quantity }}
+              <span v-if="inboundData.status === 1">{{ inboundItems[i].delivered.module }}</span>
+              <AppTextField
+                v-if="inboundData.status === 0"
+                v-model="inboundItems[i].delivered.module"
+                class="quantity-input"
+              />
+            </td>
+            <td>
+              <span v-if="inboundData.status === 1">{{ inboundItems[i].delivered.quantity }}</span>
+              <AppTextField
+                v-if="inboundData.status === 0"
+                v-model="inboundItems[i].delivered.quantity"
+                class="quantity-input"
+              />
+            </td>
+            <td>
+              {{ inboundItems[i]?.total_quantity ?? '-' }}
             </td>
           </tr>
         </tbody>
@@ -145,8 +278,26 @@ const { data: inboundData } = await useApi(`api/inbound/${ route.params.id }`)
           class="d-flex gap-4 mt-2"
         >
           <VBtn
+            v-if="inboundData.status === 0"
+            color="primary"
+            prepend-icon="tabler-package-import"
+            :disabled="selectedIds.length === 0"
+            @click="store"
+          >
+            Almacenar
+          </VBtn>
+          <VBtn
+            v-if="inboundData.status === 0"
+            color="error"
+            prepend-icon="tabler-x"
+            @click="cancel"
+          >
+            Cancelar
+          </VBtn>
+          <VBtn
             color="secondary"
             variant="tonal"
+            prepend-icon="tabler-arrow-narrow-left"
             :to="{name:'apps-inbounds-list'}"
           >
             Regresar
@@ -155,6 +306,11 @@ const { data: inboundData } = await useApi(`api/inbound/${ route.params.id }`)
       </VRow>
     </VCardText>
   </VCard>
+  <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
+  <Notification
+    v-model:is-notification-visible="isNotificationVisible"
+    :message="notificationMessage"
+  />
 </template>
 
 <style lang="scss">
@@ -169,6 +325,12 @@ const { data: inboundData } = await useApi(`api/inbound/${ route.params.id }`)
 
   .v-field {
     border-radius: 0 !important;
+  }
+}
+
+.quantity-input {
+  input {
+    text-align: end;
   }
 }
 </style>

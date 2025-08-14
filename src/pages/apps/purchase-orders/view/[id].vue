@@ -284,16 +284,14 @@ const viewPDFfile = () => {
     window.open(purchaseOrderData.value.pdf_file, '_blank')
 }
 
-const inputEntryRegister = async inputs => {
+const inputEntryRegister = async inputData => {
   if (selectedRows.value) {
     
     isLoadingDialogVisible.value = true
     try {
       await $api(`api/purchase_orders/input_register/${route.params.id}`, {
         method: 'PATCH',
-        body: {
-          'items': inputs,
-        },
+        body: inputData,
         onResponse({ response }) {
           if (response.status === 200)
             fetchPurchaseOrder()
