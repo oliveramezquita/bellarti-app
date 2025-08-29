@@ -72,8 +72,9 @@ const statusList = [
 ]
 
 const invoicedStatusList = [
-  { name: 'Pendiente', color: 'secondary', icon: 'tabler-receipt-2', value: false },
-  { name: 'Facturada', color: 'success', icon: 'tabler-receipt-2', value: true },
+  { name: 'Pendiente', color: 'secondary', icon: 'tabler-receipt-2', value: 0 },
+  { name: 'Entregada', color: 'warning', icon: 'tabler-receipt-2', value: 1 },
+  { name: 'Pagada', color: 'success', icon: 'tabler-receipt-2', value: 2 },
 ]
 
 const deliveredStatusList = [
@@ -250,6 +251,12 @@ const formatCurrency = valor => {
                   <div class="cell">
                     Estatus
                   </div>
+                  <div class="cell">
+                    Factura
+                  </div>
+                  <div class="cell">
+                    Entrega
+                  </div>
                 </div>
                 <div class="row">
                   <div class="cell">
@@ -271,6 +278,24 @@ const formatCurrency = valor => {
                         :icon="getStatusValue(statusList, slotProps.item.status, 'icon')"
                       />
                       {{ getStatusValue(statusList, slotProps.item.status, 'name') }}
+                    </VChip>
+                  </div>
+                  <div class="cell">
+                    <VChip :color="getStatusValue(invoicedStatusList, slotProps.item.invoiced_status, 'color')">
+                      <VIcon
+                        start
+                        :icon="getStatusValue(invoicedStatusList, slotProps.item.invoiced_status, 'icon')"
+                      />
+                      {{ getStatusValue(invoicedStatusList, slotProps.item.invoiced_status, 'name') }}
+                    </VChip>
+                  </div>
+                  <div class="cell">
+                    <VChip :color="getStatusValue(deliveredStatusList, slotProps.item.delivered_status, 'color')">
+                      <VIcon
+                        start
+                        :icon="getStatusValue(deliveredStatusList, slotProps.item.delivered_status, 'icon')"
+                      />
+                      {{ getStatusValue(deliveredStatusList, slotProps.item.delivered_status, 'name') }}
                     </VChip>
                   </div>
                 </div>
@@ -357,24 +382,70 @@ const formatCurrency = valor => {
 
         <!-- Actions -->
         <template #item.actions="{ item }">
-          <IconBtn
-            v-if="item.status === 0"
-            :to="{name: 'apps-purchase-orders-view-id', params: {id: item._id}}"
+          <VBtn
+            icon
+            variant="text"
+            color="medium-emphasis"
           >
-            <VIcon icon="tabler-pencil" />
-          </IconBtn>
-          <IconBtn
-            v-if="item.status > 0"
-            :to="{name: 'apps-purchase-orders-view-id', params: {id: item._id}}"
-          >
-            <VIcon icon="tabler-eye" />
-          </IconBtn>
-          <IconBtn
-            v-if="item.status === 0 || item.status === 3"
-            @click="viewDeletePurchaseOrderDialog(item)"
-          >
-            <VIcon icon="tabler-trash" />
-          </IconBtn>
+            <VIcon icon="tabler-dots-vertical" />
+            <VMenu activator="parent">
+              <VList>
+                <VListItem
+                  v-if="item.status === 0"
+                  :to="{name: 'apps-purchase-orders-view-id', params: {id: item._id}}"
+                >
+                  <template #prepend>
+                    <VIcon icon="tabler-pencil" />
+                  </template>
+                  <VListItemTitle>Modificar</VListItemTitle>
+                </VListItem>
+
+                <VListItem
+                  v-if="item.status > 0"
+                  :to="{name: 'apps-purchase-orders-view-id', params: {id: item._id}}"
+                >
+                  <template #prepend>
+                    <VIcon icon="tabler-eye" />
+                  </template>
+                  <VListItemTitle>Ver</VListItemTitle>
+                </VListItem>
+
+                <VListItem
+                  v-if="item.invoice_pdf_file"
+                  :href="item.invoice_pdf_file"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <template #prepend>
+                    <VIcon icon="tabler-file-type-pdf" />
+                  </template>
+                  <VListItemTitle>Factura PDF</VListItemTitle>
+                </VListItem>
+
+                <VListItem
+                  v-if="item.invoice_xml_file"
+                  :href="item.invoice_xml_file"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <template #prepend>
+                    <VIcon icon="tabler-file-type-xml" />
+                  </template>
+                  <VListItemTitle>Factura XML</VListItemTitle>
+                </VListItem>
+
+                <VListItem
+                  v-if="item.status === 0 || item.status === 3"
+                  @click="viewDeletePurchaseOrderDialog(item)"
+                >
+                  <template #prepend>
+                    <VIcon icon="tabler-trash" />
+                  </template>
+                  <VListItemTitle>Eliminar</VListItemTitle>
+                </VListItem>
+              </VList>
+            </VMenu>
+          </VBtn>
         </template>
 
         <template #bottom>
@@ -415,12 +486,6 @@ const formatCurrency = valor => {
   display: flex;
   align-items: center;
   justify-content: end;
-}
-
-.align-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .inner-table {

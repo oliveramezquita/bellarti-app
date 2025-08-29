@@ -370,7 +370,7 @@ watch(lotsData, newData => {
       <VRow>
         <VCol cols="12">
           <p>
-            Para cargar información a través de un archivo debe ser de formato <b>EXCEL</b> y debe tener un formato en específico, el cual para los materiales es el siguiente: <a
+            Para cargar información a través de un archivo debe ser en formato <b>EXCEL</b> y debe tener un formato en específico, el cual para los materiales es el siguiente: <a
               :href="lotesFormat"
               target="_blank"
               rel="noopener noreferrer"

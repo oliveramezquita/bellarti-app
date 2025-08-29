@@ -159,6 +159,14 @@ const totalInbounds = computed(() => inboundsData.value.total_elements)
           >
             Agregar entrada
           </VBtn>
+          <!-- 👉 Upload inbound button -->
+          <VBtn
+            prepend-icon="tabler-upload"
+            variant="outlined"
+            :to="{name: 'apps-inbounds-upload'}"
+          >
+            Subir entrada
+          </VBtn>
         </div>
       </VCardText>
 

@@ -15,7 +15,7 @@ const createdAtDate = ref('')
 const total = ref(0)
 
 const {
-  data: ibounds,
+  data: inbounds,
 } = await useApi(createUrl(`api/inbounds/material/${ props.materialId }`, {
   query: {
     created_at: createdAtDate,
@@ -29,19 +29,19 @@ const headers = [
   },
   {
     title: 'Rack',
-    key: 'rack',
+    key: 'item.delivered.rack',
   },
   {
     title: 'Nivel',
-    key: 'level',
+    key: 'item.delivered.level',
   },
   {
     title: 'Módulo',
-    key: 'module',
+    key: 'item.delivered.module',
   },
   {
     title: 'Cantidad',
-    key: 'quantity',
+    key: 'item.delivered.quantity',
   },
   {
     title: 'Estatus',
@@ -54,20 +54,9 @@ const headers = [
 ]
 
 const getTotal = () => {
-  total.value = ibounds.value
-    ?.filter(entry => Number(entry.status) === 1) // forzamos número
-    .flatMap(entry => entry.items || [])
-    .reduce((sum, item) => {
-      const qty = parseFloat(item?.delivered?.quantity) || 0
-      
-      return sum + qty
-    }, 0)
-}
-
-const getInboundData = (items, key) => {
-  const item = items.find(item => item.material_id === props.materialId)
-
-  return item.delivered[key] ?? null
+  total.value = inbounds.value.reduce((sum, entry) => {
+    return sum + parseFloat(entry.item.delivered.quantity)
+  }, 0)
 }
 
 const statusList = [
@@ -84,7 +73,7 @@ const getStatusValue = (value, key) => {
 
 getTotal()
 
-watch(ibounds, _ => {
+watch(inbounds, _ => {
   getTotal()
 })
 </script>
@@ -114,27 +103,10 @@ watch(ibounds, _ => {
   </div>
   <VDataTable
     :headers="headers"
-    :items="ibounds"
+    :items="inbounds"
     :items-per-page="10"
     :search="search"
   >
-    <!-- 👉 Rack -->
-    <template #item.rack="{ item }">
-      {{ getInboundData(item.items, 'rack') }}
-    </template>
-    <!-- 👉 Level -->
-    <template #item.level="{ item }">
-      {{ getInboundData(item.items, 'level') }}
-    </template>
-    <!-- 👉 Module -->
-    <template #item.module="{ item }">
-      {{ getInboundData(item.items, 'module') }}
-    </template>
-    <!-- 👉 Quantity -->
-    <template #item.quantity="{ item }">
-      {{ getInboundData(item.items, 'quantity') }}
-    </template>
-    <!-- 👉 Status -->
     <template #item.status="{ item }">
       <VChip :color="getStatusValue(item.status, 'color')">
         <VIcon
@@ -144,11 +116,10 @@ watch(ibounds, _ => {
         {{ getStatusValue(item.status, 'name') }}
       </VChip>
     </template>
-    <!-- 👉 Created at -->
     <template #item.created_at="{ item }">
       {{ formatDate(item.updated_at) }}
     </template>
-  </VDataTable>
+  </VDataTable> 
 </template>
 
 <style lang="scss">

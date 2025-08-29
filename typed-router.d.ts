@@ -46,6 +46,7 @@ declare module 'vue-router/auto-routes' {
     'apps-equipment-list': RouteRecordInfo<'apps-equipment-list', '/apps/equipment/list', Record<never, never>, Record<never, never>>,
     'apps-inbounds-list': RouteRecordInfo<'apps-inbounds-list', '/apps/inbounds/list', Record<never, never>, Record<never, never>>,
     'apps-inbounds-new': RouteRecordInfo<'apps-inbounds-new', '/apps/inbounds/new', Record<never, never>, Record<never, never>>,
+    'apps-inbounds-upload': RouteRecordInfo<'apps-inbounds-upload', '/apps/inbounds/upload', Record<never, never>, Record<never, never>>,
     'apps-inbounds-view-id': RouteRecordInfo<'apps-inbounds-view-id', '/apps/inbounds/view/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     'apps-inventory-list': RouteRecordInfo<'apps-inventory-list', '/apps/inventory/list', Record<never, never>, Record<never, never>>,
     'apps-inventory-view-id': RouteRecordInfo<'apps-inventory-view-id', '/apps/inventory/view/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
