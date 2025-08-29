@@ -9,6 +9,7 @@ definePage({
 import AddMaterialDrawer from '@/views/apps/purchase-orders/AddMaterialDrawer.vue'
 import EditMaterialDrawer from '@/views/apps/purchase-orders/EditMaterialDrawer.vue'
 import InputMaterialsDialog from '@/views/apps/purchase-orders/InputMaterialsDialog.vue'
+import UploadInvoiceDrawer from '@/views/apps/purchase-orders/UploadInvoiceDrawer.vue'
 
 const userData = useCookie('userData')
 const route = useRoute('apps-purchase-orders-view-id')
@@ -24,6 +25,7 @@ const isAddNewMaterialDrawerVisible = ref(false)
 const isEditMaterialDrawerVisible = ref(false)
 const isDeleteMaterialDialogVisible = ref(false)
 const isInputMaterialDialogVisible = ref(false)
+const isUploadInvoiceDrawerVisible = ref(false)
 const isLoadingDialogVisible = ref(false)
 const isNotificationVisible = ref(false)
 const notificationMessage = ref('')
@@ -46,6 +48,12 @@ const paymentMethod = ref(purchaseOrderData.value.payment_method)
 const paymentForm = ref(purchaseOrderData.value.payment_form)
 const cfdi = ref(purchaseOrderData.value.cfdi)
 const invoiceEmail = ref(purchaseOrderData.value.invoice_email)
+
+const invoicedStatusList = [
+  { name: 'FACTURA PENDIENTE', color: 'secondary', icon: 'tabler-receipt-2', value: 0 },
+  { name: 'FACTURA ENTREGADA', color: 'warning', icon: 'tabler-receipt-2', value: 1 },
+  { name: 'FACTURA PAGADA', color: 'success', icon: 'tabler-receipt-2', value: 2 },
+]
 
 const costs = ref({
   subtotal: purchaseOrderData.value.subtotal,
@@ -305,8 +313,29 @@ const inputEntryRegister = async inputData => {
   }
 }
 
-const inputMaterialsView = () => {
-  isInputMaterialDialogVisible.value = true
+const getStatusValue = (list, value, key) => {
+  const status = list.find(item => item.value === value)
+  
+  return status ? status[key] : null
+}
+
+const uploadInvoiceFiles = async formsData => {
+  isLoadingDialogVisible.value = true
+
+  try {
+    await $api(`api/purchase_orders/invoice/${route.params.id}`, {
+      method: 'PATCH',
+      body: formsData,
+      onResponse({ response }) {
+        if (response.status === 200)
+          fetchPurchaseOrder()
+        notificationMessage.value = response._data
+        isNotificationVisible.value = true
+      },
+    })
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
 }
 
 if (route.query.new) {
@@ -334,7 +363,7 @@ watch(selectedRows, val => {
 <template>
   <section>
     <Breadcrumb
-      :items="[{ title: 'Órdenes de Compra', to: { name: 'apps-purchase-orders-list' }, class: 'text-underline' }, { title: purchaseOrderData.name }]"
+      :items="[{ title: 'Órdenes de Compra', to: { name: 'apps-purchase-orders-list' }, class: 'text-underline' }, { title: purchaseOrderData.number }]"
       icon="credit-card-pay"
     />
     <VCard class="mb-2">
@@ -839,7 +868,7 @@ watch(selectedRows, val => {
             <VBtn
               v-if="purchaseOrderData.delivered_status < 2"
               prepend-icon="tabler-package-export"
-              @click="inputMaterialsView"
+              @click="isInputMaterialDialogVisible = true"
             >
               ENTRADA DE MATERIALES
             </VBtn>
@@ -858,6 +887,15 @@ watch(selectedRows, val => {
               @click="viewPDFfile"
             >
               PDF
+            </VBtn>
+            <!-- 👉 INVOICE -->
+            <VBtn
+              v-if="purchaseOrderData.delivered_status === 2"
+              :color="getStatusValue(invoicedStatusList, purchaseOrderData.invoiced_status, 'color')"
+              :prepend-icon="getStatusValue(invoicedStatusList, purchaseOrderData.invoiced_status, 'icon')"
+              @click="isUploadInvoiceDrawerVisible = true"
+            >
+              {{ getStatusValue(invoicedStatusList, purchaseOrderData.invoiced_status, 'name') }}
             </VBtn>
             <!-- 👉 Return -->
             <VBtn
@@ -926,6 +964,14 @@ watch(selectedRows, val => {
       v-model:is-dialog-open="isInputMaterialDialogVisible"
       v-model:purchase-order-data="purchaseOrderData"
       @input-entry-register="inputEntryRegister"
+    />
+    <UploadInvoiceDrawer
+      v-model:is-drawer-open="isUploadInvoiceDrawerVisible"
+      v-model:purchase-order-id="route.params.id"
+      v-model:invoice-pdf-file="purchaseOrderData.invoice_pdf_file"
+      v-model:invoice-xml-file="purchaseOrderData.invoice_xml_file"
+      v-model:invoice-paid="purchaseOrderData.paid"
+      @upload-files="uploadInvoiceFiles"
     />
   </section>
 </template>

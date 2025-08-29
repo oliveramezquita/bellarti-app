@@ -164,14 +164,16 @@ const getOutputData = (items, materialId) => {
 
         <div class="d-flex align-center flex-wrap gap-4">
           <!-- 👉 Download material button -->
-          <VBtn
+          <!--
+            <VBtn
             prepend-icon="tabler-download"
             color="secondary"
             variant="outlined"
             @click="download"
-          >
+            >
             Descargar
-          </VBtn>
+            </VBtn> 
+          -->
         </div>
       </VCardText>
 
@@ -373,12 +375,6 @@ const getOutputData = (items, materialId) => {
   display: flex;
   align-items: center;
   justify-content: end;
-}
-
-.align-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .inner-table {

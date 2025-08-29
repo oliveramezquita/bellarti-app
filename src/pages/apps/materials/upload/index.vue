@@ -58,7 +58,7 @@ const onSubmit = () => {
   <VCard class="py-3 pa-3">
     <VCardItem>
       <p>
-        Para cargar información a través de un archivo debe ser de formato <b>EXCEL</b> y debe tener un formato en específico, el cual para los materiales es el siguiente: <a
+        Para cargar información a través de un archivo debe ser en formato <b>EXCEL</b> y debe tener un formato en específico, el cual para los materiales es el siguiente: <a
           :href="MaterialsFormat"
           target="_blank"
           rel="noopener noreferrer"

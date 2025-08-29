@@ -413,7 +413,7 @@ watch(() => props.responseUploadedFile, newResponse => {
         </VWindowItem>
         <VWindowItem>
           <p>
-            Para cargar información a través de un archivo debe ser de formato <b>excel</b> y debe tener una estructura en específico, el cual para la volumetría es el siguiente: <a
+            Para cargar información a través de un archivo debe ser en formato <b>excel</b> y debe tener una estructura en específico, el cual para la volumetría es el siguiente: <a
               :href="VolumetryFormat"
               target="_blank"
               rel="noopener noreferrer"
