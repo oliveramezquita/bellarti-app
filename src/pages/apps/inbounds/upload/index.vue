@@ -16,6 +16,8 @@ const isFormValid = ref(false)
 const refForm = ref()
 const excelFile = ref()
 const isLoadingDialogVisible = ref(false)
+const isNotificationVisible = ref(false)
+const notificationMessage = ref('')
 const messageRespond = ref()
 const errorRespond = ref()
 const protectTypes = { 'Vivienda en Serie': 'Vivienda en Serie', 'Proyecto Especial': 'Proyecto Especial', 'Stock': 'Sin proyecto' }
@@ -96,12 +98,6 @@ const onSubmit = async() => {
     name: 'Sin proyecto',
     id: null,
   }
-  if (projectType.value === 'Stock') {
-    notificationMessage.value = 'Seleccione al menos un material para registrar una entrada.'
-    isNotificationVisible.value = true
-
-    return
-  }
   if (['Vivienda en Serie', 'Proyecto Especial'].includes(projectType.value) && !project.value) {
     notificationMessage.value = 'Seleccione al menos un proyecto para registrar una entrada.'
     isNotificationVisible.value = true
@@ -174,6 +170,7 @@ const onSubmit = async() => {
               label="Tipo de entrada"
               placeholder="Seleccionar tipo de entrada"
               :items="Object.keys(protectTypes)"
+              :rules="[requiredValidator]"
               clearable
               clear-icon="tabler-x"
               @update:model-value="getProjects"
@@ -390,4 +387,8 @@ const onSubmit = async() => {
     </p>
   </VAlert>
   <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
+  <Notification
+    v-model:is-notification-visible="isNotificationVisible"
+    :message="notificationMessage"
+  />
 </template>

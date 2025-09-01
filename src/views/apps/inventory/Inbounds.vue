@@ -54,10 +54,13 @@ const headers = [
 ]
 
 const getTotal = () => {
-  total.value = inbounds.value.reduce((sum, entry) => {
+  const sum = inbounds.value.reduce((sum, entry) => {
     return sum + parseFloat(entry.item.delivered.quantity)
   }, 0)
+
+  total.value = Math.round(sum * 100) / 100
 }
+
 
 const statusList = [
   { name: 'Registrada', color: 'secondary', icon: 'tabler-package-import', value: 0 },
