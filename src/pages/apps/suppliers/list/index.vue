@@ -12,6 +12,8 @@ const breadcrumbItems = ref([{ title: 'Proveedores', class: 'text-primary' }])
 const searchQuery = ref('')
 const itemsPerPage = ref(10)
 const page = ref(1)
+const sortBy = ref()
+const orderBy = ref()
 const isAddNewSupplierDrawerVisible = ref(false)
 const isEditSupplierDrawerVisible = ref(false)
 const isNotificationVisible = ref(false)
@@ -27,10 +29,12 @@ const headers = [
   {
     title: 'Correo electrónico',
     key: 'email',
+    sortable: false,
   },
   {
     title: 'Teléfono',
     key: 'phone',
+    sortable: false,
   },
   {
     title: 'Acciones',
@@ -47,11 +51,19 @@ const {
     q: searchQuery,
     itemsPerPage,
     page,
+    sortBy,
+    orderBy,
   },
 }))
 
 const suppliers = computed(() => suppliersData.value.data)
 const totalSuppliers = computed(() => suppliersData.value.total_elements)
+
+const updateOptions = options => {
+  page.value = options.page
+  sortBy.value = options.sortBy[0]?.key
+  orderBy.value = options.sortBy[0]?.order
+}
 
 const addNewSupplier = async supplierData => {
   const type = 'VS'

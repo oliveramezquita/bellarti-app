@@ -11,6 +11,8 @@ const { data: supplierList } = await useApi('api/suppliers?itemsPerPage=100')
 const searchQuery = ref('')
 const itemsPerPage = ref(10)
 const page = ref(1)
+const sortBy = ref()
+const orderBy = ref()
 const isDeleteMaterialDialogVisible = ref(false)
 const selectedMaterial = ref()
 const selectedSupplier = ref()
@@ -27,18 +29,27 @@ const headers = [
   {
     title: 'SKU',
     key: 'material.sku',
+    sortable: false,
   },
   {
     title: 'Proveedor',
     key: 'material.supplier_id',
+    sortable: false,
+  },
+  {
+    title: 'Código de Proveedor',
+    key: 'material.supplier_code',
+    sortable: false,
   },
   {
     title: 'Unidad',
     key: 'material.measurement',
+    sortable: false,
   },
   {
     title: 'Cantidad',
     key: 'quantity',
+    sortable: false,
   },
   {
     title: 'Acciones',
@@ -56,11 +67,19 @@ const {
     supplier: selectedSupplier,
     itemsPerPage,
     page,
+    sortBy,
+    orderBy,
   },
 }))
 
 const inventory = computed(() => inventoryData.value.data)
 const totalInventory = computed(() => inventoryData.value.total_elements)
+
+const updateOptions = options => {
+  page.value = options.page
+  sortBy.value = options.sortBy[0]?.key
+  orderBy.value = options.sortBy[0]?.order
+}
 
 const viewDeleteMaterialDialog = material => {
   selectedMaterial.value = material

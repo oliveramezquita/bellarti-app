@@ -9,33 +9,46 @@ definePage({
 
 const breadcrumbItems = ref([{ title: 'Materiales', class: 'text-primary' }, { title: 'Materiales' }])
 const { data: supplierList } = await useApi('api/suppliers?itemsPerPage=100')
+const { data: divisions } = await useApi('api/catalogs?name=División de materiales')
 const searchQuery = ref('')
 const itemsPerPage = ref(10)
 const page = ref(1)
+const sortBy = ref()
+const orderBy = ref()
 const isDeleteMaterialDialogVisible = ref(false)
 const selectedMaterial = ref()
 const selectedSupplier = ref()
+const selectedDivision = ref()
 
 const headers = [
+  {
+    title: 'División',
+    key: 'division',
+    sortable: false,
+  },
   {
     title: 'Concepto',
     key: 'concept',
   },
   {
-    title: 'Proveedor',
-    key: 'supplier',
-  },
-  {
     title: 'SKU',
     key: 'sku',
+    sortable: false,
   },
   {
-    title: 'División',
-    key: 'division',
+    title: 'Proveedor',
+    key: 'supplier',
+    sortable: false,
+  },
+  {
+    title: 'Código de Proveedor',
+    key: 'supplier_code',
+    sortable: false,
   },
   {
     title: 'U. de Medida',
     key: 'measurement',
+    sortable: false,
   },
   {
     title: 'Acciones',
@@ -51,13 +64,22 @@ const {
   query: {
     q: searchQuery,
     supplier: selectedSupplier,
+    division: selectedDivision,
     itemsPerPage,
     page,
+    sortBy,
+    orderBy,
   },
 }))
 
 const materials = computed(() => materialsData.value.data)
 const totalMaterials = computed(() => materialsData.value.total_elements)
+
+const updateOptions = options => {
+  page.value = options.page
+  sortBy.value = options.sortBy[0]?.key
+  orderBy.value = options.sortBy[0]?.order
+}
 
 const viewDeleteMaterialDialog = material => {
   selectedMaterial.value = material
@@ -102,7 +124,7 @@ const download = async() => {
           <!-- 👉 Select Supplier -->
           <VCol
             cols="12"
-            sm="6"
+            sm="4"
           >
             <AppAutocomplete
               v-model="selectedSupplier"
@@ -116,7 +138,19 @@ const download = async() => {
           </VCol>
           <VCol
             cols="12"
-            sm="6"
+            sm="4"
+          >
+            <AppSelect
+              v-model="selectedDivision"
+              :items="divisions.values"
+              placeholder="Seleccionar división"
+              clearable
+              clear-icon="tabler-x"
+            />
+          </VCol>
+          <VCol
+            cols="12"
+            sm="4"
           >
             <!-- 👉 Search  -->
             <AppTextField
