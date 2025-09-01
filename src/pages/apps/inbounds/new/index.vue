@@ -139,6 +139,7 @@ const registerInbound = async() => {
     projectData.id = project.value?._id
     projectData.name = project.value?.name ?? projectData.name
   }
+  isLoadingDialogVisible.value = true
 
   try {
     await $api('api/inbounds', {

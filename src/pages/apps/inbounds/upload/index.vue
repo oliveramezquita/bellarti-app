@@ -107,6 +107,7 @@ const onSubmit = async() => {
     projectData.id = project.value?._id
     projectData.name = project.value?.name ?? projectData.name
   }
+  isLoadingDialogVisible.value = true
 
   try {
     const formData = new FormData()

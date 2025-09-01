@@ -92,6 +92,7 @@ const onSubmit = () => {
 }
 
 const createMateiral = async() => {
+  isLoadingDialogVisible.value = true
   material.value.concept = concept.value
   material.value.sku = sku.value
 
