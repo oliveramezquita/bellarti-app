@@ -7,6 +7,7 @@ definePage({
 })
 
 const route = useRoute('apps-inbounds-view-id')
+const router = useRouter()
 const { data: inboundData, execute: fetchInbound } = await useApi(`api/inbound/${ route.params.id }`)
 const inboundItems = ref(inboundData.value.items)
 const notes = ref(inboundData.value?.notes ?? null)
@@ -14,6 +15,9 @@ const selectedIds = ref([])
 const isLoadingDialogVisible = ref(false)
 const isNotificationVisible = ref(false)
 const notificationMessage = ref('')
+const isDeleteItemDialogVisible = ref(false)
+const selectedItem = ref()
+const selectedIndex = ref()
 
 const statusList = [
   { name: 'Registrada', color: 'secondary', icon: 'tabler-package-import', value: 0 },
@@ -86,6 +90,27 @@ const cancel = async () => {
     isLoadingDialogVisible.value = false
   }
 }
+
+const viewDeleteItemDialog = (item, idx) => {
+  selectedItem.value = item
+  selectedIndex.value = idx
+  isDeleteItemDialogVisible.value = true
+}
+
+const deleteItem = async idx => {
+  const response = await $api(`api/inbound/${route.params.id}?idx=${idx}`, { method: 'DELETE' })
+
+  if (response === 'deleted') {
+    nextTick(() => { 
+      router.replace(`/apps/inbounds/list`)
+    })
+  } else {
+    isDeleteItemDialogVisible.value = false
+    fetchInbound()
+    isNotificationVisible.value = true
+    notificationMessage.value = response
+  }
+} 
 
 watch(() => inboundData.value, newVal => {
   inboundItems.value = newVal?.items || []
@@ -182,7 +207,7 @@ watch(() => inboundData.value, newVal => {
     <VCardTitle class="mb-2">
       Materiales
     </VCardTitle>
-    <VCardText>
+    <VCardText style=" padding-inline: 0;">
       <VTable class="text-no-wrap">
         <thead>
           <tr>
@@ -207,13 +232,14 @@ watch(() => inboundData.value, newVal => {
             <th>
               REQUERIDO
             </th>
+            <th>&nbsp;</th>
           </tr>
         </thead>
 
         <tbody>
           <tr
             v-for="(_,i) in inboundItems"
-            :key="inboundItems[i].material_id"
+            :key="inboundItems[i]?.material_id"
           >
             <td v-if="inboundData.status === 0">
               <VCheckbox
@@ -230,10 +256,10 @@ watch(() => inboundData.value, newVal => {
               />
             </td>
             <td>
-              {{ inboundItems[i].concept }}
+              {{ inboundItems[i]?.concept }}
             </td>
             <td>
-              <span v-if="inboundData.status === 1">{{ inboundItems[i].delivered.rack }}</span>
+              <span v-if="inboundData.status === 1">{{ inboundItems[i]?.delivered?.rack }}</span>
               <AppTextField
                 v-if="inboundData.status === 0"
                 v-model="inboundItems[i].delivered.rack"
@@ -241,7 +267,7 @@ watch(() => inboundData.value, newVal => {
               />
             </td>
             <td>
-              <span v-if="inboundData.status === 1">{{ inboundItems[i].delivered.level }}</span>
+              <span v-if="inboundData.status === 1">{{ inboundItems[i]?.delivered?.level }}</span>
               <AppTextField
                 v-if="inboundData.status === 0"
                 v-model="inboundItems[i].delivered.level"
@@ -249,7 +275,7 @@ watch(() => inboundData.value, newVal => {
               />
             </td>
             <td>
-              <span v-if="inboundData.status === 1">{{ inboundItems[i].delivered.module }}</span>
+              <span v-if="inboundData.status === 1">{{ inboundItems[i]?.delivered?.module }}</span>
               <AppTextField
                 v-if="inboundData.status === 0"
                 v-model="inboundItems[i].delivered.module"
@@ -257,7 +283,7 @@ watch(() => inboundData.value, newVal => {
               />
             </td>
             <td>
-              <span v-if="inboundData.status === 1">{{ inboundItems[i].delivered.quantity }}</span>
+              <span v-if="inboundData.status === 1">{{ inboundItems[i]?.delivered?.quantity }}</span>
               <AppTextField
                 v-if="inboundData.status === 0"
                 v-model="inboundItems[i].delivered.quantity"
@@ -266,6 +292,11 @@ watch(() => inboundData.value, newVal => {
             </td>
             <td>
               {{ inboundItems[i]?.total_quantity ?? '-' }}
+            </td>
+            <td>
+              <IconBtn @click="viewDeleteItemDialog(inboundItems[i], i)">
+                <VIcon icon="tabler-trash" />
+              </IconBtn>
             </td>
           </tr>
         </tbody>
@@ -306,6 +337,26 @@ watch(() => inboundData.value, newVal => {
       </VRow>
     </VCardText>
   </VCard>
+  <VDialog
+    v-model="isDeleteItemDialogVisible"
+    width="500"
+  >
+    <!-- Dialog close btn -->
+    <DialogCloseBtn @click="isDeleteItemDialogVisible = !isDeleteItemDialogVisible" />
+
+    <!-- Dialog Content -->
+    <VCard title="Eliminar material de la entrada">
+      <VCardText>
+        ¿Estás seguro de eliminar el material <b>{{ selectedItem.concept }}</b>? Al hacerlo, la cantidad registrada se descontará automáticamente del inventario y, si es el único material, la entrada será eliminada por completo.
+      </VCardText>
+
+      <VCardText class="d-flex justify-end">
+        <VBtn @click="deleteItem(selectedIndex)">
+          Eliminar
+        </VBtn>
+      </VCardText>
+    </VCard>
+  </VDialog>
   <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
   <Notification
     v-model:is-notification-visible="isNotificationVisible"
