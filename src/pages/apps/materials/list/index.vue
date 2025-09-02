@@ -10,6 +10,7 @@ definePage({
 const breadcrumbItems = ref([{ title: 'Materiales', class: 'text-primary' }, { title: 'Materiales' }])
 const { data: supplierList } = await useApi('api/suppliers?itemsPerPage=100')
 const { data: divisions } = await useApi('api/catalogs?name=División de materiales')
+const isLoadingDialogVisible = ref(false)
 const searchQuery = ref('')
 const itemsPerPage = ref(10)
 const page = ref(1)
@@ -93,18 +94,24 @@ const deleteMaterial = async id => {
 }
 
 const download = async() => {
-  const apiUrl = selectedSupplier.value ? `api/exportar-materiales?supplier=${selectedSupplier.value}` : 'api/exportar-materiales'
-  const response = await $api(apiUrl, { method: 'GET' })
+  isLoadingDialogVisible.value = true
 
-  const url = URL.createObjectURL(response)
-  const link = document.createElement('a')
+  try {
+    const apiUrl = selectedSupplier.value ? `api/export-materials?supplier=${selectedSupplier.value}` : 'api/export-materials'
+    const response = await $api(apiUrl, { method: 'GET' })
 
-  link.href = url
-  link.setAttribute('download', 'materiales.xlsx')
-  document.body.appendChild(link)
-  link.click()
-  link.remove()
-  URL.revokeObjectURL(url)
+    const url = URL.createObjectURL(response)
+    const link = document.createElement('a')
+
+    link.href = url
+    link.setAttribute('download', 'materiales.xlsx')
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
 }
 </script>
 

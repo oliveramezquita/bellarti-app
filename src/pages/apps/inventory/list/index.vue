@@ -8,13 +8,16 @@ definePage({
 
 const breadcrumbItems = ref([{ title: 'Almacén', class: 'text-primary' }, { title: 'Inventario' }])
 const { data: supplierList } = await useApi('api/suppliers?itemsPerPage=100')
+const isLoadingDialogVisible = ref(false)
+const isNotificationVisible = ref(false)
+const notificationMessage = ref('')
 const searchQuery = ref('')
 const itemsPerPage = ref(10)
 const page = ref(1)
 const sortBy = ref()
 const orderBy = ref()
-const isDeleteMaterialDialogVisible = ref(false)
-const selectedMaterial = ref()
+const isDeleteItemDialogVisible = ref(false)
+const selectedItem = ref()
 const selectedSupplier = ref()
 
 const headers = [
@@ -81,30 +84,39 @@ const updateOptions = options => {
   orderBy.value = options.sortBy[0]?.order
 }
 
-const viewDeleteMaterialDialog = material => {
-  selectedMaterial.value = material
-  isDeleteMaterialDialogVisible.value = true
+const viewDeleteItemDialog = item => {
+  selectedItem.value = item
+  isDeleteItemDialogVisible.value = true
 }
 
-const deleteMaterial = async id => {
-  await $api(`api/material/${id}`, { method: 'DELETE' })
-  isDeleteMaterialDialogVisible.value = false
+const deleteItem = async id => {
+  const response = await $api(`api/inventory_item/${id}`, { method: 'DELETE' })
+
+  isDeleteItemDialogVisible.value = false
+  isNotificationVisible.value = true
+  notificationMessage.value = response
   fetchMaterials()
 }
 
 const download = async() => {
-  const apiUrl = selectedSupplier.value ? `api/exportar-materiales?supplier=${selectedSupplier.value}` : 'api/exportar-materiales'
-  const response = await $api(apiUrl, { method: 'GET' })
+  isLoadingDialogVisible.value = true
 
-  const url = URL.createObjectURL(response)
-  const link = document.createElement('a')
+  try {
+    const apiUrl = selectedSupplier.value ? `api/export-inventory?supplier=${selectedSupplier.value}` : 'api/export-inventory'
+    const response = await $api(apiUrl, { method: 'GET' })
 
-  link.href = url
-  link.setAttribute('download', 'materiales.xlsx')
-  document.body.appendChild(link)
-  link.click()
-  link.remove()
-  URL.revokeObjectURL(url)
+    const url = URL.createObjectURL(response)
+    const link = document.createElement('a')
+
+    link.href = url
+    link.setAttribute('download', 'inventario.xlsx')
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
 }
 
 const getInboundData = (items, materialId, key) => {
@@ -182,16 +194,14 @@ const getOutputData = (items, materialId) => {
 
         <div class="d-flex align-center flex-wrap gap-4">
           <!-- 👉 Download material button -->
-          <!--
-            <VBtn
+          <VBtn
             prepend-icon="tabler-download"
             color="secondary"
             variant="outlined"
             @click="download"
-            >
+          >
             Descargar
-            </VBtn> 
-          -->
+          </VBtn>
         </div>
       </VCardText>
 
@@ -323,6 +333,9 @@ const getOutputData = (items, materialId) => {
                   </div>
                 </div>
               </div>
+              <div v-if="!slotProps.item.last_inbound && !slotProps.item.last_output">
+                <span>No se encontraron entradas y salidas para este material.</span>
+              </div>
             </td>
           </tr>
         </template>
@@ -350,7 +363,7 @@ const getOutputData = (items, materialId) => {
           <IconBtn :to="{name: 'apps-inventory-view-id', params: {id: item._id}}">
             <VIcon icon="tabler-eye" />
           </IconBtn>
-          <IconBtn @click="viewDeleteMaterialDialog(item)">
+          <IconBtn @click="viewDeleteItemDialog(item)">
             <VIcon icon="tabler-trash" />
           </IconBtn>
         </template>
@@ -366,25 +379,29 @@ const getOutputData = (items, materialId) => {
     </VCard>
     <!-- SECTION -->
     <VDialog
-      v-model="isDeleteMaterialDialogVisible"
+      v-model="isDeleteItemDialogVisible"
       width="500"
     >
       <!-- Dialog close btn -->
-      <DialogCloseBtn @click="isDeleteMaterialDialogVisible = !isDeleteMaterialDialogVisible" />
+      <DialogCloseBtn @click="isDeleteItemDialogVisible = !isDeleteItemDialogVisible" />
 
       <!-- Dialog Content -->
-      <VCard title="Eliminar material">
+      <VCard title="Eliminar material del inventario">
         <VCardText>
-          ¿Estás seguro de eliminar el material: <b>{{ selectedMaterial.concept }}</b>?
+          ¿Estás seguro de que deseas eliminar el material <b>{{ selectedItem.material.concept }}</b> del inventario? Esta acción también eliminará todas las entradas y salidas relacionadas.
         </VCardText>
 
         <VCardText class="d-flex justify-end">
-          <VBtn @click="deleteMaterial(selectedMaterial._id)">
+          <VBtn @click="deleteItem(selectedItem._id)">
             Eliminar
           </VBtn>
         </VCardText>
       </VCard>
     </VDialog>
+    <Notification
+      v-model:is-notification-visible="isNotificationVisible"
+      :message="notificationMessage"
+    />
   </section>
 </template>
 
