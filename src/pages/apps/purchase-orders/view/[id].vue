@@ -113,7 +113,7 @@ const extractData = () => {
 }
 
 const getProjectInformation = async () => {
-  const response = await $api(`api/purchase_orders/get_suppliers/${purchaseOrderData.value.home_production_id}`, { method: 'GET' })
+  const response = await $api(`api/purchase_orders/get_suppliers/${purchaseOrderData.value.home_production_id}?type=${purchaseOrderData.value.type}`, { method: 'GET' })
 
   suppliers.value = response.suppliers_list
   items.value = purchaseOrderData.value.items
@@ -157,6 +157,7 @@ const updatePurchaseOrder = async status => {
           'iva': costs.value.iva,
           'total': costs.value.total,
           'status': status,
+          'type': purchaseOrderData.value.project === 'Sin proyecto' ? 'SP' : 'OD',
         },
         onResponse({ response }) {
           if (response.status === 200)

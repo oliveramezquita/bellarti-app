@@ -93,14 +93,15 @@ const headers = [
 yesterday.setDate(today.getDate() - 1)
 
 const getProjectInformation = async () => {
-  const response = await $api(`api/purchase_orders/get_suppliers/${project.value.home_production_id}`, { method: 'GET' })
+  const typeOfProject = project.value.od ? `type=OD` : `type=SP`
+  const response = await $api(`api/purchase_orders/get_suppliers/${project.value.home_production_id}?${typeOfProject}`, { method: 'GET' })
   const now = new Date()
   const month = String(now.getMonth() + 1).padStart(2, '0')
   const year = String(now.getFullYear()).slice(-2)
-  
-  if (!purchaseOrderNumber.value || purchaseOrderNumber.value == '')
-    purchaseOrderNumber.value = `${response.last_consecutive}-OD${project.value.od}-${month}-${year}`
-  suppliers.value = response.suppliers_list
+  const odNumber = project.value.od ? `OD${project.value.od}` : 'SP'
+
+  purchaseOrderNumber.value = `${response.last_consecutive}-${odNumber}-${month}-${year}`
+  suppliers.value = response.suppliers_list  
 }
 
 const getMaterials = async () => {
@@ -168,7 +169,8 @@ const addPurchaseOrder = async status => {
           'payment_method': paymentMethod.value,
           'payment_form': paymentForm.value,
           'cfdi': cfdi.value,
-          'invoice_email': invoiceEmail.value, 
+          'invoice_email': invoiceEmail.value,
+          'type': project.value.od ? 'OD' : 'SP',
         },
         onResponse({ response }) {
           if (response.status === 201) {

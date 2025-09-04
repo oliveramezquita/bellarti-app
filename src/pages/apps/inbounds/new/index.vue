@@ -75,8 +75,7 @@ const getItems = async () => {
     const response = await $api(`api/purchase_order/${purchaseOrder.value}`, { method: 'GET' })
 
     items.value = response.items
-    console.log(items.value)
-
+    
     const itemIds = new Set(items.value.map(item => item.material_id))
 
     materialsList.value = materialsList.value.filter(mat => !itemIds.has(mat._id))
