@@ -1,6 +1,6 @@
 <!-- eslint-disable camelcase -->
 <script setup>
-import excelPath from '@/assets/documents/FORMATO_VOLUMETRIA.xlsx'
+import kitchenExcelPath from '@/assets/documents/FORMATO_VOLUMETRIA_COCINA.xlsx'
 import { useApi } from '@/composables/useApi'
 
 const props = defineProps({
@@ -31,9 +31,9 @@ const emit = defineEmits([
   'fileData',
 ])
 
-const VolumetryFormat = excelPath
+const KitchenVolumeFormat = kitchenExcelPath
 const { data: suppliers } = await useApi('api/suppliers?itemsPerPage=100')
-const { data: areas } = await useApi('api/catalogs?name=Áreas')
+const { data: areas } = await useApi('api/catalogs?name=Colores')
 
 const supplier = ref()
 const materials = ref()
@@ -56,9 +56,10 @@ const materialChange = async () => {
   } else {
     volumetryTable.value = areas.value.values.map(area => ({
       id: crypto.randomUUID(),
-      area,
+      area: area.toUpperCase(),
       factory: null,
       instalation: null,
+      delivery: null,
       total_x: null,
     }))
   }
@@ -74,6 +75,7 @@ const addNewArea = () => {
     area: null,
     factory: null,
     instalation: null,
+    delivery: null,
     total_x: null,
   })
 }
@@ -99,7 +101,7 @@ const uploadVolumetry = () => {
 
 const removeArea = index => {
   volumetryTable.value.splice(index, 1)
-}
+} 
 
 const getMaterials = async supplierId => {
   materials.value = await $api(`api/materials/supplier/${supplierId}`, { method: 'GET' })
@@ -113,13 +115,14 @@ watch(() => props.responseUploadedFile, newResponse => {
 }, { deep: true })
 
 watch(
-  () => volumetryTable.value.map(i => [i.factory, i.instalation]),
+  () => volumetryTable.value.map(i => [i.factory, i.instalation, i.delivery]),
   newVals => {
     newVals.forEach((val, idx) => {
       const factory = parseFloat(val[0]) || 0
       const instalation = parseFloat(val[1]) || 0
+      const delivery = parseFloat(val[2]) || 0
 
-      volumetryTable.value[idx].total_x = (factory + instalation).toFixed(2)
+      volumetryTable.value[idx].total_x = (factory + instalation + delivery).toFixed(2)
     })
   },
   { deep: false },
@@ -227,7 +230,7 @@ watch(
           <VRow>
             <VCol
               cols="12"
-              md="8"
+              md="7"
             >
               ÁREA
             </VCol>
@@ -242,6 +245,12 @@ watch(
               md="1"
             >
               INSTALACIÓN
+            </VCol>
+            <VCol
+              cols="12"
+              md="1"
+            >
+              ENTREGA
             </VCol>
             <VCol
               cols="12"
@@ -264,7 +273,7 @@ watch(
           >
             <VCol
               cols="12"
-              md="8"
+              md="7"
               class="narrow-column"
             >
               <!-- 👉 Area -->
@@ -296,6 +305,20 @@ watch(
               <!-- 👉 Instalation -->
               <AppTextField
                 v-model="item.instalation"
+                type="number"
+                step="0.01"
+                min="0"
+              />
+            </VCol>
+
+            <VCol
+              cols="12"
+              md="1"
+              class="narrow-column"
+            >
+              <!-- 👉 Delivery -->
+              <AppTextField
+                v-model="item.delivery"
                 type="number"
                 step="0.01"
                 min="0"
@@ -350,11 +373,11 @@ watch(
           </p>
           <ul>
             <li>
-              Para la volumetría normal, utilice el archivo: <a
-                :href="VolumetryFormat"
+              Para la volumetría de cocina, utilice el archivo: <a
+                :href="KitchenVolumeFormat"
                 target="_blank"
                 rel="noopener noreferrer"
-              >FORMATO VOLUMETRÍA</a>.
+              >FORMATO VOLUMETRÍA COCINA</a>.
             </li>
           </ul>
           <VRow class="mt-4">

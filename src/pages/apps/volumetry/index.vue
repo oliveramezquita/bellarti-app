@@ -8,6 +8,7 @@ definePage({
 })
 import DataTable from '@/views/apps/volumetry/DataTable.vue'
 import FormData from '@/views/apps/volumetry/FormData.vue'
+import KitchenFormData from '@/views/apps/volumetry/KitchenFormData.vue'
 
 const breadcrumbItems = ref([{ title: 'Vivienda en Serie', class: 'text-primary' }, { title: 'Volumetría' }])
 const isLoadingDialogVisible = ref(false)
@@ -19,9 +20,11 @@ const client = ref()
 const front = ref()
 const fronts = ref([])
 const prototypes = ref([])
+const prototype = ref()
 const volumetry = ref([])
 const volumetryItemDeleted = ref()
 const responseUploadedFile = ref()
+const isKitchen = ref(false)
 
 const clientChange = async value => {
   await $api(`api/prototype_by_client/${value}`, {
@@ -43,13 +46,28 @@ const clientChange = async value => {
 const frontChange = async () => {
   isLoadingDialogVisible.value = true
   try {
-    await $api(`api/volumetries?client_id=${client.value}&front=${front.value}`, {
+    await $api(`api/prototypes_by_data/${client.value}/${front.value}`, {
+      method: 'GET',
+      onResponse({ response }) {
+        if (response.status === 200) 
+          prototypes.value = response._data
+      },
+    })
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
+}
+
+const prototypeChange = async () => {
+  isKitchen.value = prototype.value.trim().endsWith("Cocina")
+  isLoadingDialogVisible.value = true
+  try {
+    await $api(`api/volumetries?client_id=${client.value}&front=${front.value}&prototype=${prototype.value}`, {
       method: 'GET',
       onResponse({ response }) {
         if (response.status === 200) {
           isViewVolumetry.value = true
           volumetry.value = response._data.volumetry
-          prototypes.value = response._data.prototypes
         }
       },
     })
@@ -67,6 +85,7 @@ const addVolumetry  = async volumetryData => {
       body: {
         client_id: client.value,
         front: front.value,
+        prototype: prototype.value,
         material_id: volumetryData.material_id,
         reference: volumetryData.reference,
         volumetry: volumetryData.volumetry,
@@ -90,7 +109,7 @@ const uploadVolumetry = async formsData => {
   isLoadingDialogVisible.value = true
 
   try {
-    await $api(`api/upload_volumetry?client_id=${client.value}&front=${front.value}`, {
+    await $api(`api/upload_volumetry?client_id=${client.value}&front=${front.value}&prototype=${prototype.value}`, {
       method: 'POST',
       body: formsData,
       onResponse({ response }) {
@@ -98,7 +117,8 @@ const uploadVolumetry = async formsData => {
           notificationMessage.value = response._data
           isNotificationVisible.value = true
         } else {
-          volumetry.value = response._data.volumetry
+          if (response._data.volumetry.length > 0)
+            volumetry.value = response._data.volumetry
           responseUploadedFile.value = response._data
         }
       },
@@ -137,7 +157,7 @@ const deleteVolumetry = async i => {
           <!-- 👉 Clients -->
           <VCol
             cols="12"
-            md="6"
+            md="4"
           >
             <AppSelect
               v-model="client"
@@ -153,7 +173,7 @@ const deleteVolumetry = async i => {
           <!-- 👉 Fronts -->
           <VCol
             cols="12"
-            md="6"
+            md="4"
           >
             <AppSelect
               v-model="front"
@@ -166,22 +186,48 @@ const deleteVolumetry = async i => {
               @update:model-value="frontChange"
             />
           </VCol>
+          <!-- 👉 Prototypes -->
+          <VCol
+            cols="12"
+            md="4"
+          >
+            <AppSelect
+              v-model="prototype"
+              label="Prototipos"
+              placeholder="Prototipos"
+              :item-title="item => item.name"
+              :item-value="item => item"
+              :items="prototypes"
+              class="font-weight-bold"
+              @update:model-value="prototypeChange"
+            />
+          </VCol>
         </VRow>
       </VCardText>
     </VCard>
-    <DataTable
-      v-if="isViewVolumetry"
-      :volumetry="volumetry"
-      @volumetry-data="deleteVolumetry"
-    />
     <FormData
-      v-if="isViewVolumetry"
-      :prototypes="prototypes"
+      v-if="isViewVolumetry && !isKitchen"
+      key="form"
+      :prototype="prototype"
       :volumetry="volumetry"
-      :volumetry-item-deleted="volumetryItemDeleted"
       :response-uploaded-file="responseUploadedFile"
       @volumetry-data="addVolumetry"
       @file-data="uploadVolumetry"
+    />
+    <KitchenFormData
+      v-if="isViewVolumetry && isKitchen"
+      key="kitchen"
+      :prototype="prototype"
+      :volumetry="volumetry"
+      :response-uploaded-file="responseUploadedFile"
+      @volumetry-data="addVolumetry"
+      @file-data="uploadVolumetry"
+    />
+    <DataTable
+      v-if="isViewVolumetry"
+      :volumetry="volumetry"
+      :is-kitchen="isKitchen"
+      @volumetry-data="deleteVolumetry"
     />
     <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
     <Notification

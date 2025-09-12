@@ -4,7 +4,11 @@ const props = defineProps({
     type: Array,
     required: true,
   },
-
+  isKitchen: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
 })
 
 const emit = defineEmits([
@@ -12,7 +16,15 @@ const emit = defineEmits([
   'volumetryData',
 ])
 
+props.volumetry.forEach(obj => {
+  obj.volumetry = obj.volumetry.map((item, index) => ({
+    ...item,
+    id: index + 1,
+  }))
+})
+
 const search = ref('')
+
 
 const headers = [
   {
@@ -33,7 +45,7 @@ const headers = [
   },
   {
     title: 'TOTAL',
-    key: 'gran_total',
+    key: 'total',
   },
   {
     title: '',
@@ -46,7 +58,7 @@ const deleteMaterial = id => {
   emit('volumetryData', id)
 }
 
-watch(() => props.volumetry, newValue => {}, { deep: true })
+watch(() => props.volumetry, _ => {}, { deep: true })
 </script>
 
 <template>
@@ -89,27 +101,52 @@ watch(() => props.volumetry, newValue => {}, { deep: true })
       <template #expanded-row="slotProps">
         <tr class="v-data-table__tr">
           <td :colspan="headers.length">
-            <table class="more-info">
-              <tr>
-                <td style=" padding-block-end: 5px;padding-inline-start: 55px !important;">
-                  <b>ÁREA</b>
-                </td>
-                <td style="padding-inline-start: 7px !important;">
-                  <b>CANTIDAD</b>
-                </td>
-              </tr>
-              <tr
+            <div class="inner-table">
+              <div class="row header">
+                <div class="cell align-left">
+                  ÁREA
+                </div>
+                <div class="cell">
+                  FÁBRICA
+                </div>
+                <div class="cell">
+                  INSTALACIÓN
+                </div>
+                <div
+                  v-if="props.isKitchen"
+                  class="cell"
+                >
+                  ENTREGA
+                </div>
+                <div class="cell">
+                  CANTIDAD
+                </div>
+              </div>
+              <div
                 v-for="v in slotProps.item.volumetry"
-                :key="v.area"
+                :key="v.id"
+                class="row"
               >
-                <td style=" padding-block-end: 5px;padding-inline-start: 55px !important;">
+                <div class="cell align-left">
                   {{ v.area }}
-                </td>
-                <td style="padding-inline-start: 7px !important;">
-                  {{ v.total }}
-                </td>
-              </tr>
-            </table>
+                </div>
+                <div class="cell">
+                  {{ v.factory }}
+                </div>
+                <div class="cell">
+                  {{ v.instalation }}
+                </div>
+                <div
+                  v-if="props.isKitchen"
+                  class="cell"
+                >
+                  {{ v.delivery }}
+                </div>
+                <div class="cell">
+                  {{ v.total_x }}
+                </div>
+              </div> 
+            </div>
           </td>
         </tr>
       </template>
@@ -123,3 +160,44 @@ watch(() => props.volumetry, newValue => {}, { deep: true })
     </VDataTable>
   </VCard>
 </template>
+
+<style lang="scss">
+.inner-table {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #ccc;
+  font-size: 0.85rem;
+  inline-size: 100%;
+  margin-block: 20px;
+  margin-inline: auto;
+
+  .row {
+    display: flex;
+    border-block-end: 1px solid #ccc;
+  }
+
+  .cell {
+    flex: 1;
+    padding: 5px;
+    border-inline-end: 1px solid #ccc;
+    text-align: center;
+
+    &.align-left {
+      text-align: start !important;
+    }
+  }
+
+  .row:last-child {
+    border-block-end: none;
+  }
+
+  .cell:last-child {
+    border-inline-end: none;
+  }
+
+  .header {
+    background-color: #f5f5f5;
+    font-weight: bold;
+  }
+}
+</style>
