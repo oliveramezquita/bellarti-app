@@ -58,6 +58,7 @@ const getQuantification = async () => {
       method: 'GET',
       onResponse({ response }) {
         if (response.status === 200) {
+          console.log(response._data)
           quantificationId.value = response._data._id
           if (response._data.hasOwnProperty('quantification'))
             transformData(response._data.quantification)
