@@ -206,7 +206,7 @@ export default [
         title: 'Compañías',
         to: 'apps-companies',
         action: 'read',
-        subject: 'AdmCompanias',
+        subject: 'Companias',
       },
     ],
   },
