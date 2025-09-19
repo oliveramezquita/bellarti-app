@@ -229,6 +229,7 @@ watch(price, val => {
                   label="Seleccionar color"
                   placeholder="Seleccionar color"
                   :items="colors.values"
+                  clearable
                 />
               </VCol>
               <!-- 👉 SKU -->
