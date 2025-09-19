@@ -22,7 +22,6 @@ const emit = defineEmits([
   'sectionData',
 ])
 
-
 const isFormValid = ref(false)
 const refForm = ref()
 
@@ -30,9 +29,13 @@ const section = ref({
   parent: '',
 })
 
-watch(props, () => {
-  section.value = structuredClone(toRaw(props.sectionInfo))
-})
+watch(
+  () => props.sectionInfo,
+  newVal => {
+    section.value = structuredClone(toRaw(newVal))
+  },
+  { immediate: true },
+)
 
 const closeNavigationDrawer = () => {
   emit('update:isDrawerOpen', false)
@@ -42,6 +45,7 @@ const onSubmit = () => {
   refForm.value?.validate().then(({ valid }) => {
     if (valid) {
       emit('sectionData', {
+        id: section.value._id,
         parent: section.value.parent,
         level_1: section.value.level_1 || null,
         value: section.value.value,
@@ -68,7 +72,7 @@ const handleDrawerModelValueUpdate = val => {
   >
     <!-- 👉 Title -->
     <AppDrawerHeaderSection
-      title="Agrear Nuevo Sección"
+      title="Modificar Sección"
       @cancel="closeNavigationDrawer"
     />
 
