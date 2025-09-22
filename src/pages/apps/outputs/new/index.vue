@@ -109,6 +109,7 @@ const getQuantification = async () => {
       method: 'GET',
       onResponse({ response }) {
         if (response.status === 200) {
+          console.log(response._data)
           quantification.value = response._data
           areas.value = Object.keys(response._data.quantification)
           area.value = null
