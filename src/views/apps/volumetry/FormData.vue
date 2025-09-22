@@ -102,8 +102,12 @@ const removeArea = index => {
 }
 
 const getMaterials = async supplierId => {
-  material.value = null
-  materials.value = await $api(`api/materials/supplier/${supplierId}`, { method: 'GET' })
+  try {
+    material.value = 'Cargando materiales...'
+    materials.value = await $api(`api/materials/supplier/${supplierId}`, { method: 'GET' })
+  } finally {
+    material.value = null
+  }
 }
 
 watch(() => props.responseUploadedFile, newResponse => {
