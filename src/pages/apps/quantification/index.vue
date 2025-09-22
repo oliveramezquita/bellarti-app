@@ -17,12 +17,13 @@ const prototypes = ref([])
 const client = ref()
 const front = ref()
 const prototype = ref()
+const areas = ref([])
 const isLoadingDialogVisible = ref(false)
 const isNotificationVisible = ref(false)
 const notificationMessage = ref('')
 const quantificationId = ref()
 const quantification = ref([])
-const currentTab = ref('tab-1')
+const currentTab = ref(0)
 const isSelectColorDrawerVisible = ref(false)
 const isChangeAreaDrawerVisible = ref(false)
 const selectedMaterials = ref()
@@ -58,7 +59,6 @@ const getQuantification = async () => {
       method: 'GET',
       onResponse({ response }) {
         if (response.status === 200) {
-          console.log(response._data)
           quantificationId.value = response._data._id
           if (response._data.hasOwnProperty('quantification'))
             transformData(response._data.quantification)
@@ -73,11 +73,26 @@ const getQuantification = async () => {
   }
 }
 
-const transformData = data => {
-  quantification.value = Object.entries(data).map(([key, materials]) => ({
-    key: key,
-    materials: materials,
-  }))
+const transformData = async data => {
+  areas.value = Object.keys(data).filter(area =>
+    data[area].some(material => material.TOTAL > 0),
+  )
+  quantification.value = areas.value.map(area => {
+    const materialsWithId = data[area]
+      .filter(material => material.TOTAL > 0)
+      .map((material, index) => ({
+        ...material,
+        id: index + 1,
+      }))
+
+    return {
+      key: area,
+      materials: materialsWithId,
+    }
+  })
+
+  await nextTick()
+  currentTab.value = areas.value.length > 0 ? 0 : null
 }
 
 const showSelectColorDrawer = data => {
@@ -209,18 +224,20 @@ const changeArea = async area => {
           v-model="currentTab"
           class="mt-5"
         >
-          <VTab>PRODUCCIÓN SOLO COCINA</VTab>
-          <VTab>PRODUCCIÓN SIN COCINA</VTab>
-          <VTab>INSTALACIÓN SOLO COCINA</VTab>
-          <VTab>INSTALACIÓN SIN COCINA</VTab>
-          <VTab>CARPINTERÍA</VTab>
-          <VTab>EQUIPOS</VTab>
+          <VTab
+            v-for="(area, idx) in areas"
+            :key="area"
+            :value="idx"
+          >
+            {{ area }}
+          </VTab>
         </VTabs>
 
         <VWindow v-model="currentTab">
           <VWindowItem
             v-for="(q, index) in quantification"
-            :key="index"
+            :key="q.key"
+            :value="index"
           >
             <DataTable
               :quantification="q.materials"

@@ -104,6 +104,7 @@ const removeArea = index => {
 } 
 
 const getMaterials = async supplierId => {
+  material.value = null
   materials.value = await $api(`api/materials/supplier/${supplierId}`, { method: 'GET' })
 }
 

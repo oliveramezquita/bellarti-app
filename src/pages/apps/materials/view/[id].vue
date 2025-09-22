@@ -192,6 +192,22 @@ const deleteImages = async images => {
         />
         <span>Imagen</span>
       </VTab>
+
+      <VTab>
+        <VIcon
+          icon="tabler-building-warehouse"
+          class="mb-2"
+        />
+        <span>Inventario</span>
+      </VTab>
+
+      <VTab>
+        <VIcon
+          icon="tabler-qrcode"
+          class="mb-2"
+        />
+        <span>QR</span>
+      </VTab>
     </VTabs>
 
     <VCardText>
@@ -515,6 +531,12 @@ const deleteImages = async images => {
             @upload-image="uploadImage"
             @delete-images="deleteImages"
           />
+        </VWindowItem>
+        <VWindowItem>
+          Inventario
+        </VWindowItem>
+        <VWindowItem>
+          Codigo QR
         </VWindowItem>
       </VWindow>
     </VCardText>
