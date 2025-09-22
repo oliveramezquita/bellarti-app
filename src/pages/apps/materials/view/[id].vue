@@ -9,6 +9,8 @@ definePage({
 })
 
 import Image from '@/views/apps/materials/Image.vue'
+import Inventory from '@/views/apps/materials/Inventory.vue'
+import Qr from '@/views/apps/materials/Qr.vue'
 
 const route = useRoute('apps-materials-view-id')
 const router = useRouter()
@@ -68,18 +70,16 @@ const onSubmit = () => {
   isLoadingDialogVisible.value = true
   refForm.value?.validate().then(({ valid }) => {
     if (valid) {
-      editMateiral()
+      editMaterial()
     }
   })
 }
 
-const editMateiral = async() => {
+const editMaterial = async (tab = null) => {
   material.value.concept = concept.value
   material.value.sku = sku.value
 
-  const filteredObject = Object.fromEntries(
-    Object.entries(material.value).filter(([key, _]) => key !== '_id'),
-  )
+  const { _id, ...filteredObject } = material.value
 
   try {
     await $api(`api/material/${materialData.value._id}`, {
@@ -95,10 +95,16 @@ const editMateiral = async() => {
         }
       },
     })
+  } catch (err) {
+    console.error("Error al actualizar material:", err)
+    notificationMessage.value = "Ocurrió un error inesperado"
+    isNotificationVisible.value = true
   } finally {
+    if (tab) currentTab.value = tab
     isLoadingDialogVisible.value = false
   }
 }
+
 
 const convertCurrency = value => {
   let floatValue = parseFloat(value)
@@ -177,7 +183,7 @@ const deleteImages = async images => {
       grow
       stacked
     >
-      <VTab>
+      <VTab value="tab-1">
         <VIcon
           icon="tabler-info-circle"
           class="mb-2"
@@ -185,7 +191,7 @@ const deleteImages = async images => {
         <span>Información</span>
       </VTab>
 
-      <VTab>
+      <VTab value="tab-2">
         <VIcon
           icon="tabler-photo-plus"
           class="mb-2"
@@ -193,7 +199,7 @@ const deleteImages = async images => {
         <span>Imagen</span>
       </VTab>
 
-      <VTab>
+      <VTab value="tab-3">
         <VIcon
           icon="tabler-building-warehouse"
           class="mb-2"
@@ -201,7 +207,7 @@ const deleteImages = async images => {
         <span>Inventario</span>
       </VTab>
 
-      <VTab>
+      <VTab value="tab-4">
         <VIcon
           icon="tabler-qrcode"
           class="mb-2"
@@ -212,7 +218,7 @@ const deleteImages = async images => {
 
     <VCardText>
       <VWindow v-model="currentTab">
-        <VWindowItem>
+        <VWindowItem value="tab-1">
           <VForm
             ref="refForm"
             v-model="isFormValid"
@@ -524,7 +530,7 @@ const deleteImages = async images => {
             </VRow>
           </VForm>
         </VWindowItem>
-        <VWindowItem>
+        <VWindowItem value="tab-2">
           <Image
             :material-id="material._id"
             :images="material.hasOwnProperty('images') && material.images ? material.images : {}"
@@ -532,11 +538,14 @@ const deleteImages = async images => {
             @delete-images="deleteImages"
           />
         </VWindowItem>
-        <VWindowItem>
-          Inventario
+        <VWindowItem value="tab-3">
+          <Inventory :inventory-id="material.inventory_id" />
         </VWindowItem>
-        <VWindowItem>
-          Codigo QR
+        <VWindowItem value="tab-4">
+          <Qr
+            :image="material.qr"
+            @update-material="editMaterial('tab-4')"
+          />
         </VWindowItem>
       </VWindow>
     </VCardText>
