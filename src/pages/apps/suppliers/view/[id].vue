@@ -3,7 +3,7 @@ definePage({
   meta: {
     action: 'read',
     subject: 'Proveedores',
-    navActiveLink: 'apps-townhouses-list',
+    navActiveLink: 'apps-suppliers-list',
   },
 })
 import BankDataInformationForm from '@/views/apps/suppliers/view/BankDataInformationForm.vue'

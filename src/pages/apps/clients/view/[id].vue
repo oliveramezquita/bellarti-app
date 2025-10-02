@@ -1,18 +1,18 @@
 <script setup>
+import ClientInformationForm from '@/views/apps/clients/view/ClientInformationForm.vue'
+import Contacts from '@/views/apps/clients/view/Contacts.vue'
+import TaxDataInformationForm from '@/views/apps/clients/view/TaxDataInformationForm.vue'
 import EditContactFormDrawer from '@/views/apps/contacts/EditContactFormDrawer.vue'
 import NewContactFormDrawer from '@/views/apps/contacts/NewContactFormDrawer.vue'
-import ClientInformationForm from '@/views/apps/townhouses/view/ClientInformationForm.vue'
-import Contacts from '@/views/apps/townhouses/view/Contacts.vue'
-import TaxDataInformationForm from '@/views/apps/townhouses/view/TaxDataInformationForm.vue'
 
 definePage({
   meta: {
     action: 'read',
-    subject: 'CliVS',
+    subject: 'Clientes',
   },
 })
 
-const route = useRoute('apps-townhouses-view-id')
+const route = useRoute('apps-clients-view-id')
 const currentTab = ref('tab-1')
 const { data: clientData } = await useApi(`api/client/${ route.params.id }`)
 const { data: taxDataInfo } = await useApi(`api/tax_data/client/${ route.params.id }`)
@@ -132,7 +132,7 @@ const deleteContact = async id => {
 
 <template>
   <Breadcrumb
-    :items="[{ title: 'Clientes', class: 'text-primary' }, { title: 'Vivienda en Serie', to: { name: 'apps-townhouses-list' }, class: 'text-underline' }, { title: clientData.name }]"
+    :items="[{ title: 'Clientes', class: 'text-primary' }, { title: 'Vivienda en Serie', to: { name: 'apps-clients-list' }, class: 'text-underline' }, { title: clientData.name }]"
     icon="password-user"
   />
   <VCard class="py-3">

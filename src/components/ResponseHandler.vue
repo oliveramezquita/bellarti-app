@@ -27,7 +27,8 @@ const typeAlert = status => {
 
 const parseResponse = response => {
   if (typeof(response) === 'object')
-    return response[0]
+    
+    return response.hasOwnProperty('error') ? response.error : response[0]
   else if (typeof(response) === 'string')
     return response
 }

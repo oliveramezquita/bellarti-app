@@ -5,8 +5,8 @@ definePage({
     subject: 'CliVS',
   },
 })
-import AddNewClientDrawer from '@/views/apps/townhouses/list/AddNewClientDrawer.vue'
-import EditClientDrawer from '@/views/apps/townhouses/list/EditClientDrawer.vue'
+import AddNewClientDrawer from '@/views/apps/clients/list/AddNewClientDrawer.vue'
+import EditClientDrawer from '@/views/apps/clients/list/EditClientDrawer.vue'
 
 const breadcrumbItems = ref([{ title: 'Clientes', class: 'text-primary' }, { title: 'Vivienda en Serie' }])
 const searchQuery = ref('')
@@ -184,7 +184,7 @@ const deleteClient = async id => {
                 style="font-weight: normal;"
               >
                 <RouterLink
-                  :to="{ name: 'apps-townhouses-view-id', params: { id: item._id } }"
+                  :to="{ name: 'apps-clients-view-id', params: { id: item._id } }"
                   class="font-weight-medium text-link"
                 >
                   {{ item.name }}
@@ -214,7 +214,7 @@ const deleteClient = async id => {
 
         <!-- Actions -->
         <template #item.actions="{ item }">
-          <IconBtn :to="{ name: 'apps-townhouses-view-id', params: { id: item._id } }">
+          <IconBtn :to="{ name: 'apps-clients-view-id', params: { id: item._id } }">
             <VIcon icon="tabler-eye" />
           </IconBtn>
           <IconBtn @click="viewEditClientDrawer(item)">
