@@ -93,7 +93,7 @@ const onSubmit = () => {
             type="reset"
             color="secondary"
             variant="tonal"
-            :to="{name:'apps-townhouses-list'}"
+            :to="{name:'apps-clients-list'}"
           >
             Cancelar
           </VBtn>

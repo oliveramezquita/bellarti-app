@@ -23,13 +23,13 @@ export default [
     children: [
       {
         title: 'Vivienda en Serie',
-        to: 'apps-townhouses-list',
+        to: 'apps-clients-list-vs',
         action: 'read',
         subject: 'CliVS',
       },
       {
         title: 'Proyectos Especiales',
-        to: 'apps-special-projects-list',
+        to: 'apps-clients-list-pe',
         action: 'read',
         subject: 'CliPE',
       },
