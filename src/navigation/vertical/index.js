@@ -169,7 +169,7 @@ export default [
   {
     title: 'Empleados y Colaboradores',
     icon: { icon: 'tabler-users-group' },
-    to: 'apps-employees-list',
+    to: 'apps-employees',
     action: 'read',
     subject: 'EC',
   },

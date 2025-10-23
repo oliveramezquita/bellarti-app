@@ -1,16 +1,16 @@
 <script setup>
-import ClientInformationForm from '@/views/apps/clients/view/ClientInformationForm.vue'
-import Contacts from '@/views/apps/clients/view/Contacts.vue'
-import TaxDataInformationForm from '@/views/apps/clients/view/TaxDataInformationForm.vue'
-import EditContactFormDrawer from '@/views/apps/contacts/EditContactFormDrawer.vue'
-import NewContactFormDrawer from '@/views/apps/contacts/NewContactFormDrawer.vue'
-
 definePage({
   meta: {
     action: 'read',
     subject: 'Clientes',
   },
 })
+
+import ClientInformationForm from '@/views/apps/clients/view/ClientInformationForm.vue'
+import Contacts from '@/views/apps/clients/view/Contacts.vue'
+import TaxDataInformationForm from '@/views/apps/clients/view/TaxDataInformationForm.vue'
+import EditContactFormDrawer from '@/views/apps/contacts/EditContactFormDrawer.vue'
+import NewContactFormDrawer from '@/views/apps/contacts/NewContactFormDrawer.vue'
 
 const route = useRoute('apps-clients-view-id')
 const currentTab = ref('tab-1')
@@ -23,6 +23,16 @@ const notificationMessage = ref('')
 const isAddContactFormDrawerVisible = ref(false)
 const isEditContactFormDrawerVisible = ref(false)
 const contact = ref()
+
+const breadcrumbItems = ref([
+  { title: 'Clientes', class: 'text-primary' },
+  {
+    title: clientData.value.type === 'PE' ? 'Proyectos Especiales' : 'Vivienda en Serie', 
+    to: { name: clientData.value.type === 'PE' ? 'apps-clients-list-pe' : 'apps-clients-list-vs' },
+    class: 'text-underline',
+  },
+  { title: clientData.value.name },
+])
 
 const updateInformation = async data => {
   isLoadingDialogVisible.value = true
@@ -132,9 +142,9 @@ const deleteContact = async id => {
 
 <template>
   <Breadcrumb
-    :items="[{ title: 'Clientes', class: 'text-primary' }, { title: 'Vivienda en Serie', to: { name: 'apps-clients-list' }, class: 'text-underline' }, { title: clientData.name }]"
+    :items="breadcrumbItems"
     icon="password-user"
-  />
+  /> 
   <VCard class="py-3">
     <VTabs
       v-model="currentTab"
@@ -197,7 +207,7 @@ const deleteContact = async id => {
             @tax-data-info="saveTaxData"
           />
         </VWindowItem>
-        <VWindowItem>Proyectos </VWindowItem>
+        <VWindowItem>Proyectos</VWindowItem>
       </VWindow>
     </VCardText>
   </VCard>

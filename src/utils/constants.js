@@ -23,3 +23,11 @@ export const COMMON_STATUS = [
     value: 0,
   },
 ]
+
+export const projectStatusList = [
+  { name: 'Diseño', color: 'secondary', icon: 'tabler-color-picker', value: 0 },
+  { name: 'Cotización', color: 'warning', icon: 'tabler-cash-register', value: 1 },
+  { name: 'Producción', color: 'info', icon: 'tabler-building-factory-2', value: 2 },
+  { name: 'Instalación', color: 'primary', icon: 'tabler-package-export', value: 3 },
+  { name: 'Entregado', color: 'success', icon: 'tabler-checklist', value: 4 },
+]

@@ -21,6 +21,10 @@ const selectedClient = ref()
 
 const headers = [
   {
+    title: 'ID',
+    key: 'pe_id',
+  },
+  {
     title: 'Nombre',
     key: 'name',
   },
@@ -175,6 +179,10 @@ const deleteClient = async id => {
         class="text-no-wrap"
         @update:options="updateOptions"
       >
+        <!-- ID -->
+        <template #item.pe_id="{ item }">
+          {{ `C${item.pe_id}` }}
+        </template>
         <!-- Name -->
         <template #item.name="{ item }">
           <div class="d-flex align-center gap-x-4">
