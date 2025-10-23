@@ -18,6 +18,7 @@ const isFormValid = ref(false)
 const refForm = ref()
 
 const client = ref(props.clientInfo)
+const backLink = client.value.type === 'PE' ? 'apps-clients-list-pe' : 'apps-clients-list-vs'
 
 const onSubmit = () => {
   refForm.value?.validate().then(({ valid }) => {
@@ -88,15 +89,14 @@ const onSubmit = () => {
           <VBtn type="submit">
             Actualizar
           </VBtn>
-
           <VBtn
             type="reset"
             color="secondary"
             variant="tonal"
-            :to="{name:'apps-clients-list'}"
+            :to="{name:backLink}"
           >
             Cancelar
-          </VBtn>
+          </VBtn> 
         </VCol>
       </VRow>
     </VForm>

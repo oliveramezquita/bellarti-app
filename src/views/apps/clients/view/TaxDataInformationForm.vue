@@ -26,6 +26,7 @@ const { data: taxRegimes } = await useApi('api/catalogs?name=Regimen Fiscal')
 const taxDataInfo = ref(props.taxDataInfo)
 const constancyFile = ref()
 const clientType = ref(['Persona Física', 'Persona Moral', 'Cliente sin RFC', 'Cliente Extranjero'])
+const backLink = props.clientData.type === 'PE' ? 'apps-clients-list-pe' : 'apps-clients-list-vs'
 
 const onSubmit = () => {
   const formData = new FormData()
@@ -168,12 +169,11 @@ const onSubmit = () => {
           <VBtn type="submit">
             Guardar
           </VBtn>
-
           <VBtn
             type="reset"
             color="secondary"
             variant="tonal"
-            :to="{name:'apps-clients-list'}"
+            :to="{name:backLink}"
           >
             Cancelar
           </VBtn>

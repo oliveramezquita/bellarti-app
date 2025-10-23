@@ -66,6 +66,7 @@ const {
     q: searchQuery,
     supplier: selectedSupplier,
     division: selectedDivision,
+    group: 'MATERIALS_GROUP',
     itemsPerPage,
     page,
     sortBy,
@@ -97,7 +98,8 @@ const download = async() => {
   isLoadingDialogVisible.value = true
 
   try {
-    const apiUrl = selectedSupplier.value ? `api/export-materials?supplier=${selectedSupplier.value}` : 'api/export-materials'
+    const baseUrl = 'api/export-materials?group=MATERIALS_GROUP'
+    const apiUrl = selectedSupplier.value ? `${baseUrl}&supplier=${selectedSupplier.value}` : baseUrl
     const response = await $api(apiUrl, { method: 'GET' })
 
     const url = URL.createObjectURL(response)

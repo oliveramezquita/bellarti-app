@@ -375,6 +375,8 @@
     "notifications": true,
     "NOTIFICATIONS": true,
     "getNotifications": true,
-    "OD_STATUS": true
+    "OD_STATUS": true,
+    "formatNumber": true,
+    "projectStatusList": true
   }
 }

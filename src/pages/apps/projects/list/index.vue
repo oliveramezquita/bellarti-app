@@ -7,7 +7,7 @@ definePage({
 })
 
 const breadcrumbItems = ref([{ title: 'Proyectos Especiales', class: 'text-primary' }, { title: 'Proyectos' }])
-const { data: clientList } = await useApi('api/special_projects/clients')
+const { data: clientList } = await useApi('api/projects/clients')
 </script>
 
 <template>
@@ -30,11 +30,11 @@ const { data: clientList } = await useApi('api/special_projects/clients')
               :to="{ name: 'apps-projects-client-id', params: { id: client._id } }"
               class="font-weight-medium text-link"
             >
-              {{ client.name }}
+              {{ `C${client.pe_id} - ${client.name}` }}
             </RouterLink>
           </VCardTitle>
           <VCardSubtitle>
-            {{ client.total_projects }} Proyectos
+            {{ client.total_projects }} Proyecto(s)
           </VCardSubtitle>
         </VCardItem>
 
