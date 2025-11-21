@@ -1,240 +1,224 @@
+<!-- eslint-disable camelcase -->
 <script setup>
-definePage({
-  meta: {
-    action: 'read',
-    subject: 'OC',
-    navActiveLink: 'apps-purchase-orders-list',
-  },
-})
-import AddMaterialDrawer from '@/views/apps/purchase-orders/AddMaterialDrawer.vue'
-import EditMaterialDrawer from '@/views/apps/purchase-orders/EditMaterialDrawer.vue'
+import { useApi } from '@/composables/useApi'
+import { useDebounceFn } from '@vueuse/core'
+import { cloneDeep } from 'lodash-es'
+import { defineAsyncComponent, nextTick, reactive, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
-const userData = useCookie('userData')
-const breadcrumbItems = ref([{ title: 'Órdenes de Compra', to: { name: 'apps-purchase-orders-list' }, class: 'text-underline' }, { title: 'Nuevo' }])
-const { data: projects } = await useApi('api/purchase_orders/get_projects')
-const { data: companiesList } = await useApi('api/companies?itemsPerPage=100')
-const { data: purchaseOrdersLIst } =  await useApi('api/purchase_orders?status=processed&itemsPerPage=100')
-const { data: divisionsList } = await useApi('api/catalogs?name=División de materiales')
-const { data: paymentMethodsList } = await useApi('api/catalogs?name=Métodos de Pago')
-const { data: paymentFormsList  } = await useApi('api/catalogs?name=Formas de Pago')
-const { data: useOfCFDIList } = await useApi('api/catalogs?name=Uso de CFDI')
-const isAddNewMaterialDrawerVisible = ref(false)
-const isEditMaterialDrawerVisible = ref(false)
-const isDeleteMaterialDialogVisible = ref(false)
-const isLoadingDialogVisible = ref(false)
-const isNotificationVisible = ref(false)
-const notificationMessage = ref('')
-const project = ref()
-const suppliers = ref()
-const estimatedDelivery = ref()
-const today = new Date()
-const yesterday = new Date(today)
-const created = ref(today)
-const purchaseOrderLinked = ref()
-const purchaseOrderNumber = ref()
-const company = ref()
-const supplier = ref()
-const selectedDivisions = ref([])
-const subject = ref()
-const costs = ref()
-const items = ref()
-const materialsList = ref([])
-const itemsPerPage = ref(10)
-const page = ref(1)
-const selectedRows = ref()
-const totalItems = ref(0)
+// 🔹 Meta
+
+definePage({ meta: { action: 'read', subject: 'OC', navActiveLink: 'apps-purchase-orders-list' } })
+
+// 🔹 Lazy Components
+const AddMaterialDrawer = defineAsyncComponent(() => import('@/views/apps/purchase-orders/AddMaterialDrawer.vue'))
+const EditMaterialDrawer = defineAsyncComponent(() => import('@/views/apps/purchase-orders/EditMaterialDrawer.vue'))
+
+// 🔹 Helpers
+const formatCurrency = valor => new Intl.NumberFormat('es-MX', {
+  style: 'currency', currency: 'MXN', minimumFractionDigits: 2,
+}).format(parseFloat(valor || 0))
+
+// 🔹 Estado principal
 const router = useRouter()
-const selectedMaterial = ref()
-const paymentMethod = ref()
-const paymentForm = ref()
-const cfdi = ref()
-const invoiceEmail = ref('facturas@bellarti.com.mx')
+const userData = useCookie('userData')
 
-const headers = [
-  {
-    title: 'MATERIAL',
-    key: 'concept',
-  },
-  {
-    title: 'CÓDIGO PROVEEDOR',
-    key: 'supplier_code',
-  },
-  {
-    title: 'SKU',
-    key: 'sku',
-  },
-  {
-    title: 'UNIDAD DE MEDIDA',
-    key: 'measurement',
-  },
-  {
-    title: 'PRESENTACIÓN',
-    key: 'presentation',
-  },
-  {
-    title: 'PRECIO',
-    key: 'inventory_price',
-  },
-  {
-    title: 'CANTIDAD',
-    key: 'total_quantity',
-  },
-  {
-    title: 'TOTAL',
-    key: 'total',
-  },
-  {
-    title: 'Acciones',
-    key: 'actions',
-    sortable: false,
-  },
-]
+const ui = reactive({
+  isLoading: false,
+  isNotificationVisible: false,
+  notificationMessage: '',
+  notificationColor: 'info',
+  isAddNewMaterialDrawerVisible: false,
+  isEditMaterialDrawerVisible: false,
+  isDeleteMaterialDialogVisible: false,
+})
 
-yesterday.setDate(today.getDate() - 1)
+const lists = reactive(purchaseOrdersDefaultValues.list)
+const form = ref(cloneDeep(purchaseOrdersDefaultValues.form))
+const table = ref(cloneDeep(purchaseOrdersDefaultValues.table))
+const costs = ref(cloneDeep(purchaseOrdersDefaultValues.costs))
+const type = ref()
+const selectedMaterial = ref(null)
+const now = new Date()
+const month = String(now.getMonth() + 1).padStart(2, '0')
+const year = String(now.getFullYear()).slice(-2)
 
-const getProjectInformation = async () => {
-  const typeOfProject = project.value.od ? `type=OD` : `type=SP`
-  const response = await $api(`api/purchase_orders/get_suppliers/${project.value.home_production_id}?${typeOfProject}`, { method: 'GET' })
-  const now = new Date()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const year = String(now.getFullYear()).slice(-2)
-  const odNumber = project.value.od ? `OD${project.value.od}` : 'SP'
+const onTypeChange = async value => {
+  // resetear valores correctamente
+  Object.assign(lists, purchaseOrdersDefaultValues.list)
+  form.value = cloneDeep(purchaseOrdersDefaultValues.form)
+  table.value = cloneDeep(purchaseOrdersDefaultValues.table)
+  costs.value = cloneDeep(purchaseOrdersDefaultValues.costs)
 
-  purchaseOrderNumber.value = `${response.last_consecutive}-${odNumber}-${month}-${year}`
-  suppliers.value = response.suppliers_list  
-}
-
-const getMaterials = async () => {
-  isLoadingDialogVisible.value = true
+  ui.isLoading = true
   try {
-    let filter = ''
-    if (selectedDivisions.value)
-      filter = `?division=${selectedDivisions.value.join(',')}`
+    if (value === 'SP') {
+      const [suppliers, last_consecutive, purchaseOrdersRes] = await Promise.all([
+        useApi('api/suppliers?itemsPerPage=1000'),
+        useApi('api/purchase_orders/get_last_consecutive'),
+        useApi(`api/purchase_orders?type=${value}&status=processed&itemsPerPage=10000`),
+      ])
 
-    if (supplier.value) {
-      const response = await $api(`api/purchase_orders/get_materials/${project.value.home_production_id}/${supplier.value}${filter}`, { method: 'GET' })
-  
-      costs.value = response.costs
-      items.value = response.items
-      materialsList.value = items.value.map(item => item.material_id)
-      totalItems.value = response.items.length
+      lists.suppliers = suppliers.data.value.data
+      lists.purchaseOrders = purchaseOrdersRes.data.value
+      form.value.purchaseOrderNumber = `${last_consecutive.data.value}-SP-${month}-${year}`
     } else {
-      items.value = null
+      const [purchaseOrdersRes, projectsRes] = await Promise.all([
+        useApi(`api/purchase_orders?type=${value}&status=processed&itemsPerPage=10000`),
+        useApi(`api/purchase_orders/get_projects?type=${value}`),
+      ])
+
+      lists.suppliers = []
+      lists.purchaseOrders = purchaseOrdersRes.data.value
+      lists.projects = projectsRes.data.value
     }
+
+    const [companies, divisions, methods, forms, cfdi] = await Promise.all([
+      useApi('api/companies?itemsPerPage=100'),
+      useApi('api/catalogs?name=División de materiales'),
+      useApi('api/catalogs?name=Métodos de Pago'),
+      useApi('api/catalogs?name=Formas de Pago'),
+      useApi('api/catalogs?name=Uso de CFDI'),
+    ])
+
+    lists.companies = companies.data
+    lists.divisions = divisions.data.value
+    lists.paymentMethods = methods.data.value
+    lists.paymentForms = forms.data.value
+    lists.cfdi = cfdi.data.value
+  } catch (e) {
+    ui.notificationColor = 'error'
+    ui.notificationMessage = 'Error al cargar datos'
+    ui.isNotificationVisible = true
   } finally {
-    isLoadingDialogVisible.value = false
+    ui.isLoading = false
   }
 }
 
-const formatCurrency = valor => {
-  valor = parseFloat(valor).toFixed(2)
-  
-  return new Intl.NumberFormat('es-MX', {
-    style: 'currency',
-    currency: 'MXN',
-    minimumFractionDigits: 2,
-  }).format(valor)
-}
 
-const getItemsByIds = ids => {
-  const idsToFind = Object.values(ids)
+// 🔹 Obtener proveedores
+const getSuppliers = async () => {
+  if (!form.value.project) return
+  ui.isLoading = true
+  try {
+    const res = await $api(`api/purchase_orders/get_suppliers?project_id=${form.value.project.home_production_id}&type=${type.value}`)
 
-  return items.value.filter(obj => idsToFind.includes(obj.id))
-}
+    lists.suppliers = res.suppliers_list
 
-const addPurchaseOrder = async status => {
-  if (selectedRows.value) {
-    const itemsSelected = getItemsByIds(Object.values(selectedRows.value))
+    const od = form.value.project?.od ? `OD${form.value.project.od}` : 'SP'
 
-    isLoadingDialogVisible.value = true
-    try {
-      await $api('api/purchase_orders', {
-        method: 'POST',
-        body: {
-          'supplier_id': supplier.value,
-          'linked_id': purchaseOrderLinked.value,
-          'number': purchaseOrderNumber.value,
-          'company_id': company.value, 
-          'home_production_id': project.value.home_production_id,
-          'division': selectedDivisions.value,
-          'request_by': userData.value._id,
-          'created': created.value,
-          'estimated_delivery': estimatedDelivery.value,
-          'subject': subject.value,
-          'items': Object.values(itemsSelected),
-          'subtotal': costs.value.subtotal,
-          'iva': costs.value.iva,
-          'total': costs.value.total,
-          'status': status,
-          'payment_method': paymentMethod.value,
-          'payment_form': paymentForm.value,
-          'cfdi': cfdi.value,
-          'invoice_email': invoiceEmail.value,
-          'type': project.value.od ? 'OD' : 'SP',
-        },
-        onResponse({ response }) {
-          if (response.status === 201) {
-            nextTick(() => { 
-              router.replace(`/apps/purchase-orders/view/${response._data.id}?new=true`)
-            })
-          } else {
-            isNotificationVisible.value = true
-            notificationMessage.value = response._data
-          }
-        },
-      })
-    } finally {
-      isLoadingDialogVisible.value = false
-    }
+    form.value.purchaseOrderNumber = `${res.last_consecutive}-${od}-${month}-${year}`
+  } catch (e) {
+    ui.notificationColor = 'error'
+    ui.notificationMessage = 'Error al obtener proveedores'
+    ui.isNotificationVisible = true
+  } finally {
+    ui.isLoading = false
   }
 }
 
-const addMaterial = material => {
-  material.id = items.value.length
-  items.value.push(material)
-  materialsList.value.push(material.material_id)
-  totalItems.value = items.value.length
+// 🔹 Obtener materiales
+const getMaterials = async () => {
+  if (!form.value.project || !form.value.supplier) return
+  ui.isLoading = true
+  try {
+    const filter = form.value.selectedDivisions.length ? `division=${form.value.selectedDivisions.join(',')}` : ''
+    const res = await $api(`api/purchase_orders/get_materials/${form.value.supplier}?project_id=${form.value.project.home_production_id}&${filter}`)
 
-  if (!selectedRows.value) {
-    const totalSum = costs.value.subtotal + material.total
-    
-    updateCosts(totalSum)
+    table.value.items = res.items
+    table.value.totalItems = res.items.length
+    costs.value.subtotal = res.costs.subtotal
+    costs.value.iva = res.costs.iva
+    costs.value.total = res.costs.total
+  } catch (e) {
+    ui.notificationColor = 'error'
+    ui.notificationMessage = 'Error al obtener materiales'
+    ui.isNotificationVisible = true
+  } finally {
+    ui.isLoading = false
   }
 }
 
-const updateMaterial = material => {
-  const item = items.value.find(obj => obj.id === material.id)
+// 🔹 Recalcular costos seleccionados
+const recalcCosts = useDebounceFn(() => {
+  const selected = table.value.selectedRows?.map(id => table.value.items.find(i => i.id === id)) || []
+  const subtotal = selected.reduce((s, i) => s + (i?.total || 0), 0)
 
-  if (item) {
-    Object.assign(item, material)
-    if (!selectedRows.value) {
-      const totalSum = Object.values(items.value).reduce((sum, item) => sum + (item.total || 0), 0)
+  costs.value.subtotal = parseFloat(subtotal.toFixed(2))
+  costs.value.iva = parseFloat((subtotal * 0.16).toFixed(2))
+  costs.value.total = parseFloat((subtotal * 1.16).toFixed(2))
+}, 200)
 
-      updateCosts(totalSum)
-    }
-  }
+watch(() => table.value.selectedRows, recalcCosts)
+
+// 🔹 Agregar/editar/eliminar material
+const addMaterial = m => {
+  table.value.items.push({ ...m, id: table.value.items.length + 1 })
+  table.value.totalItems = table.value.items.length
 }
 
-const viewEditMaterialDrawer = material => {
-  selectedMaterial.value = material
-  isEditMaterialDrawerVisible.value = true
-}
-
-const viewDeleteMaterialDialog = material => {
-  selectedMaterial.value = material
-  isDeleteMaterialDialogVisible.value = true
+const updateMaterial = m => {
+  const i = table.value.items.findIndex(it => it.id === m.id)
+  if (i >= 0) table.value.items[i] = { ...table.value.items[i], ...m }
 }
 
 const deleteMaterial = id => {
-  items.value = items.value.filter(item => item.id !== id)
-
-  isDeleteMaterialDialogVisible.value = false
+  table.value.items = table.value.items.filter(it => it.id !== id)
+  ui.isDeleteMaterialDialogVisible = false
 }
 
-const updateCosts = subtotal => {
-  costs.value.subtotal = parseFloat(subtotal).toFixed(2)
-  costs.value.iva = parseFloat((subtotal * 0.16).toFixed(2))
-  costs.value.total = parseFloat((subtotal * 1.16).toFixed(2))
+// 🔹 Crear orden de compra
+const addPurchaseOrder = async status => {
+  if (!table.value.selectedRows?.length || !form.value.supplier || !form.value.company) {
+    ui.notificationColor = 'warning'
+    ui.notificationMessage = 'Completa todos los campos requeridos'
+    ui.isNotificationVisible = true
+    
+    return
+  }
+  const selectedItems = table.value.items.filter(i => table.value.selectedRows.includes(i.id))
+
+  ui.isLoading = true
+  try {
+    const body = {
+      supplier_id: form.value.supplier,
+      linked_id: form.value.linkedOrder,
+      number: form.value.purchaseOrderNumber,
+      company_id: form.value.company,
+      home_production_id: form.value.project.home_production_id,
+      division: form.value.selectedDivisions,
+      request_by: userData.value._id,
+      created: form.value.created,
+      estimated_delivery: form.value.estimatedDelivery,
+      subject: form.value.subject,
+      items: selectedItems,
+      subtotal: costs.value.subtotal,
+      iva: costs.value.iva,
+      total: costs.value.total,
+      status,
+      payment_method: form.value.paymentMethod,
+      payment_form: form.value.paymentForm,
+      cfdi: form.value.cfdi,
+      invoice_email: form.value.invoiceEmail,
+      type: form.value.project?.od ? 'OD' : 'SP',
+    }
+
+    await $api('api/purchase_orders', {
+      method: 'POST',
+      body: body,
+      onResponse({ response }) {
+        if (response.status === 201) {
+          nextTick(() => router.replace(`/apps/purchase-orders/view/${response._data.id}?new=true`))
+        } else {
+          ui.notificationColor = 'error'
+          ui.notificationMessage = res._data || 'Error al crear orden'
+          ui.isNotificationVisible = true
+        }
+      },
+    })
+  } finally {
+    ui.isLoading = false
+  }
 }
 
 const changePurchaseOrderNUmber = number => {
@@ -252,78 +236,98 @@ const changePurchaseOrderNUmber = number => {
     parts.push('A')
   }
 
-  purchaseOrderNumber.value = parts.join("-")
+  form.value.purchaseOrderNumber = parts.join("-")
 }
 
-watch(selectedRows, val => {
-  const itemsSelected = getItemsByIds(Object.values(val))
-  const totalSum = Object.values(itemsSelected).reduce((sum, item) => sum + (item.total || 0), 0)
-
-  updateCosts(totalSum)
-})
+const headers = [
+  { title: 'MATERIAL', key: 'concept' },
+  { title: 'CÓDIGO PROVEEDOR', key: 'supplier_code' },
+  { title: 'SKU', key: 'sku' },
+  { title: 'UNIDAD DE MEDIDA', key: 'measurement' },
+  { title: 'PRESENTACIÓN', key: 'presentation' },
+  { title: 'PRECIO', key: 'inventory_price' },
+  { title: 'CANTIDAD', key: 'total_quantity' },
+  { title: 'TOTAL', key: 'total' },
+  { title: 'Acciones', key: 'actions', sortable: false },
+]
 </script>
 
 <template>
   <section>
     <Breadcrumb
-      :items="breadcrumbItems"
+      :items="[{title:'Órdenes de Compra',to:{name:'apps-purchase-orders-list'},class:'text-underline'},{title:'Nuevo'}]"
       icon="credit-card-pay"
     />
-    <VCard class="mb-2">
+    <VCard>
+      <!-- 1: General information -->
       <VCardText>
         <VRow>
-          <!-- 👉 Project -->
+          <VCol cols="12">
+            <VRadioGroup
+              v-model="type"
+              inline
+              @update:model-value="onTypeChange"
+            >
+              <VRadio
+                label="Sin proyecto"
+                value="SP"
+              />
+              <VRadio
+                label="Vivienda en serie"
+                value="VS"
+              />
+              <VRadio
+                label="Proyecto especial"
+                value="PE"
+              />
+            </VRadioGroup>
+          </VCol>
           <VCol
             cols="12"
             md="6"
           >
             <AppAutocomplete
-              v-model="project"
+              v-model="form.project"
+              v-select-all-on-focus
               label="Proyecto"
-              placeholder="Proyecto"
-              :item-title="item => item.name"
-              :item-value="item => item"
-              :items="projects"
-              class="font-weight-bold"
-              @update:model-value="getProjectInformation"
+              :items="lists.projects"
+              :item-title="i=>i.name"
+              :item-value="i=>i"
+              :disabled="type === 'SP'"
+              @update:model-value="getSuppliers"
             />
           </VCol>
-          <!-- 👉 Created date -->
           <VCol
             cols="12"
             md="3"
           >
             <AppDateTimePicker
-              v-model="created"
+              v-model="form.created"
               label="Fecha"
-              placeholder="Fecha"
             />
           </VCol>
-          <!-- 👉 Estimated delivery -->
           <VCol
             cols="12"
             md="3"
           >
             <AppDateTimePicker
-              v-model="estimatedDelivery"
-              label="Fecha estimada de entrega"
-              placeholder="Fecha estimada de entrega"
+              v-model="form.estimatedDelivery"
+              label="Entrega"
             />
           </VCol>
         </VRow>
         <VRow>
           <VCol
             cols="12"
-            md="6"
+            md="5"
           >
-            <!-- 👉 Assign to purchase order -->
             <AppAutocomplete
-              v-model="purchaseOrderLinked"
-              label="Asignar a orden de compra"
-              placeholder="Asignar a orden de compra"
-              :item-title="item => item.number"
-              :item-value="item => item.number"
-              :items="purchaseOrdersLIst.data"
+              v-model="form.linkedOrder"
+              v-select-all-on-focus
+              label="Asignar a orden"
+              :items="lists.purchaseOrders.data"
+              :item-title="i=>i.number"
+              :item-value="i=>i.number"
               @update:model-value="changePurchaseOrderNUmber"
             />
           </VCol>
@@ -331,17 +335,14 @@ watch(selectedRows, val => {
             cols="12"
             md="4"
           >
-            <!-- 👉 Purchase order number -->
             <AppTextField
-              v-model="purchaseOrderNumber"
+              v-model="form.purchaseOrderNumber"
               label="Número de orden"
             />
           </VCol>
-          <!-- 👉 Status -->
           <VCol
             cols="12"
-            md="2"
-            class="app-picker-field"
+            md="3"
           >
             <label
               class="v-label mb-1 text-body-2"
@@ -360,328 +361,261 @@ watch(selectedRows, val => {
           </VCol>
         </VRow>
       </VCardText>
-      <VDivider v-if="project" />
-      <VCardText v-if="project">
+      <!-- 2: Company and location data -->
+      <VDivider v-if="type" />
+      <VCardText v-if="type">
         <VRow>
           <VCol
             cols="12"
             md="4"
           >
-            <!-- 👉 Company -->
             <AppSelect
-              v-model="company"
+              v-model="form.company"
               label="Razón social"
-              placeholder="Razón social"
-              :item-title="item => item.name"
-              :item-value="item => item._id"
-              :items="companiesList.data"
+              :items="lists.companies.data"
+              :item-title="i=>i.name"
+              :item-value="i=>i._id"
+              class="input-required"
             />
           </VCol>
-          <!-- 👉 OD -->
           <VCol
             cols="12"
             md="4"
           >
             <AppTextField
-              v-model="project.od"
+              v-if="form.project"
+              v-model="form.project.od"
               label="OD"
               disabled
             />
           </VCol>
-          <!-- 👉 Front -->
           <VCol
             cols="12"
             md="4"
           >
             <AppTextField
-              v-model="project.front"
+              v-if="form.project"
+              v-model="form.project.front"
               label="Ubicación"
               disabled
             />
           </VCol>
         </VRow>
-        <VRow>
-          <!-- 👉 Lots -->
-          <VCol
-            v-for="(amount, prototype) in project.lots"
-            :key="prototype"
-            cols="12"
-            md="3"
-          >
-            <AppTextField
-              :model-value="amount"
-              :label="prototype"
-              disabled
-            />
-          </VCol>
-        </VRow>
       </VCardText>
-      <VDivider v-if="suppliers" />
-      <VCardText v-if="suppliers">
+      <!-- 3: Additional information: supplier, division, notes, payment data -->
+      <VDivider v-if="type && lists.suppliers.length > 0" />
+      <VCardText v-if="type && lists.suppliers.length > 0">
         <VRow>
-          <!-- 👉 Suppliers -->
           <VCol
             cols="12"
             md="6"
           >
-            <AppSelect
-              v-model="supplier"
+            <AppAutocomplete
+              v-model="form.supplier"
+              v-select-all-on-focus
               label="Proveedor"
-              placeholder="Proveedor"
-              :item-title="item => item.name"
-              :item-value="item => item._id"
-              :items="suppliers"
-              clearable
-              clear-icon="tabler-x"
+              :items="lists.suppliers"
+              :item-title="i=>i.name"
+              :item-value="i=>i._id"
               @update:model-value="getMaterials"
             />
           </VCol>
-          <!-- 👉 Divisions -->
           <VCol
             cols="12"
             md="6"
           >
             <AppSelect
-              v-model="selectedDivisions"
+              v-model="form.selectedDivisions"
               label="Producto a entregar"
-              placeholder="Producto a entregar"
-              :items="divisionsList.values"
-              chips
+              :items="lists.divisions.values"
               multiple
+              chips
               closable-chips
               @update:model-value="getMaterials"
             />
           </VCol>
         </VRow>
         <VRow>
-          <!-- 👉 Subject -->
           <VCol cols="12">
             <AppTextField
-              v-model="subject"
-              label="Asunto / Nota / Comentario"
+              v-model="form.subject"
+              label="Asunto / Nota"
             />
           </VCol>
         </VRow>
         <VRow>
-          <!-- 👉 Payment Methods -->
           <VCol
             cols="12"
             md="6"
           >
             <AppSelect
-              v-model="paymentMethod"
+              v-model="form.paymentMethod"
               label="Método de pago"
-              placeholder="Método de pago"
-              :items="paymentMethodsList.values"
+              :items="lists.paymentMethods.values"
             />
           </VCol>
-          <!-- 👉 Payment Forms -->
           <VCol
             cols="12"
             md="6"
           >
             <AppSelect
-              v-model="paymentForm"
-              label="Formas de pago"
-              placeholder="Formas de pago"
-              :items="paymentFormsList.values"
+              v-model="form.paymentForm"
+              label="Forma de pago"
+              :items="lists.paymentForms.values"
             />
           </VCol>
         </VRow>
         <VRow>
-          <!-- 👉 Use of CFDs -->
           <VCol
             cols="12"
             md="6"
           >
             <AppSelect
-              v-model="cfdi"
+              v-model="form.cfdi"
               label="Uso de CFDI"
-              placeholder="Uso de CFDI"
-              :items="useOfCFDIList.values"
+              :items="lists.cfdi.values"
             />
           </VCol>
-          <!-- 👉 Invoice Email -->
           <VCol
             cols="12"
             md="6"
           >
-            <AppTextField 
-              v-model="invoiceEmail"
+            <AppTextField
+              v-model="form.invoiceEmail"
               label="Enviar factura a"
             />
           </VCol>
         </VRow>
       </VCardText>
-      <VDivider v-if="costs && items" />
-      <VCardText v-if="costs && items">
+      <!-- 4: Costs information -->
+      <VDivider v-if="table.items.length > 0" />
+      <VCardText v-if="table.items.length > 0">
         <div class="d-flex align-center justify-space-between">
           <div
-            v-for="(price, label) in costs"
+            v-for="(price,label) in costs"
             :key="label"
             class="costs"
           >
             <label>{{ label.toUpperCase() }}</label>
-            <h3
-              :class="!selectedRows || selectedRows.length === 0 ? 'text-secondary': 'text-primary'"
-              :style="!selectedRows || selectedRows.length === 0 ? 'font-weight: normal': 'font-weight: bold'"
-            >
-              {{ formatCurrency(price) }}
-            </h3>
+            <h3>{{ formatCurrency(price) }}</h3>
           </div>
         </div>
       </VCardText>
+      <!-- 5: Table of material -->
       <VDataTableServer
-        v-if="items"
-        v-model:items-per-page="itemsPerPage"
-        v-model:model-value="selectedRows"
-        v-model:page="page"
+        v-if="table.items.length"
+        v-model:model-value="table.selectedRows"
         :headers="headers"
-        :items="items"
+        :items="table.items"
         show-select
-        :items-length="totalItems"
-        class="text-no-wrap"
+        :items-length="table.totalItems"
       >
-        <template #item.concept="{ item }">
-          <div
-            class="d-flex gap-x-4"
-            :class="item.hasOwnProperty('modified') && item.modified === 1 ? 'modified': null"
-          >
-            <div class="d-flex flex-column">
-              <h6 class="text-base">
-                <label class="font-weight-medium text-link">{{ item.concept }}</label>
-              </h6>
-              <small v-if="item.color">{{ item.color }}</small>
-            </div>
-          </div>
-        </template>
-
-        <template #item.inventory_price="{ item }">
+        <template #item.total="{item}">
           <div class="align-right">
-            <label>{{ formatCurrency(item.inventory_price) }}</label>
+            {{ formatCurrency(item.total) }}
           </div>
         </template>
-
-        <template #item.total_quantity="{ item }">
-          <div class="align-right">
-            {{ item.total_quantity }}
-          </div>
-        </template>
-
-        <template #item.total="{ item }">
-          <div class="align-right">
-            <label>{{ formatCurrency(item.total) }}</label>
-          </div>
-        </template>
-
-        <!-- Actions -->
-        <template #item.actions="{ item }">
+        <template #item.actions="{item}">
           <VBtn
             icon
             variant="text"
-            color="medium-emphasis"
           >
             <VIcon icon="tabler-dots-vertical" />
             <VMenu activator="parent">
               <VList>
-                <VListItem @click="viewEditMaterialDrawer(item)">
-                  <template #prepend>
-                    <VIcon icon="tabler-pencil" />
-                  </template>
-                  <VListItemTitle>Modificar</VListItemTitle>
+                <VListItem @click="()=>{selectedMaterial=item;ui.isEditMaterialDrawerVisible=true}">
+                  <VIcon icon="tabler-pencil" /> Modificar
                 </VListItem>
-                <VListItem @click="viewDeleteMaterialDialog(item)">
-                  <template #prepend>
-                    <VIcon icon="tabler-trash" />
-                  </template>
-                  <VListItemTitle>Eliminar</VListItemTitle>
+                <VListItem @click="()=>{selectedMaterial=item;ui.isDeleteMaterialDialogVisible=true}">
+                  <VIcon icon="tabler-trash" /> Eliminar
                 </VListItem>
               </VList>
             </VMenu>
           </VBtn>
         </template>
-
-        <!-- pagination -->
-        <template #bottom>
-          <TablePagination
-            v-model:page="page"
-            :items-per-page="itemsPerPage"
-            :total-items="totalItems"
-          />
-        </template>
       </VDataTableServer>
-      <VDivider v-if="costs && items" />
-      <VCardText v-if="costs && items">
+      <!-- 6: Actions -->
+      <VDivider v-if="table.items.length > 0 || (form.supplier && type ==='SP')" />
+      <VCardText v-if="table.items.length > 0 || (form.supplier && type ==='SP')">
         <div>
-          <div class="d-flex flex-wrap gap-4">
-            <!-- 👉 Generate purchase order -->
-            <VBtn
-              prepend-icon="tabler-shopping-cart-plus"
-              :disabled="(!selectedRows || selectedRows.length === 0) || !company"
-              @click="addPurchaseOrder(1)"
-            >
-              Generar orden de compra
-            </VBtn>
-            <!-- 👉 Save purchase order -->
-            <VBtn
-              prepend-icon="tabler-device-floppy"
-              variant="outlined"
-              :disabled="!selectedRows || selectedRows.length === 0"
-              @click="addPurchaseOrder(0)"
-            >
-              Guardar borrador
-            </VBtn>
-            <!-- 👉 Add material -->
-            <VBtn
-              prepend-icon="tabler-package-export"
-              variant="outlined"
-              @click="isAddNewMaterialDrawerVisible = true"
-            >
-              Añadir material
-            </VBtn>
-            <!-- 👉 Return -->
-            <VBtn
-              prepend-icon="tabler-arrow-left"
-              color="secondary"
-              variant="outlined"
-              :to="{name: 'apps-purchase-orders-list'}"
-            >
-              Regresar
-            </VBtn>
-          </div>
+          <h4>Requerimientos:</h4>
+          <ul style="margin-block: 5px 15px;margin-inline: 15px 0;">
+            <li>Seleccionar al menos un material</li>
+            <li>Seleccionar una razón social</li>
+          </ul>
+        </div>
+        <div class="d-flex flex-wrap gap-4">
+          <VBtn
+            prepend-icon="tabler-shopping-cart-plus"
+            :disabled="!table.selectedRows.length||!form.company"
+            @click="addPurchaseOrder(1)"
+          >
+            Generar orden
+          </VBtn>
+          <VBtn
+            prepend-icon="tabler-device-floppy"
+            variant="outlined"
+            :disabled="!table.selectedRows.length"
+            @click="addPurchaseOrder(0)"
+          >
+            Guardar borrador
+          </VBtn>
+          <VBtn
+            prepend-icon="tabler-package-export"
+            variant="outlined"
+            @click="ui.isAddNewMaterialDrawerVisible=true"
+          >
+            Añadir material
+          </VBtn>
+          <VBtn
+            prepend-icon="tabler-arrow-left"
+            color="secondary"
+            variant="outlined"
+            :to="{name:'apps-purchase-orders-list'}"
+          >
+            Regresar
+          </VBtn>
         </div>
       </VCardText>
+      <!-- No data -->
+      <VDivider v-show="(type && type !== 'SP') && (form.project && lists.suppliers.length === 0)" />
+      <VCardText v-show="(type && type !== 'SP') && (form.project && lists.suppliers.length === 0)">
+        <VAlert
+          border="start"
+          border-color="warning"
+        >
+          No existen materiales dados de alta en el proyecto <b>{{ form.project?.name }}</b>, posibles causas:
+          <ul>
+            <li>
+              - Verifica que se hayan registrado lotes en las OD's. 
+            </li>
+          </ul>
+        </VAlert>
+      </VCardText>
     </VCard>
-    <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
+    <LoadingDataDialog v-model:is-dialog-visible="ui.isLoading" />
     <Notification
-      v-model:is-notification-visible="isNotificationVisible"
-      :message="notificationMessage"
+      v-model:is-notification-visible="ui.isNotificationVisible"
+      :message="ui.notificationMessage"
+      :color="ui.notificationColor"
     />
     <AddMaterialDrawer
-      v-model:is-drawer-open="isAddNewMaterialDrawerVisible"
-      v-model:supplier-id="supplier"
-      v-model:materials-list="materialsList"
-      v-model:selected-divisions="selectedDivisions"
+      v-model:is-drawer-open="ui.isAddNewMaterialDrawerVisible"
+      :supplier-id="form.supplier"
       @add-material="addMaterial"
     />
     <EditMaterialDrawer
-      v-model:is-drawer-open="isEditMaterialDrawerVisible"
+      v-model:is-drawer-open="ui.isEditMaterialDrawerVisible"
       v-model:material-data="selectedMaterial"
       @update-material="updateMaterial"
     />
     <VDialog
-      v-model="isDeleteMaterialDialogVisible"
+      v-model="ui.isDeleteMaterialDialogVisible"
       width="500"
     >
-      <!-- Dialog close btn -->
-      <DialogCloseBtn @click="isDeleteMaterialDialogVisible = !isDeleteMaterialDialogVisible" />
-
-      <!-- Dialog Content -->
-      <VCard title="Eliminar orden de compra">
-        <VCardText>
-          ¿Estás seguro de eliminar material de la orde de compra: <b>{{ selectedMaterial.concept }}</b>?
-        </VCardText>
-
+      <DialogCloseBtn @click="ui.isDeleteMaterialDialogVisible=false" />
+      <VCard title="Eliminar material">
+        <VCardText>¿Eliminar <b>{{ selectedMaterial?.concept }}</b>?</VCardText>
         <VCardText class="d-flex justify-end">
           <VBtn @click="deleteMaterial(selectedMaterial.id)">
             Eliminar
@@ -692,7 +626,7 @@ watch(selectedRows, val => {
   </section>
 </template>
 
-<style lang="scss">
+<style scoped lang="scss">
 .align-right {
   display: flex;
   align-items: center;
@@ -700,7 +634,6 @@ watch(selectedRows, val => {
 }
 
 .modified {
-  background-color: yellow;
-  block-size: 100%;
+  background: yellow;
 }
 </style>

@@ -54,14 +54,20 @@ const total = ref()
 const getMaterials = async () => {
   let filter = ''
   if (division.value && division.value.length > 0)
-    filter = `?division=${division.value.join(',')}`
+    filter = `&division=${division.value.join(',')}`
 
   if (supplier.value) {
-    const response = await $api(`api/materials/supplier/${supplier.value}${filter}`, { method: 'GET' })
+    const response = await $api(
+      `api/materials?supplier_id=${supplier.value}&itemsPerPage=1000${filter}`,
+      { method: 'GET' },
+    )
 
-    materials.value = response.filter(item => !Object.values(items.value).includes(item._id))
+    materials.value = response.data.filter(item =>
+      !(items.value || []).some(i => i._id === item._id),
+    )
   }
 }
+
 
 const getMaterialData = () => {
   if (material.value) {
@@ -211,8 +217,9 @@ watch(price, val => {
               </VCol>
               <!-- 👉 Materials -->
               <VCol cols="12">
-                <AppSelect
+                <AppAutocomplete
                   v-model="material"
+                  v-select-all-on-focus
                   label="Materiales"
                   :item-title="item => item.concept"
                   :item-value="item => item"
@@ -223,15 +230,17 @@ watch(price, val => {
                 />
               </VCol>
               <!-- 👉 Color -->
-              <VCol cols="12">
+              <!--
+                <VCol cols="12">
                 <AppSelect
-                  v-model="color"
-                  label="Seleccionar color"
-                  placeholder="Seleccionar color"
-                  :items="colors.values"
-                  clearable
+                v-model="color"
+                label="Seleccionar color"
+                placeholder="Seleccionar color"
+                :items="colors.values"
+                clearable
                 />
-              </VCol>
+                </VCol> 
+              -->
               <!-- 👉 SKU -->
               <VCol cols="12">
                 <AppTextField
@@ -273,12 +282,14 @@ watch(price, val => {
                 />
               </VCol>
               <!-- 👉 Reference -->
-              <VCol cols="12">
+              <!--
+                <VCol cols="12">
                 <AppTextField
-                  v-model="reference"
-                  label="Referencia"
+                v-model="reference"
+                label="Referencia"
                 />
-              </VCol>
+                </VCol> 
+              -->
               <!-- 👉 Total -->
               <VCol cols="12">
                 <AppTextField

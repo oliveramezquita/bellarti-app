@@ -8,6 +8,11 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  color: {
+    type: String,
+    required: false,
+    default: 'default',
+  },
 })
 
 const emit = defineEmits(['update:isNotificationVisible'])
@@ -37,11 +42,12 @@ const closeNotification = () => {
     :model-value="props.isNotificationVisible"
     :timeout="-1"
     multi-line
+    :color="props.color"
   >
     {{ parseResponse(props.message) }}
     <template #actions>
       <VBtn
-        color="error"
+        color="default"
         @click="closeNotification"
       >
         Cerrar

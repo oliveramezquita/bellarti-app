@@ -504,6 +504,17 @@ const deleteImages = async images => {
 
               <VCol
                 cols="12"
+                md="8"
+                style="margin-block-start: -25px;"
+              >
+                <VSwitch
+                  v-model="material.its_trending"
+                  label="Es un producto de tendencia"
+                />
+              </VCol>
+
+              <VCol
+                cols="12"
                 class="d-flex gap-4"
               >
                 <VBtn type="submit">

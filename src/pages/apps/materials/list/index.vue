@@ -1,3 +1,4 @@
+<!-- eslint-disable camelcase -->
 <script setup>
 definePage({
   meta: {
@@ -64,7 +65,7 @@ const {
 } = await useApi(createUrl('api/materials', {
   query: {
     q: searchQuery,
-    supplier: selectedSupplier,
+    supplier_id: selectedSupplier,
     division: selectedDivision,
     group: 'MATERIALS_GROUP',
     itemsPerPage,

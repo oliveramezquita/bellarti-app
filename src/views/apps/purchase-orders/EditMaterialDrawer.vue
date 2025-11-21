@@ -53,9 +53,9 @@ watch(props, () => {
 })
 
 const getMaterials = async () => {
-  const response = await $api(`api/materials/supplier/${supplier.value}`, { method: 'GET' })
+  const response = await $api(`api/materials?supplier_id=${supplier.value}&itemsPerPage=1000`, { method: 'GET' })
 
-  materials.value = response
+  materials.value = response.data
 }
 
 const onSubmit = () => {
@@ -162,15 +162,17 @@ watch(price, val => {
                 />
               </VCol>
               <!-- 👉 Color -->
-              <VCol cols="12">
+              <!--
+                <VCol cols="12">
                 <AppSelect
-                  v-model="color"
-                  label="Seleccionar color"
-                  placeholder="Seleccionar color"
-                  :items="colors.values"
-                  clearable
+                v-model="color"
+                label="Seleccionar color"
+                placeholder="Seleccionar color"
+                :items="colors.values"
+                clearable
                 />
-              </VCol>
+                </VCol> 
+              -->
               <!-- 👉 SKU -->
               <VCol cols="12">
                 <AppTextField
@@ -221,12 +223,14 @@ watch(price, val => {
                 />
               </VCol>
               <!-- 👉 Reference -->
-              <VCol cols="12">
+              <!--
+                <VCol cols="12">
                 <AppTextField
-                  v-model="reference"
-                  label="Referencia"
+                v-model="reference"
+                label="Referencia"
                 />
-              </VCol>
+                </VCol> 
+              -->
               <!-- 👉 Total -->
               <VCol cols="12">
                 <AppTextField

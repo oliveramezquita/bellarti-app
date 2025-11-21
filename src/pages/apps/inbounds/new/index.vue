@@ -60,7 +60,7 @@ const getSupplierData = async () => {
       ? `&supplier=${supplier.value}`
       : ''
 
-    const responseMaterials = await $api(`api/materials/supplier/${supplier.value}`, { method: 'GET' })
+    const { data: responseMaterials } = await $api(`api/materials?supplier_id=${supplier.value}&itemsPerPage=1000`)
     const { data: responsePurchaseOrders } = await $api(`api/purchase_orders?status=2&itemsPerPage=1000${p}${s}`)
 
     materialsList.value = responseMaterials

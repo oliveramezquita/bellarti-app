@@ -12,14 +12,21 @@ const breadcrumbItems = ref([{ title: 'Clientes', class: 'text-primary' }, { tit
 const searchQuery = ref('')
 const itemsPerPage = ref(10)
 const page = ref(1)
+const sortBy = ref()
+const orderBy = ref()
 const isAddNewClientDrawerVisible = ref(false)
 const isEditClientDrawerVisible = ref(false)
 const isNotificationVisible = ref(false)
 const notificationMessage = ref('')
+const notificationColor = ref('info')
 const isDeleteClientDialogVisible = ref(false)
 const selectedClient = ref()
 
 const headers = [
+  {
+    title: '',
+    key: 'data-table-expand',
+  },
   {
     title: 'ID',
     key: 'pe_id',
@@ -29,16 +36,14 @@ const headers = [
     key: 'name',
   },
   {
-    title: 'Dirección',
-    key: 'address',
-  },
-  {
     title: 'Correo electrónico',
     key: 'email',
+    sortable: false,
   },
   {
     title: 'Teléfono',
     key: 'phone',
+    sortable: false,
   },
   {
     title: 'Acciones',
@@ -55,11 +60,18 @@ const {
     q: searchQuery,
     itemsPerPage,
     page,
+    sortBy,
+    orderBy,
   },
 }))
 
 const clients = computed(() => clientsData.value.data)
 const totalClients = computed(() => clientsData.value.total_elements)
+
+const updateOptions = options => {
+  sortBy.value = options.sortBy[0]?.key
+  orderBy.value = options.sortBy[0]?.order
+}
 
 const addNewClient = async clientData => {
   const type = 'PE'
@@ -74,8 +86,9 @@ const addNewClient = async clientData => {
     method: 'POST',
     body: filtered,
     onResponse({ response }) {
-      isNotificationVisible.value = true
+      notificationColor.value = getStatusColor(response.status)
       notificationMessage.value = response._data
+      isNotificationVisible.value = true
     },
   })
 
@@ -102,8 +115,9 @@ const editClient = async clientData => {
     method: 'PATCH',
     body: filtered,
     onResponse({ response }) {
-      isNotificationVisible.value = true
+      notificationColor.value = getStatusColor(response.status)
       notificationMessage.value = response._data
+      isNotificationVisible.value = true
     },
   })
   fetchClients()
@@ -176,7 +190,7 @@ const deleteClient = async id => {
         :items="clients"
         :items-length="totalClients"
         :headers="headers"
-        class="text-no-wrap"
+        expand-on-click
         @update:options="updateOptions"
       >
         <!-- ID -->
@@ -193,7 +207,7 @@ const deleteClient = async id => {
               >
                 <RouterLink
                   :to="{ name: 'apps-clients-view-id', params: { id: item._id } }"
-                  class="font-weight-medium text-link"
+                  class="font-weight-medium text-underline"
                 >
                   {{ item.name }}
                 </RouterLink>
@@ -202,22 +216,16 @@ const deleteClient = async id => {
           </div>
         </template>
 
-        <template #item.address="{ item }">
-          <div class="text-body-1 text-high-emphasis text-capitalize">
-            {{ item.address }}
-          </div>
-        </template>
-
-        <template #item.email="{ item }">
-          <div class="text-body-1 text-high-emphasis">
-            {{ item.email }}
-          </div>
-        </template>
-
-        <template #item.phone="{ item }">
-          <div class="text-body-1 text-high-emphasis text-capitalize">
-            {{ item.phone }}
-          </div>
+        <!-- Expanded Row Data -->
+        <template #expanded-row="slotProps">
+          <tr class="v-data-table__tr">
+            <td :colspan="headers.length">
+              <br>
+              <p>
+                <b>Dirección:</b> {{ slotProps.item.address ? `${slotProps.item.address}` : '' }} 
+              </p>
+            </td>
+          </tr>
         </template>
 
         <!-- Actions -->
@@ -255,6 +263,7 @@ const deleteClient = async id => {
     <Notification
       v-model:is-notification-visible="isNotificationVisible"
       :message="notificationMessage"
+      :color="notificationColor"
     />
     <VDialog
       v-model="isDeleteClientDialogVisible"

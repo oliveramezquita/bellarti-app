@@ -35,7 +35,7 @@ export default [
       },
       {
         title: 'Contactos',
-        to: 'apps-contacts-list',
+        to: 'apps-contacts',
         action: 'read',
         subject: 'CliContactos',
       },
@@ -47,7 +47,7 @@ export default [
     children: [
       {
         title: 'Prototipos',
-        to: 'apps-prototypes',
+        to: 'apps-prototypes-list',
         action: 'read',
         subject: 'VSPrototipos',
       },

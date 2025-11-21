@@ -377,6 +377,10 @@
     "getNotifications": true,
     "OD_STATUS": true,
     "formatNumber": true,
-    "projectStatusList": true
+    "projectStatusList": true,
+    "getStatusColor": true,
+    "loadState": true,
+    "saveState": true,
+    "purchaseOrdersDefaultValues": true
   }
 }

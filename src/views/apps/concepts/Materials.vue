@@ -60,7 +60,7 @@ const clearFields = () => {
 const getMaterials = async supplierId => {
   try {
     material.value = 'Cargando materiales...'
-    materials.value = await $api(`api/materials/supplier/${supplierId}?group=${group}`, { method: 'GET' })
+    materials.value = await $api(`api/materials?supplier_id=${supplierId}&group=${group}&itemsPerPage=1000`, { method: 'GET' })
   } finally {
     clearFields()
   }
@@ -206,7 +206,7 @@ onMounted(() => (materialsTable.value = structuredClone(props.materialsList)))
             v-model="material"
             label="Material"
             placeholder="Seleccionar material"
-            :items="materials"
+            :items="materials.data"
             :item-title="i => i.concept"
             :item-value="i => i"
             :rules="[requiredValidator]"
