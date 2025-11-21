@@ -31,3 +31,10 @@ export const projectStatusList = [
   { name: 'Instalación', color: 'primary', icon: 'tabler-package-export', value: 3 },
   { name: 'Entregado', color: 'success', icon: 'tabler-checklist', value: 4 },
 ]
+
+export const purchaseOrdersDefaultValues = {
+  list: { projects: [], companies: [], suppliers: [], purchaseOrders: [], divisions: { values: [] }, paymentMethods: { values: [] }, paymentForms: { values: [] }, cfdi: { values: [] } },
+  form: { project: null, company: null, supplier: null, selectedDivisions: [], subject: '', paymentMethod: null, paymentForm: null, cfdi: null, invoiceEmail: 'facturas@bellarti.com.mx', created: new Date(), estimatedDelivery: null, type: 'SP', purchaseOrderNumber: null, linkedOrder: null },
+  table: { items: [], totalItems: 0, selectedRows: [], itemsPerPage: 10, page: 1 },
+  costs: { subtotal: 0, iva: 0, total: 0 },
+}

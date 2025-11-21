@@ -4,10 +4,6 @@ import excelPath from '@/assets/documents/FORMATO_VOLUMETRIA.xlsx'
 import { useApi } from '@/composables/useApi'
 
 const props = defineProps({
-  prototype: {
-    type: String,
-    required: true,
-  },
   volumetry: {
     type: Array,
     required: true,
@@ -24,32 +20,43 @@ const props = defineProps({
 })
 
 const emit = defineEmits([
-  'update:prototype',
   'update:volumetry',
   'update:responseUploadedFile',
   'volumetryData',
   'fileData',
 ])
 
+// ------------------------------------------------
+// ✅ Inicialización
+// ------------------------------------------------
 const VolumetryFormat = excelPath
 const { data: suppliers } = await useApi('api/suppliers?itemsPerPage=100')
 const { data: areas } = await useApi('api/catalogs?name=Áreas')
 
 const supplier = ref()
-const materials = ref()
+const materials = ref({ data: [] })
 const measurement = ref()
+const presentation = ref()
 const sku = ref()
 const reference = ref()
 const currentTab = ref('tab-1')
 const material = ref()
-const isMaterialFormValid = ref(false)
 const refMaterialForm = ref()
 const volumetryTable = ref([])
 const excelFile = ref()
 const viewResults = ref(false)
+const isDeleteAreaDialogVisible = ref(false)
+const selectedArea = ref()
 
+// ------------------------------------------------
+// ✅ Cambio de material
+// ------------------------------------------------
 const materialChange = async () => {
-  const leakedMaterial = props.volumetry.filter(item => item.material_id === material.value._id)
+  if (!material.value || !material.value._id) return
+
+  const leakedMaterial = props.volumetry.filter(
+    item => item.material_id === material.value._id,
+  )
 
   if (leakedMaterial.length > 0) {
     volumetryTable.value = leakedMaterial[0].volumetry
@@ -58,24 +65,30 @@ const materialChange = async () => {
       id: crypto.randomUUID(),
       area,
       factory: null,
-      instalation: null,
-      total_x: null,
+      installation: null,
     }))
   }
 
   measurement.value = material.value.measurement
   if ('sku' in material.value) sku.value = material.value.sku
-  if ('reference' in material.value) reference.value = material.value.reference
+  if ('presentation' in material.value) presentation.value = material.value.presentation
 }
 
+// ------------------------------------------------
+// ✅ Funciones generales
+// ------------------------------------------------
 const addNewArea = () => {
   volumetryTable.value.push({
     id: crypto.randomUUID(),
     area: null,
     factory: null,
-    instalation: null,
-    total_x: null,
+    installation: null,
   })
+}
+
+const removeArea = index => {
+  volumetryTable.value.splice(index, 1)
+  isDeleteAreaDialogVisible.value = false
 }
 
 const addVolumetry = () => {
@@ -97,41 +110,56 @@ const uploadVolumetry = () => {
   emit('fileData', formData)
 }
 
-const removeArea = index => {
-  volumetryTable.value.splice(index, 1)
-}
-
 const getMaterials = async supplierId => {
   try {
     material.value = 'Cargando materiales...'
-    materials.value = await $api(`api/materials/supplier/${supplierId}`, { method: 'GET' })
+    materials.value = await $api(
+      `api/materials?supplier_id=${supplierId}&itemsPerPage=1000`,
+      { method: 'GET' },
+    )
   } finally {
     material.value = null
   }
 }
 
-watch(() => props.responseUploadedFile, newResponse => {
-  if (newResponse) {
-    excelFile.value = null
-    viewResults.value = true
+const viewDeleteAreaDialog = (area, index) => {
+  selectedArea.value = {
+    name: area,
+    index: index,
   }
-}, { deep: true })
+  isDeleteAreaDialogVisible.value = true
+} 
 
+// ------------------------------------------------
+// ✅ Computed para validar Totales válidos
+// ------------------------------------------------
+const hasValidTotal = computed(() =>
+  volumetryTable.value.some(
+    item =>
+      (parseFloat(item.factory) || 0) + (parseFloat(item.installation) || 0) > 0,
+  ),
+)
+
+// ------------------------------------------------
+// ✅ Watcher simple para reset de archivo
+// ------------------------------------------------
 watch(
-  () => volumetryTable.value.map(i => [i.factory, i.instalation]),
-  newVals => {
-    newVals.forEach((val, idx) => {
-      const factory = parseFloat(val[0]) || 0
-      const instalation = parseFloat(val[1]) || 0
-
-      volumetryTable.value[idx].total_x = (factory + instalation).toFixed(2)
-    })
+  () => props.responseUploadedFile,
+  newResponse => {
+    if (newResponse) {
+      excelFile.value = null
+      viewResults.value = true
+    }
   },
-  { deep: false },
+  { deep: true },
 )
 </script>
 
-
+<!--
+  ------------------------------------------------------------
+  TEMPLATE
+  ------------------------------------------------------------- 
+-->
 <template>
   <VCard class="mt-2 mb-2">
     <VTabs
@@ -156,13 +184,15 @@ watch(
       </VTab>
     </VTabs>
 
-    
     <VWindow v-model="currentTab">
+      <!-- ================================================= -->
+      <!-- ✅ TAB 1: Subir por material -->
+      <!-- ================================================= -->
       <VWindowItem>
         <VCardText>
+          <!-- 🚫 Eliminado v-model="isMaterialFormValid" -->
           <VForm
             ref="refMaterialForm"
-            v-model="isMaterialFormValid"
             @submit.prevent="addVolumetry"
           >
             <VRow class="mb-1">
@@ -180,6 +210,7 @@ watch(
                   @update:model-value="getMaterials"
                 />
               </VCol>
+
               <VCol
                 cols="12"
                 md="7"
@@ -187,7 +218,7 @@ watch(
                 <AppAutocomplete
                   v-model="material"
                   label="Material"
-                  :items="materials"
+                  :items="materials?.data ?? []"
                   :item-title="item => item.concept"
                   :item-value="item => item"
                   :rules="[requiredValidator]"
@@ -195,6 +226,7 @@ watch(
                   @update:model-value="materialChange"
                 />
               </VCol>
+
               <VCol
                 cols="12"
                 md="4"
@@ -205,6 +237,7 @@ watch(
                   disabled
                 />
               </VCol>
+
               <VCol
                 cols="12"
                 md="4"
@@ -215,19 +248,23 @@ watch(
                   disabled
                 />
               </VCol>
+
               <VCol
                 cols="12"
                 md="4"
               >
                 <AppTextField
-                  v-model="reference"
-                  label="Referencia"
+                  v-model="presentation"
+                  label="Presentación"
+                  disabled
                 />
               </VCol>
             </VRow>
           </VForm>
         </VCardText>
+
         <VDivider v-if="volumetryTable.length > 0" />
+
         <VCardText v-if="volumetryTable.length > 0">
           <VRow>
             <VCol
@@ -258,9 +295,11 @@ watch(
               cols="12"
               md="1"
             >
-                &nbsp;
+&nbsp;
             </VCol>
           </VRow>
+
+          <!-- ✅ Sin recursión: cálculo inline -->
           <VRow
             v-for="(item, index) in volumetryTable"
             :key="item.id"
@@ -272,7 +311,6 @@ watch(
               md="8"
               class="narrow-column"
             >
-              <!-- 👉 Area -->
               <AppTextField
                 v-model="item.area"
                 placeholder="Nombre del área"
@@ -284,13 +322,7 @@ watch(
               md="1"
               class="narrow-column"
             >
-              <!-- 👉 Factory -->
-              <AppTextField
-                v-model="item.factory"
-                type="number"
-                step="0.01"
-                min="0"
-              />
+              <AppTextField v-model="item.factory" />
             </VCol>
 
             <VCol
@@ -298,13 +330,7 @@ watch(
               md="1"
               class="narrow-column"
             >
-              <!-- 👉 Instalation -->
-              <AppTextField
-                v-model="item.instalation"
-                type="number"
-                step="0.01"
-                min="0"
-              />
+              <AppTextField v-model="item.installation" />
             </VCol>
 
             <VCol
@@ -312,9 +338,8 @@ watch(
               md="1"
               class="narrow-column"
             >
-              <!-- 👉 Total per house -->
               <AppTextField
-                v-model="item.total_x"
+                :model-value="((parseFloat(item.factory) || 0) + (parseFloat(item.installation) || 0)).toFixed(2)"
                 readonly
               />
             </VCol>
@@ -327,41 +352,54 @@ watch(
               <IconBtn>
                 <VIcon
                   icon="tabler-trash"
-                  @click="removeArea(index)"
+                  @click="viewDeleteAreaDialog(item.area, index)"
                 />
               </IconBtn>
             </VCol>
           </VRow>
-          <div class="mt-10">
+        </VCardText>
+
+        <VCardText>
+          <div class="mt-3">
             <VBtn
               variant="outlined"
               @click="addNewArea"
             >
-              Nueva área
+              Agregar área
             </VBtn>
             <VBtn
               class="ml-3"
+              :disabled="!hasValidTotal"
               @click="refMaterialForm.requestSubmit()"
             >
-              Agregar volumetría
+              Subir volumetría
             </VBtn>
           </div>
         </VCardText>
       </VWindowItem>
+
+      <!-- ================================================= -->
+      <!-- ✅ TAB 2: Subir por archivo -->
+      <!-- ================================================= -->
       <VWindowItem>
         <VCardText>
           <p>
-            Para cargar información mediante un archivo, este debe estar en formato <b>Excel</b> y cumplir con una estructura específica. 
+            Para cargar información mediante un archivo, este debe estar en formato <b>Excel</b> y cumplir con una
+            estructura específica.
           </p>
           <ul>
             <li>
-              Para la volumetría normal, utilice el archivo: <a
+              Para la volumetría normal, utilice el archivo:
+              <a
                 :href="VolumetryFormat"
                 target="_blank"
                 rel="noopener noreferrer"
-              >FORMATO VOLUMETRÍA</a>.
+              >
+                FORMATO VOLUMETRÍA
+              </a>.
             </li>
           </ul>
+
           <VRow class="mt-4">
             <VCol
               cols="12"
@@ -376,19 +414,21 @@ watch(
                 required
               />
             </VCol>
+
             <VCol
               cols="12"
               md="3"
             >
               <VBtn
                 color="primary"
-                :disabled="excelFile ? false : true"
+                :disabled="!excelFile"
                 @click="uploadVolumetry"
               >
                 Enviar
               </VBtn>
             </VCol>
           </VRow>
+
           <VCard
             v-if="viewResults"
             class="mt-5"
@@ -406,26 +446,28 @@ watch(
                 </div>
               </template>
             </VCardItem>
+
             <VCardText>
               <VAlert
-                v-if="(props.responseUploadedFile.hasOwnProperty('num_inserted') && props.responseUploadedFile.num_inserted > 0) || (props.responseUploadedFile.hasOwnProperty('num_updated') && props.responseUploadedFile.num_updated > 0)"
+                v-if="(props.responseUploadedFile.num_inserted || 0) + (props.responseUploadedFile.num_updated || 0) > 0"
                 border="start"
                 border-color="success"
                 class="mb-2"
               >
-                Archivo cargado correctamente, total de registros cargados: <b>{{ props.responseUploadedFile.num_inserted + props.responseUploadedFile.num_updated }}</b>
+                Archivo cargado correctamente. Total registros cargados:
+                <b>{{ props.responseUploadedFile.num_inserted + props.responseUploadedFile.num_updated }}</b>
                 <ul>
                   <li>Nuevos: {{ props.responseUploadedFile.num_inserted }}</li>
                   <li>Actualizados: {{ props.responseUploadedFile.num_updated }}</li>
                 </ul>
               </VAlert>
+
               <VAlert
-                v-if="props.responseUploadedFile.hasOwnProperty('errors') && props.responseUploadedFile.errors.length > 0"
+                v-if="props.responseUploadedFile.errors?.length"
                 border="start"
                 border-color="error"
               >
-                Ocurrió un error al procesaro el archivo: 
-                <br>
+                Ocurrió un error al procesar el archivo:
                 <ul>
                   <li
                     v-for="error in props.responseUploadedFile.errors"
@@ -441,6 +483,25 @@ watch(
       </VWindowItem>
     </VWindow>
   </VCard>
+  <VDialog
+    v-model="isDeleteAreaDialogVisible"
+    width="500"
+  >
+    <DialogCloseBtn @click="isDeleteAreaDialogVisible = !isDeleteAreaDialogVisible" />
+    <VCard title="Eliminar área">
+      <VCardText>
+        ¿Confirma que desea eliminar el área <b>{{ selectedArea.name }}</b>?
+      </VCardText>
+      <VCardText class="d-flex justify-end">
+        <VBtn
+          color="error"
+          @click="removeArea(selectedArea.index)"
+        >
+          Eliminar
+        </VBtn>
+      </VCardText>
+    </VCard>
+  </VDialog>
 </template>
 
 <style lang="scss">

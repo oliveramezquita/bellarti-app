@@ -23,10 +23,12 @@ const headers = [
   {
     title: 'Correo electrónico',
     key: 'email',
+    ortable: false,
   },
   {
     title: 'Teléfono',
     key: 'phone',
+    ortable: false,
   },
   {
     title: 'Acciones',
@@ -39,8 +41,8 @@ const updateContact = data => {
   emit('updateContactData', data)
 }
 
-const deteleContact = id => {
-  emit('deleteContactData', id)
+const deleteContact = data => {
+  emit('deleteContactData', data)
 }
 
 watch(() => props.contactsInfo, newValue => {
@@ -76,7 +78,7 @@ watch(() => props.contactsInfo, newValue => {
           <VIcon icon="tabler-pencil" />
         </IconBtn> 
           
-        <IconBtn @click="deteleContact(item._id)">
+        <IconBtn @click="deleteContact(item)">
           <VIcon icon="tabler-trash" />
         </IconBtn>
       </template>

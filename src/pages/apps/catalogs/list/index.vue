@@ -28,6 +28,7 @@ const headers = [
   {
     title: 'Valores',
     key: 'values',
+    sortable: false,
   },
   {
     title: 'Acciones',

@@ -15,6 +15,7 @@ const isLoadingDialogVisible = ref(false)
 const isNotificationVisible = ref(false)
 const isViewVolumetry = ref(false)
 const notificationMessage = ref('')
+const notificationColor = ref('info')
 const { data: clients } = await useApi('api/clients/VS?itemsPerPage=1000')
 const client = ref()
 const front = ref()
@@ -25,32 +26,103 @@ const volumetry = ref([])
 const volumetryItemDeleted = ref()
 const responseUploadedFile = ref()
 const isKitchen = ref(false)
+const allTendencies = ref({})
+const tendencies = ref([])
+
+client.value = loadState('volumetry_client')
+front.value = loadState('volumetry_front')
+prototype.value = loadState('volumetry_prototype')
+fronts.value = loadState('volumetry_fronts') || []
+prototypes.value = loadState('volumetry_prototypes') || []
+allTendencies.value = loadState('prototype_tendencies') || {}
 
 const clientChange = async value => {
-  await $api(`api/prototype_by_client/${value}`, {
+  // Guardar el cliente seleccionado
+  saveState('volumetry_client', value)
+
+  // 🔹 Limpiar dependencias
+  front.value = null
+  prototype.value = null
+  fronts.value = []
+  prototypes.value = []
+  resetVolumetry()
+
+  // 🔹 Actualizar almacenamiento persistente
+  saveState('volumetry_front', null)
+  saveState('volumetry_prototype', null)
+  saveState('volumetry_fronts', [])
+  saveState('volumetry_prototypes', [])
+  saveState('prototype_tendencies', {})
+
+  // 🔹 Llamada API
+  await $api(`api/prototypes?itemsPerPage=100&client_id=${value}`, {
     method: 'GET',
     onResponse({ response }) {
       if (response.status === 200) {
-        fronts.value = response._data
+        fronts.value = getUniqueValues(response._data.data, 'front')
+        saveState('volumetry_fronts', fronts.value)
       } else {
-        isNotificationVisible.value = true
+        notificationColor.value = getStatusColor(response.status)
         notificationMessage.value = response._data
-        front.value = null
-        fronts.value = []
-        prototypes.value = []
+        isNotificationVisible.value = true
       }
     },
   })
 }
 
+const getUniqueValues = (array, key) => {
+  if (!Array.isArray(array) || array.length === 0) return []
+  if (!key) return []
+
+  // Extrae los valores del campo especificado y elimina los duplicados
+  return [...new Set(array.map(item => item[key]).filter(Boolean))]
+}
+
+const getTendenciesByPrototype = prototypes => {
+  if (!Array.isArray(prototypes)) return {}
+
+  return prototypes.reduce((acc, proto) => {
+    const tendencies = Array.isArray(proto.tendencies)
+      ? proto.tendencies.map(t => ({
+        id: crypto.randomUUID(),
+        melamine: t.melamine,
+        granite: t.granite,
+        percentage: t.percentage,
+        factory: 0,
+        installation: 0,
+        delivery: 0,
+        total_x: 0,
+      }))
+      : []
+
+    acc[proto.name] = tendencies
+    
+    return acc
+  }, {})
+}
+
+
 const frontChange = async () => {
+  saveState('volumetry_front', front.value)
+
+  // 🔹 Limpiar dependencias del prototipo
+  prototype.value = null
+  prototypes.value = []
+  resetVolumetry()
+  saveState('volumetry_prototype', null)
+  saveState('volumetry_prototypes', [])
+
   isLoadingDialogVisible.value = true
   try {
-    await $api(`api/prototypes_by_data/${client.value}/${front.value}`, {
+    await $api(`api/prototypes?itemsPerPage=100&client_id=${client.value}&front=${front.value}`, {
       method: 'GET',
       onResponse({ response }) {
-        if (response.status === 200) 
-          prototypes.value = response._data
+        if (response.status === 200) {
+          prototypes.value = getUniqueValues(response._data.data, 'name')
+          allTendencies.value = getTendenciesByPrototype(response._data.data)
+          saveState('volumetry_prototypes', prototypes.value)
+          saveState('prototype_tendencies', allTendencies.value)
+        }
       },
     })
   } finally {
@@ -59,6 +131,10 @@ const frontChange = async () => {
 }
 
 const prototypeChange = async () => {
+  if (!prototype.value) return
+
+  saveState('volumetry_prototype', prototype.value)
+  tendencies.value = allTendencies.value[prototype.value]
   isKitchen.value = prototype.value.trim().endsWith("Cocina")
   isLoadingDialogVisible.value = true
   try {
@@ -68,6 +144,8 @@ const prototypeChange = async () => {
         if (response.status === 200) {
           isViewVolumetry.value = true
           volumetry.value = response._data.volumetry
+        } else {
+          resetVolumetry()
         }
       },
     })
@@ -76,7 +154,31 @@ const prototypeChange = async () => {
   }
 }
 
+const resetVolumetry = () => {
+  isViewVolumetry.value = false
+  volumetry.value = []
+}
+
+// ✅ Si hay un prototipo guardado, ejecuta la carga automática
+watch(
+  prototype,
+  async newVal => {
+    if (newVal) {
+      await prototypeChange()
+    }
+  },
+  { immediate: true }, // ✅ ejecuta una vez al montar si prototype ya tiene valor
+)
+
 const addVolumetry  = async volumetryData => {
+  if (!parseFloat(volumetryData.volumetry[0]?.total_x || 0)) {
+    notificationColor.value = 'error'
+    notificationMessage.value = 'No se ingresó al menos una cantidad por fábrica, instalación y/o entrega.'
+    isNotificationVisible.value = true
+    
+    return
+  }
+
   isLoadingDialogVisible.value = true
 
   try {
@@ -87,10 +189,11 @@ const addVolumetry  = async volumetryData => {
         front: front.value,
         prototype: prototype.value,
         material_id: volumetryData.material_id,
-        reference: volumetryData.reference,
         volumetry: volumetryData.volumetry,
+        tendencies: volumetryData.tendencies,
       },
       onResponse({ response }) {
+        notificationColor.value = getStatusColor(response.status)
         if (response.status === 200) {
           volumetry.value = response._data.data
           notificationMessage.value = response._data.message
@@ -113,6 +216,7 @@ const uploadVolumetry = async formsData => {
       method: 'POST',
       body: formsData,
       onResponse({ response }) {
+        notificationColor.value = getStatusColor(response.status)
         if (response.status !== 200) {
           notificationMessage.value = response._data
           isNotificationVisible.value = true
@@ -132,6 +236,7 @@ const deleteVolumetry = async i => {
   await $api(`api/volumetry/${i.id}`, { 
     method: 'DELETE',
     onResponse({ response }) {
+      notificationColor.value = getStatusColor(response.status)
       if (response.status === 200) {
         volumetry.value = volumetry.value.filter(item => item.id !== i.id)
         volumetryItemDeleted.value = i.material_id
@@ -179,8 +284,6 @@ const deleteVolumetry = async i => {
               v-model="front"
               label="Frente / Fraccionamiento"
               placeholder="Frente / Fraccionamiento"
-              :item-title="item => item.name"
-              :item-value="item => item"
               :items="fronts"
               class="font-weight-bold"
               @update:model-value="frontChange"
@@ -195,8 +298,6 @@ const deleteVolumetry = async i => {
               v-model="prototype"
               label="Prototipos"
               placeholder="Prototipos"
-              :item-title="item => item.name"
-              :item-value="item => item"
               :items="prototypes"
               class="font-weight-bold"
               @update:model-value="prototypeChange"
@@ -208,7 +309,6 @@ const deleteVolumetry = async i => {
     <FormData
       v-if="isViewVolumetry && !isKitchen"
       key="form"
-      :prototype="prototype"
       :volumetry="volumetry"
       :response-uploaded-file="responseUploadedFile"
       @volumetry-data="addVolumetry"
@@ -217,8 +317,8 @@ const deleteVolumetry = async i => {
     <KitchenFormData
       v-if="isViewVolumetry && isKitchen"
       key="kitchen"
-      :prototype="prototype"
-      :volumetry="volumetry"
+      :tendencies-data="tendencies"
+      :volumetry-data="volumetry"
       :response-uploaded-file="responseUploadedFile"
       @volumetry-data="addVolumetry"
       @file-data="uploadVolumetry"
@@ -233,6 +333,7 @@ const deleteVolumetry = async i => {
     <Notification
       v-model:is-notification-visible="isNotificationVisible"
       :message="notificationMessage"
+      :color="notificationColor"
     />
   </section>
 </template>

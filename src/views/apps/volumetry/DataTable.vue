@@ -24,7 +24,8 @@ props.volumetry.forEach(obj => {
 })
 
 const search = ref('')
-
+const isDeleteVolumetryDialogVisible = ref(false)
+const selectedVolumetry = ref()
 
 const headers = [
   {
@@ -54,8 +55,14 @@ const headers = [
   },
 ]
 
-const deleteMaterial = id => {
-  emit('volumetryData', id)
+const viewDeleteVolumetryDialog = item => {
+  selectedVolumetry.value = item
+  isDeleteVolumetryDialogVisible.value = true
+}
+
+const deleteVolumetry = item => {
+  emit('volumetryData', item)
+  isDeleteVolumetryDialogVisible.value = false
 }
 
 watch(() => props.volumetry, _ => {}, { deep: true })
@@ -101,10 +108,16 @@ watch(() => props.volumetry, _ => {}, { deep: true })
       <template #expanded-row="slotProps">
         <tr class="v-data-table__tr">
           <td :colspan="headers.length">
-            <div class="inner-table">
+            <div v-if="props.isKitchen && !slotProps.item.material.its_trending">
+              <label>{{ slotProps.item.its_trending }} Material no clasificado como una tendencia.</label>
+            </div>
+            <div
+              v-else
+              class="inner-table"
+            >
               <div class="row header">
                 <div class="cell align-left">
-                  ÁREA
+                  {{ slotProps.item.hasOwnProperty('tendencies') && slotProps.item.tendencies.length > 0 ? 'TENDENCIAS' : 'ÁREA' }}
                 </div>
                 <div class="cell">
                   FÁBRICA
@@ -124,6 +137,7 @@ watch(() => props.volumetry, _ => {}, { deep: true })
               </div>
               <div
                 v-for="v in slotProps.item.volumetry"
+                v-show="!slotProps.item.hasOwnProperty('tendencies')"
                 :key="v.id"
                 class="row"
               >
@@ -134,7 +148,32 @@ watch(() => props.volumetry, _ => {}, { deep: true })
                   {{ v.factory }}
                 </div>
                 <div class="cell">
-                  {{ v.instalation }}
+                  {{ v.installation }}
+                </div>
+                <div
+                  v-if="props.isKitchen"
+                  class="cell"
+                >
+                  {{ v.delivery }}
+                </div>
+                <div class="cell">
+                  {{ v.total_x }}
+                </div>
+              </div>
+              <div
+                v-for="v in slotProps.item.tendencies"
+                v-show="slotProps.item.hasOwnProperty('tendencies')"
+                :key="v.id"
+                class="row"
+              >
+                <div class="cell align-left">
+                  {{ v.melamine }} - {{ v.granite }}
+                </div>
+                <div class="cell">
+                  {{ v.factory }}
+                </div>
+                <div class="cell">
+                  {{ v.installation }}
                 </div>
                 <div
                   v-if="props.isKitchen"
@@ -153,12 +192,31 @@ watch(() => props.volumetry, _ => {}, { deep: true })
 
       <!-- Actions -->
       <template #item.actions="{ item }">
-        <IconBtn @click="deleteMaterial(item)">
+        <IconBtn @click="viewDeleteVolumetryDialog(item)">
           <VIcon icon="tabler-trash" />
         </IconBtn>
       </template>
     </VDataTable>
   </VCard>
+  <VDialog
+    v-model="isDeleteVolumetryDialogVisible"
+    width="500"
+  >
+    <DialogCloseBtn @click="isDeleteVolumetryDialogVisible = !isDeleteVolumetryDialogVisible" />
+    <VCard title="Eliminar material">
+      <VCardText>
+        ¿Confirma que desea eliminar el material <b>{{ selectedVolumetry.material.concept }}</b> de la volumetría?
+      </VCardText>
+      <VCardText class="d-flex justify-end">
+        <VBtn
+          color="error"
+          @click="deleteVolumetry(selectedVolumetry)"
+        >
+          Eliminar
+        </VBtn>
+      </VCardText>
+    </VCard>
+  </VDialog>
 </template>
 
 <style lang="scss">
