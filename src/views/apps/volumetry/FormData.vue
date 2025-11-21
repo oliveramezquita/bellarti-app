@@ -66,6 +66,7 @@ const materialChange = async () => {
       area,
       factory: null,
       installation: null,
+      total_x: null,
     }))
   }
 
@@ -83,6 +84,7 @@ const addNewArea = () => {
     area: null,
     factory: null,
     installation: null,
+    total_x: null,
   })
 }
 
@@ -150,6 +152,19 @@ watch(
       excelFile.value = null
       viewResults.value = true
     }
+  },
+  { deep: true },
+)
+
+watch(
+  volumetryTable,
+  newValue => {
+    newValue.forEach(item => {
+      const factory = parseFloat(item.factory) || 0
+      const installation = parseFloat(item.installation) || 0
+
+      item.total_x = factory + installation
+    })
   },
   { deep: true },
 )
@@ -222,6 +237,7 @@ watch(
                   :item-title="item => item.concept"
                   :item-value="item => item"
                   :rules="[requiredValidator]"
+                  :disabled="material === 'Cargando materiales...'"
                   placeholder="Seleccionar material"
                   @update:model-value="materialChange"
                 />
@@ -339,8 +355,8 @@ watch(
               class="narrow-column"
             >
               <AppTextField
-                :model-value="((parseFloat(item.factory) || 0) + (parseFloat(item.installation) || 0)).toFixed(2)"
-                readonly
+                v-model="item.total_x"
+                disabled
               />
             </VCol>
 

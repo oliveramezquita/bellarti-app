@@ -341,6 +341,7 @@ watch(
                   :item-title="item => item.concept"
                   :item-value="item => item"
                   :rules="[requiredValidator]"
+                  :disabled="material === 'Cargando materiales...'"
                   placeholder="Seleccionar material"
                   @update:model-value="materialChange"
                 />

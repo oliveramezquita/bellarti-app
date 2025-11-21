@@ -27,6 +27,7 @@ const ui = reactive({
   isLoading: false,
   isNotificationVisible: false,
   notificationMessage: '',
+  notificationColor: 'info',
   isAddNewMaterialDrawerVisible: false,
   isEditMaterialDrawerVisible: false,
   isDeleteMaterialDialogVisible: false,
@@ -86,6 +87,7 @@ const onTypeChange = async value => {
     lists.paymentForms = forms.data.value
     lists.cfdi = cfdi.data.value
   } catch (e) {
+    ui.notificationColor = 'error'
     ui.notificationMessage = 'Error al cargar datos'
     ui.isNotificationVisible = true
   } finally {
@@ -107,6 +109,7 @@ const getSuppliers = async () => {
 
     form.value.purchaseOrderNumber = `${res.last_consecutive}-${od}-${month}-${year}`
   } catch (e) {
+    ui.notificationColor = 'error'
     ui.notificationMessage = 'Error al obtener proveedores'
     ui.isNotificationVisible = true
   } finally {
@@ -128,6 +131,7 @@ const getMaterials = async () => {
     costs.value.iva = res.costs.iva
     costs.value.total = res.costs.total
   } catch (e) {
+    ui.notificationColor = 'error'
     ui.notificationMessage = 'Error al obtener materiales'
     ui.isNotificationVisible = true
   } finally {
@@ -166,6 +170,7 @@ const deleteMaterial = id => {
 // 🔹 Crear orden de compra
 const addPurchaseOrder = async status => {
   if (!table.value.selectedRows?.length || !form.value.supplier || !form.value.company) {
+    ui.notificationColor = 'warning'
     ui.notificationMessage = 'Completa todos los campos requeridos'
     ui.isNotificationVisible = true
     
@@ -198,13 +203,19 @@ const addPurchaseOrder = async status => {
       type: form.value.project?.od ? 'OD' : 'SP',
     }
 
-    const res = await $api('api/purchase_orders', { method: 'POST', body })
-    if (res.status === 201) {
-      nextTick(() => router.replace(`/apps/purchase-orders/view/${res._data.id}?new=true`))
-    } else {
-      ui.notificationMessage = res._data || 'Error al crear orden'
-      ui.isNotificationVisible = true
-    }
+    await $api('api/purchase_orders', {
+      method: 'POST',
+      body: body,
+      onResponse({ response }) {
+        if (response.status === 201) {
+          nextTick(() => router.replace(`/apps/purchase-orders/view/${response._data.id}?new=true`))
+        } else {
+          ui.notificationColor = 'error'
+          ui.notificationMessage = res._data || 'Error al crear orden'
+          ui.isNotificationVisible = true
+        }
+      },
+    })
   } finally {
     ui.isLoading = false
   }
@@ -586,6 +597,7 @@ const headers = [
     <Notification
       v-model:is-notification-visible="ui.isNotificationVisible"
       :message="ui.notificationMessage"
+      :color="ui.notificationColor"
     />
     <AddMaterialDrawer
       v-model:is-drawer-open="ui.isAddNewMaterialDrawerVisible"

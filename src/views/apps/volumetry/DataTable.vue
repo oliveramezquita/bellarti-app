@@ -117,7 +117,7 @@ watch(() => props.volumetry, _ => {}, { deep: true })
             >
               <div class="row header">
                 <div class="cell align-left">
-                  {{ slotProps.item.hasOwnProperty('tendencies') && slotProps.item.tendencies.length > 0 ? 'TENDENCIAS' : 'ÁREA' }}
+                  {{ Array.isArray(slotProps.item.tendencies) && slotProps.item.tendencies.length > 0 ? 'TENDENCIAS' : 'ÁREA' }}
                 </div>
                 <div class="cell">
                   FÁBRICA
@@ -136,8 +136,9 @@ watch(() => props.volumetry, _ => {}, { deep: true })
                 </div>
               </div>
               <div
-                v-for="v in slotProps.item.volumetry"
-                v-show="!slotProps.item.hasOwnProperty('tendencies')"
+                v-for="v in (Array.isArray(slotProps.item.volumetry)
+                  ? slotProps.item.volumetry.filter(x => x?.area !== 'COCINA')
+                  : [])"
                 :key="v.id"
                 class="row"
               >
