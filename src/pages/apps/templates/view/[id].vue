@@ -215,6 +215,7 @@ const clearIndirect = async () => {
           <Materials
             tag="materials"
             :materials-list="templateData.materials?.items || []"
+            :project-status="0"
             @materials-data="addNewElement"
             @delete-material="deleteElement"
           />
@@ -223,6 +224,7 @@ const clearIndirect = async () => {
           <Equipment
             tag="equipment"
             :materials-list="templateData.equipment?.items || []"
+            :project-status="0"
             @materials-data="addNewElement"
             @delete-material="deleteElement"
           />
@@ -231,6 +233,7 @@ const clearIndirect = async () => {
           <Production
             tag="production"
             :employees-list="templateData.production?.items || []"
+            :project-status="0"
             @employees-data="addNewElement"
             @delete-employee="deleteElement"
           />

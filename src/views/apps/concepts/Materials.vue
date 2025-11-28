@@ -9,6 +9,9 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:tag', 'update:materialsList', 'update:projectStatus', 'materialsData', 'deleteMaterial'])
+
+console.log(props.projectStatus)
+
 const tagList = props.tag === 'materials' || props.tag === 'prov.materials' ? 'materiales' : 'equipos y/o accesorios'
 const tagForm = props.tag === 'materials' || props.tag === 'prov.materials' ? 'material' : 'equipo y/o accesorio'
 const group = props.tag === 'materials' || props.tag === 'prov.materials' ? 'MATERIALS_GROUP' : 'EQUIPMENT_GROUP'
@@ -189,6 +192,7 @@ onMounted(() => (materialsTable.value = structuredClone(props.materialsList)))
         >
           <AppAutocomplete
             v-model="supplier"
+            v-select-all-on-focus
             label="Proveedor"
             placeholder="Seleccionar proveedor"
             :items="suppliers.data"
@@ -204,6 +208,7 @@ onMounted(() => (materialsTable.value = structuredClone(props.materialsList)))
         >
           <AppAutocomplete
             v-model="material"
+            v-select-all-on-focus
             label="Material"
             placeholder="Seleccionar material"
             :items="materials.data"
@@ -215,7 +220,7 @@ onMounted(() => (materialsTable.value = structuredClone(props.materialsList)))
         </VCol>
         <VCol
           cols="12"
-          md="2"
+          md="3"
         >
           <AppTextField
             v-model="measurement"
@@ -235,17 +240,7 @@ onMounted(() => (materialsTable.value = structuredClone(props.materialsList)))
         </VCol>
         <VCol
           cols="12"
-          md="3"
-        >
-          <AppTextField
-            v-model="reference"
-            label="Referencia"
-            readonly
-          />
-        </VCol>
-        <VCol
-          cols="12"
-          md="2"
+          md="4"
         >
           <AppTextField
             v-model="presentation"

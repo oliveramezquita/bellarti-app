@@ -154,6 +154,7 @@ onMounted(() => (employeesTable.value = structuredClone(props.employeesList)))
         >
           <AppAutocomplete
             v-model="employee"
+            v-select-all-on-focus
             label="Empleado/Colaborador"
             placeholder="Seleccionar empleado/colaborador"
             :items="employees.data"

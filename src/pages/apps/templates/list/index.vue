@@ -167,10 +167,10 @@ const deleteTemplate = async templateId => {
         </div>
       </template>
       <template #item.client="{ item }">
-        {{ item.client ? `C${item.client.pe_id} - ${item.client.name}` : '' }}
+        {{ item.client && `C${item.client.pe_id} - ${item.client.name}` }}
       </template>
       <template #item.indirect="{ item }">
-        {{ `${item.indirect}%` }}
+        {{ item.indirect && `${item.indirect}%` }}
       </template>
       <template #item.subtotal="{ item }">
         {{ formatNumber(item.subtotal) }}
