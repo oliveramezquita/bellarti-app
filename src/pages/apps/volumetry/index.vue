@@ -6,9 +6,10 @@ definePage({
     subject: 'VSVolumetria',
   },
 })
+import { loadState, saveState } from '@/utils/storage'
 import DataTable from '@/views/apps/volumetry/DataTable.vue'
 import FormData from '@/views/apps/volumetry/FormData.vue'
-import KitchenFormData from '@/views/apps/volumetry/KitchenFormData.vue'
+import TrendMaterialsFormData from '@/views/apps/volumetry/TrendMaterialsFormData.vue'
 
 const breadcrumbItems = ref([{ title: 'Vivienda en Serie', class: 'text-primary' }, { title: 'Volumetría' }])
 const isLoadingDialogVisible = ref(false)
@@ -22,19 +23,28 @@ const front = ref()
 const fronts = ref([])
 const prototypes = ref([])
 const prototype = ref()
+const trend = ref()
+const trends = ref({ melamines: [], granites: [] })
+const melamine = ref()
+const granite = ref()
 const volumetry = ref([])
 const volumetryItemDeleted = ref()
 const responseUploadedFile = ref()
-const isKitchen = ref(false)
-const allTendencies = ref({})
-const tendencies = ref([])
+const type = ref()
+
+const types = [
+  { value: 'prototype', label: 'Prototipo' },
+  { value: 'trend', label: 'Tendencia' },
+]
 
 client.value = loadState('volumetry_client')
 front.value = loadState('volumetry_front')
+type.value = loadState('volumetry_type')
 prototype.value = loadState('volumetry_prototype')
+trend.value = loadState('volumetry_trend')
 fronts.value = loadState('volumetry_fronts') || []
 prototypes.value = loadState('volumetry_prototypes') || []
-allTendencies.value = loadState('prototype_tendencies') || {}
+trends.value = loadState('volumetry_trends') || []
 
 const clientChange = async value => {
   // Guardar el cliente seleccionado
@@ -48,11 +58,13 @@ const clientChange = async value => {
   resetVolumetry()
 
   // 🔹 Actualizar almacenamiento persistente
+  saveState('volumetry_type', null)
   saveState('volumetry_front', null)
   saveState('volumetry_prototype', null)
+  saveState('volumetry_trend', null)
   saveState('volumetry_fronts', [])
   saveState('volumetry_prototypes', [])
-  saveState('prototype_tendencies', {})
+  saveState('volumetry_trends', { melamines: [], granites: [] })
 
   // 🔹 Llamada API
   await $api(`api/prototypes?itemsPerPage=100&client_id=${value}`, {
@@ -78,64 +90,26 @@ const getUniqueValues = (array, key) => {
   return [...new Set(array.map(item => item[key]).filter(Boolean))]
 }
 
-const getTendenciesByPrototype = prototypes => {
-  if (!Array.isArray(prototypes)) return {}
-
-  return prototypes.reduce((acc, proto) => {
-    const tendencies = Array.isArray(proto.tendencies)
-      ? proto.tendencies.map(t => ({
-        id: crypto.randomUUID(),
-        melamine: t.melamine,
-        granite: t.granite,
-        percentage: t.percentage,
-        factory: 0,
-        installation: 0,
-        delivery: 0,
-        total_x: 0,
-      }))
-      : []
-
-    acc[proto.name] = tendencies
-    
-    return acc
-  }, {})
-}
-
-
 const frontChange = async () => {
   saveState('volumetry_front', front.value)
 
   // 🔹 Limpiar dependencias del prototipo
   prototype.value = null
   prototypes.value = []
+  trend.value = null
+  trends.value = []
+
   resetVolumetry()
   saveState('volumetry_prototype', null)
   saveState('volumetry_prototypes', [])
-
-  isLoadingDialogVisible.value = true
-  try {
-    await $api(`api/prototypes?itemsPerPage=100&client_id=${client.value}&front=${front.value}`, {
-      method: 'GET',
-      onResponse({ response }) {
-        if (response.status === 200) {
-          prototypes.value = getUniqueValues(response._data.data, 'name')
-          allTendencies.value = getTendenciesByPrototype(response._data.data)
-          saveState('volumetry_prototypes', prototypes.value)
-          saveState('prototype_tendencies', allTendencies.value)
-        }
-      },
-    })
-  } finally {
-    isLoadingDialogVisible.value = false
-  }
+  saveState('volumetry_trend', null)
+  saveState('volumetry_trends', { melamines: [], granites: [] })
 }
 
 const prototypeChange = async () => {
   if (!prototype.value) return
 
   saveState('volumetry_prototype', prototype.value)
-  tendencies.value = allTendencies.value[prototype.value]
-  isKitchen.value = prototype.value.trim().endsWith("Cocina")
   isLoadingDialogVisible.value = true
   try {
     await $api(`api/volumetries?client_id=${client.value}&front=${front.value}&prototype=${prototype.value}`, {
@@ -190,7 +164,6 @@ const addVolumetry  = async volumetryData => {
         prototype: prototype.value,
         material_id: volumetryData.material_id,
         volumetry: volumetryData.volumetry,
-        tendencies: volumetryData.tendencies,
       },
       onResponse({ response }) {
         notificationColor.value = getStatusColor(response.status)
@@ -247,6 +220,65 @@ const deleteVolumetry = async i => {
     },
   })
 }
+
+const buildMaterials = obj => ({
+  melamines: obj?.melamines ?? [],
+  granites: obj?.granites ?? [],
+})
+
+const typeChange = async () => {
+  isViewVolumetry.value = false  
+  saveState('volumetry_type', type.value)
+  prototype.value = null
+  trend.value = null
+  melamine.value = null
+  granite.value = null
+  saveState('volumetry_prototype', null)
+  saveState('volumetry_trend', null)
+  
+  isLoadingDialogVisible.value = true
+  if (type.value === 'prototype') {
+    try {
+      await $api(`api/prototypes?itemsPerPage=100&client_id=${client.value}&front=${front.value}`, {
+        method: 'GET',
+        onResponse({ response }) {
+          if (response.status === 200) {
+            prototypes.value = getUniqueValues(response._data.data, 'name')
+            saveState('volumetry_prototypes', prototypes.value)
+          }
+        },
+      })
+    } finally {
+      isLoadingDialogVisible.value = false
+    }
+  }
+  if (type.value === 'trend') {
+    try {
+      await $api(`api/trends?itemsPerPage=100&client_id=${client.value}&front=${front.value}`, {
+        method: 'GET',
+        onResponse({ response }) {
+          if (response.status === 200) {
+            trends.value = buildMaterials(response._data[0])
+            saveState('volumetry_trends', trends.value)
+          }
+        },
+      })
+    } finally {
+      isLoadingDialogVisible.value = false
+    }
+  }
+}
+
+const trendChange = trendType => {
+  isViewVolumetry.value = true
+
+  if (trendType === "melamine")
+    granite.value = null
+  if (trendType === "granite")
+    melamine.value = null
+  
+  volumetry.value = []
+}
 </script>
 
 <template>
@@ -271,7 +303,6 @@ const deleteVolumetry = async i => {
               :item-title="item => item.name"
               :item-value="item => item._id"
               :items="clients.data"
-              class="font-weight-bold"
               @update:model-value="clientChange"
             />
           </VCol>
@@ -285,12 +316,27 @@ const deleteVolumetry = async i => {
               label="Frente / Fraccionamiento"
               placeholder="Frente / Fraccionamiento"
               :items="fronts"
-              class="font-weight-bold"
               @update:model-value="frontChange"
+            />
+          </VCol>
+          <!-- 👉 Type -->
+          <VCol
+            cols="12"
+            md="4"
+          >
+            <AppSelect
+              v-model="type"
+              label="Tipo"
+              placeholder="Tipo"
+              :item-title="item => item.label"
+              :item-value="item => item.value"
+              :items="types"
+              @update:model-value="typeChange"
             />
           </VCol>
           <!-- 👉 Prototypes -->
           <VCol
+            v-if="type === 'prototype'"
             cols="12"
             md="4"
           >
@@ -303,31 +349,59 @@ const deleteVolumetry = async i => {
               @update:model-value="prototypeChange"
             />
           </VCol>
+          <!-- 👉 Malemines -->
+          <VCol
+            v-if="type === 'trend'"
+            cols="12"
+            md="4"
+          >
+            <AppSelect
+              v-model="melamine"
+              label="Maleminas"
+              placeholder="Maleminas"
+              :item-title="item => item.name"
+              :item-value="item => item.name"
+              :items="trends.melamines"
+              @update:model-value="trendChange('melamine')"
+            />
+          </VCol>
+          <!-- 👉 Granites -->
+          <VCol
+            v-if="type === 'trend'"
+            cols="12"
+            md="4"
+          >
+            <AppSelect
+              v-model="granite"
+              label="Granitos"
+              placeholder="Granitos"
+              :item-title="item => item.name"
+              :item-value="item => item.name"
+              :items="trends.granites"
+              @update:model-value="trendChange('granite')"
+            />
+          </VCol>
         </VRow>
       </VCardText>
     </VCard>
     <FormData
-      v-if="isViewVolumetry && !isKitchen"
+      v-if="isViewVolumetry && type === 'prototype'"
       key="form"
       :volumetry="volumetry"
       :response-uploaded-file="responseUploadedFile"
       @volumetry-data="addVolumetry"
       @file-data="uploadVolumetry"
     />
-    <KitchenFormData
-      v-if="isViewVolumetry && isKitchen"
-      key="kitchen"
-      :tendencies-data="tendencies"
-      :volumetry-data="volumetry"
-      :response-uploaded-file="responseUploadedFile"
-      @volumetry-data="addVolumetry"
-      @file-data="uploadVolumetry"
-    />
     <DataTable
-      v-if="isViewVolumetry"
+      v-if="isViewVolumetry && type === 'prototype'"
       :volumetry="volumetry"
-      :is-kitchen="isKitchen"
       @volumetry-data="deleteVolumetry"
+    />
+    <TrendMaterialsFormData
+      v-if="isViewVolumetry && type === 'trend' && (melamine || granite)"
+      v-model:volumetry="volumetry"
+      :trend-type="melamine ? 'melamine' : 'granite'"
+      :trend-value="melamine ?? granite"
     />
     <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
     <Notification

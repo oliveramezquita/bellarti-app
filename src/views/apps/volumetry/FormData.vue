@@ -1,7 +1,7 @@
 <!-- eslint-disable camelcase -->
 <script setup>
-import excelPath from '@/assets/documents/FORMATO_VOLUMETRIA.xlsx'
 import { useApi } from '@/composables/useApi'
+import SelectorDialog from '@/views/apps/materials/SelectorDialog.vue'
 
 const props = defineProps({
   volumetry: {
@@ -29,7 +29,6 @@ const emit = defineEmits([
 // ------------------------------------------------
 // ✅ Inicialización
 // ------------------------------------------------
-const VolumetryFormat = excelPath
 const { data: suppliers } = await useApi('api/suppliers?itemsPerPage=100')
 const { data: areas } = await useApi('api/catalogs?name=Áreas')
 
@@ -47,6 +46,7 @@ const excelFile = ref()
 const viewResults = ref(false)
 const isDeleteAreaDialogVisible = ref(false)
 const selectedArea = ref()
+const isSelectorDialogVisible = ref(false)
 
 // ------------------------------------------------
 // ✅ Cambio de material
@@ -142,6 +142,27 @@ const hasValidTotal = computed(() =>
   ),
 )
 
+const generateFormat = async selectedMaterials => {
+  const blob = await $api('api/materials/download_format', {
+    method: 'POST',
+    body: {
+      filename: 'FORMATO_VOLUMETRIA.xlsx',
+      material_ids: selectedMaterials,
+    },
+    responseType: 'blob',
+  })
+
+  const url = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+
+  a.href = url
+  a.download = 'FORMATO_VOLUMETRIA.xlsx'
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  window.URL.revokeObjectURL(url)
+}
+
 // ------------------------------------------------
 // ✅ Watcher simple para reset de archivo
 // ------------------------------------------------
@@ -205,7 +226,6 @@ watch(
       <!-- ================================================= -->
       <VWindowItem>
         <VCardText>
-          <!-- 🚫 Eliminado v-model="isMaterialFormValid" -->
           <VForm
             ref="refMaterialForm"
             @submit.prevent="addVolumetry"
@@ -248,8 +268,8 @@ watch(
                 md="4"
               >
                 <AppTextField
-                  v-model="measurement"
-                  label="Unidad de medida"
+                  v-model="sku"
+                  label="SKU"
                   disabled
                 />
               </VCol>
@@ -259,8 +279,8 @@ watch(
                 md="4"
               >
                 <AppTextField
-                  v-model="sku"
-                  label="SKU"
+                  v-model="measurement"
+                  label="Unidad de medida"
                   disabled
                 />
               </VCol>
@@ -401,21 +421,13 @@ watch(
         <VCardText>
           <p>
             Para cargar información mediante un archivo, este debe estar en formato <b>Excel</b> y cumplir con una
-            estructura específica.
+            estructura específica, utilice el archivo: <a
+              class="text-underline"
+              @click.prevent="isSelectorDialogVisible = true"
+            >
+              FORMATO VOLUMETRÍA
+            </a>.
           </p>
-          <ul>
-            <li>
-              Para la volumetría normal, utilice el archivo:
-              <a
-                :href="VolumetryFormat"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                FORMATO VOLUMETRÍA
-              </a>.
-            </li>
-          </ul>
-
           <VRow class="mt-4">
             <VCol
               cols="12"
@@ -518,6 +530,10 @@ watch(
       </VCardText>
     </VCard>
   </VDialog>
+  <SelectorDialog
+    v-model:is-dialog-visible="isSelectorDialogVisible"
+    @generate-format="generateFormat"
+  />
 </template>
 
 <style lang="scss">

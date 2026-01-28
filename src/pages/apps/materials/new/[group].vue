@@ -8,7 +8,6 @@ definePage({
   },
 })
 
-const breadcrumbItems = ref([{ title: 'Materiales', class: 'text-primary' }, { title: 'Materiales', to: { name: 'apps-materials-list' }, class: 'text-underline' }, { title: 'Nuevo' }])
 const currentTab = ref('tab-1')
 const isFormValid = ref(false)
 const refForm = ref()
@@ -16,6 +15,18 @@ const isLoadingDialogVisible = ref(false)
 const isNotificationVisible = ref(false)
 const notificationMessage = ref('')
 const router = useRouter()
+const route = useRoute('apps-materials-new-group')
+
+const breadcrumbItems = ref([
+  { title: 'Materiales', class: 'text-primary' },
+  { 
+    title: route.params.group === 'EQUIPMENT_GROUP' ? 'Equipamiento y Accesorios' : 'Materiales', 
+    to: { 
+      name: route.params.group === 'EQUIPMENT_GROUP' ? 'apps-equipment-list' : 'apps-materials-list',
+    }, 
+    class: 'text-underline' },
+  { title: 'Nuevo' },
+])
 
 const material = ref({
   division: null,
@@ -40,6 +51,11 @@ const material = ref({
   market_price: null,
   price_difference: null,
   automation: false,
+  its_trending: false,
+  trend: {
+    type: null,
+    value: null,
+  },
 })
 
 const concept = computed(() => {
@@ -76,22 +92,40 @@ const sku = computed(() => {
   return parts.join('-')
 }) 
 
-const { data: suppliers } = await useApi('api/suppliers?itemsPerPage=1000')
-const { data: unitsOfMeasurement }= await useApi('api/catalogs?name=Unidades de medida')
-const { data: divisions } = await useApi('api/catalogs?name=División de materiales')
+const [
+  { data: suppliers },
+  { data: unitsOfMeasurement },
+  { data: divisions },
+  { data: melamines },
+  { data: granites },
+] = await Promise.all([
+  useApi('api/suppliers?itemsPerPage=1000'),
+  useApi('api/catalogs?name=Unidades de medida'),
+  useApi('api/catalogs?name=División de materiales'),
+  useApi('api/catalogs?name=Melamina'),
+  useApi('api/catalogs?name=Granito'),
+])
+
+melamines.value.values.push("Todas")
+granites.value.values.push("Todos")
+
+const trendTypes = [
+  { value: 'melamine', label: 'Melamina' },
+  { value: 'granite', label: 'Granito' },
+]
 
 const onSubmit = () => {
   isLoadingDialogVisible.value = true
   refForm.value?.validate().then(({ valid }) => {
     if (valid) {
-      createMateiral()
+      createMaterial()
     } else {
       isLoadingDialogVisible.value = false
     }
   })
 }
 
-const createMateiral = async() => {
+const createMaterial = async() => {
   isLoadingDialogVisible.value = true
   material.value.concept = concept.value
   material.value.sku = sku.value
@@ -134,6 +168,10 @@ const differentiatePrices = () => {
 
     material.value.price_difference = convertCurrency(priceDifference)
   }
+}
+
+const typeChange = () => {
+  material.value.trend.value = null
 }
 </script>
 
@@ -446,7 +484,6 @@ const differentiatePrices = () => {
 
               <VCol
                 cols="12"
-                md="8"
                 style="margin-block-start: -25px;"
               >
                 <VSwitch
@@ -456,8 +493,54 @@ const differentiatePrices = () => {
               </VCol>
 
               <VCol
+                v-if="material.its_trending"
                 cols="12"
-                class="d-flex gap-4"
+                md="6"
+                style="margin-block-start: -10px;"
+              >
+                <AppSelect
+                  v-model="material.trend.type"
+                  label="Tipo de tendencia"
+                  placeholder="Tipo de tendencia"
+                  :item-title="item => item.label"
+                  :item-value="item => item.value"
+                  :items="trendTypes"
+                  @update:model-value="typeChange"
+                />
+              </VCol>
+
+              <!-- 👉 Malemines -->
+              <VCol
+                v-if="material.trend.type === 'melamine'"
+                cols="12"
+                md="6"
+                style="margin-block-start: -10px;"
+              >
+                <AppSelect
+                  v-model="material.trend.value"
+                  label="Maleminas"
+                  placeholder="Maleminas"
+                  :items="melamines.values"
+                />
+              </VCol>
+              <!-- 👉 Granites -->
+              <VCol
+                v-if="material.trend.type === 'granite'"
+                cols="12"
+                md="6"
+                style="margin-block-start: -10px;"
+              >
+                <AppSelect
+                  v-model="material.trend.value"
+                  label="Granitos"
+                  placeholder="Granitos"
+                  :items="granites.values"
+                />
+              </VCol>
+
+              <VCol
+                cols="12"
+                class="d-flex gap-4 mt-4"
               >
                 <VBtn type="submit">
                   Guardar

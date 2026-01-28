@@ -10,7 +10,7 @@ definePage({
 })
 
 // 📍 Route y filtros iniciales
-const route = useRoute('apps-prototypes-list')
+const route = useRoute('apps-prototypes')
 const client = ref(route.query?.client_id ?? null)
 const front = ref(route.query?.front ?? null)
 const searchQuery = ref('')
@@ -27,11 +27,9 @@ const deleteDialog = ref({ visible: false, prototype: null })
 
 // 📍 Datos estáticos
 const headers = [
-  { title: '', key: 'data-table-expand' },
   { title: 'Cliente', key: 'client_name' },
   { title: 'Nombre', key: 'name' },
   { title: 'Frente / Fraccionamiento', key: 'front' },
-  { title: 'Tendencias', key: 'tendencies', sortable: false },
   { title: 'Acciones', key: 'actions', sortable: false },
 ]
 
@@ -112,7 +110,6 @@ const addNewPrototype = async prototypeData => {
   }
 }
 
-
 // 🗑️ Eliminar prototipo
 const confirmDelete = prototype => (deleteDialog.value = { visible: true, prototype })
 
@@ -134,6 +131,7 @@ const deletePrototype = async () => {
 <template>
   <Breadcrumb
     :items="breadcrumbItems"
+    :return="false"
     icon="home-stats"
   />
 
@@ -214,71 +212,9 @@ const deletePrototype = async () => {
         :items-length="totalPrototypes"
         :headers="headers"
         class="text-no-wrap"
-        expand-on-click
         @update:options="updateOptions"
       >
-        <template #item.name="{ item }">
-          <RouterLink
-            :to="{ name: 'apps-prototypes-view-id', params: { id: item._id } }"
-            class="font-weight-medium text-underline"
-          >
-            {{ item.name }}
-          </RouterLink>
-        </template>
-
-        <template #item.tendencies="{ item }">
-          <VAvatar
-            :color="item.tendencies ? 'success' : 'secondary'"
-            icon="tabler-chart-donut"
-            size="small"
-            variant="text"
-          />
-        </template>
-
-        <template #expanded-row="{ item }">
-          <tr>
-            <td :colspan="headers.length">
-              <div class="inner-table">
-                <div class="row header">
-                  <div class="cell align-left">
-                    TENDENCIA
-                  </div>
-                  <div class="cell">
-                    PORCENTAJE
-                  </div>
-                </div>
-
-                <div v-if="item.tendencies?.length">
-                  <div
-                    v-for="t in item.tendencies"
-                    :key="`${t.melamine}-${t.granite}`"
-                    class="row"
-                  >
-                    <div class="cell align-left">
-                      {{ `${t.melamine} - ${t.granite}` }}
-                    </div>
-                    <div class="cell">
-                      {{ `${t.percentage}%` }}
-                    </div>
-                  </div>
-                </div>
-                <div
-                  v-else
-                  class="row"
-                >
-                  <div class="cell">
-                    Sin tendencias hasta el momento
-                  </div>
-                </div>
-              </div>
-            </td>
-          </tr>
-        </template>
-
         <template #item.actions="{ item }">
-          <IconBtn :to="{ name: 'apps-prototypes-view-id', params: { id: item._id } }">
-            <VIcon icon="tabler-pencil" />
-          </IconBtn>
           <IconBtn @click="confirmDelete(item)">
             <VIcon icon="tabler-trash" />
           </IconBtn>
@@ -302,7 +238,6 @@ const deletePrototype = async () => {
       v-model:fronts-catalog="frontsCatalog"
       @prototype-data="addNewPrototype"
     />
-
     <LoadingDataDialog v-model:is-dialog-visible="isLoading" />
     <Notification
       v-model:is-notification-visible="notification.visible"

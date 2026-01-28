@@ -117,7 +117,7 @@ watch(() => props.volumetry, _ => {}, { deep: true })
             >
               <div class="row header">
                 <div class="cell align-left">
-                  {{ Array.isArray(slotProps.item.tendencies) && slotProps.item.tendencies.length > 0 ? 'TENDENCIAS' : 'ÁREA' }}
+                  ÁREA
                 </div>
                 <div class="cell">
                   FÁBRICA
@@ -144,31 +144,6 @@ watch(() => props.volumetry, _ => {}, { deep: true })
               >
                 <div class="cell align-left">
                   {{ v.area }}
-                </div>
-                <div class="cell">
-                  {{ v.factory }}
-                </div>
-                <div class="cell">
-                  {{ v.installation }}
-                </div>
-                <div
-                  v-if="props.isKitchen"
-                  class="cell"
-                >
-                  {{ v.delivery }}
-                </div>
-                <div class="cell">
-                  {{ v.total_x }}
-                </div>
-              </div>
-              <div
-                v-for="v in slotProps.item.tendencies"
-                v-show="slotProps.item.hasOwnProperty('tendencies')"
-                :key="v.id"
-                class="row"
-              >
-                <div class="cell align-left">
-                  {{ v.melamine }} - {{ v.granite }}
                 </div>
                 <div class="cell">
                   {{ v.factory }}

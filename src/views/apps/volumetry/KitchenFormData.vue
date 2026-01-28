@@ -4,10 +4,6 @@ import kitchenExcelPath from '@/assets/documents/FORMATO_VOLUMETRIA_COCINA.xlsx'
 import { useApi } from '@/composables/useApi'
 
 const props = defineProps({
-  tendenciesData: {
-    type: Array,
-    required: true,
-  },
   volumetryData: {
     type: Array,
     required: true,
@@ -24,7 +20,6 @@ const props = defineProps({
 })
 
 const emit = defineEmits([
-  'update:tendenciesData',
   'update:volumetryData',
   'update:responseUploadedFile',
   'volumetryData',
@@ -46,7 +41,6 @@ const sku = ref()
 const currentTab = ref('tab-1')
 const isMaterialFormValid = ref(false)
 const refMaterialForm = ref()
-const tendencies = ref(JSON.parse(JSON.stringify(props.tendenciesData || [])))
 
 const volumetry = ref([
   {
@@ -59,8 +53,6 @@ const volumetry = ref([
 
 const excelFile = ref()
 const viewResults = ref(false)
-const isDeleteTendencyDialogVisible = ref(false)
-const selectedTendency = ref()
 const melamines = ref([])
 const granites = ref([])
 
@@ -99,25 +91,12 @@ const materialChange = async () => {
 // ------------------------------------------------
 // ✅ Funciones generales
 // ------------------------------------------------
-const addNewTendency = () => {
-  tendencies.value.push({
-    id: crypto.randomUUID(),
-    name: null,
-    percentage: 0,
-    factory: null,
-    installation: null,
-    delivery: null,
-    total_x: null,
-  })
-}
-
 const addVolumetry = () => {
   refMaterialForm.value?.validate().then(({ valid }) => {
     if (valid) {
       emit('volumetryData', {
         material_id: material.value._id,
         volumetry: [{ ...volumetry.value[0], total_x: totalX.value }],
-        tendencies: material.value.hasOwnProperty('its_trending') && material.value.its_trending ? tendencies.value : [],
       })
     }
   })
@@ -130,11 +109,6 @@ const uploadVolumetry = () => {
   emit('fileData', formData)
 }
 
-const removeTendency = index => {
-  tendencies.value.splice(index, 1)
-  isDeleteTendencyDialogVisible.value = false
-}
-
 const getMaterials = async supplierId => {
   try {
     material.value = 'Cargando materiales...'
@@ -142,18 +116,6 @@ const getMaterials = async supplierId => {
   } finally {
     material.value = null
   }
-}
-
-const totalPercentage = computed(() =>
-  tendencies.value.reduce((sum, t) => sum + (parseFloat(t.percentage) || 0), 0),
-)
-
-const viewDeleteTendencyDialog = (melamine, granite, index) => {
-  selectedTendency.value = {
-    name: `${melamine} - ${granite}`,
-    index: index,
-  }
-  isDeleteTendencyDialogVisible.value = true
 }
 
 // ------------------------------------------------
@@ -178,80 +140,6 @@ watch(() => props.responseUploadedFile, newResponse => {
     viewResults.value = true
   }
 }, { deep: true })
-
-watch(
-  () => props.tendenciesData,
-  newValue => {
-    tendencies.value = Array.isArray(newValue)
-      ? JSON.parse(JSON.stringify(newValue))
-      : []
-  },
-  { immediate: true },
-)
-
-// 🔹 Actualizar tendencias cuando cambian los valores base
-let isUpdatingVolumetry = false
-
-watch(
-  () => [volumetry.value?.[0]?.factory, volumetry.value?.[0]?.installation, volumetry.value?.[0]?.delivery],
-  ([factory, installation, delivery]) => {
-    if (isUpdatingVolumetry) return
-    if (!Array.isArray(tendencies.value) || tendencies.value.length === 0) return
-
-    isUpdatingVolumetry = true
-
-    const totalFactory = parseFloat(factory) || 0
-    const totalInstallation = parseFloat(installation) || 0
-    const totalDelivery = parseFloat(delivery) || 0
-
-    tendencies.value.forEach(t => {
-      const percentage = parseFloat(t.percentage) || 0
-      const f = (totalFactory * percentage) / 100
-      const i = (totalInstallation * percentage) / 100
-      const d = (totalDelivery * percentage) / 100
-
-      t.factory = parseFloat(f.toFixed(2))
-      t.installation = parseFloat(i.toFixed(2))
-      t.delivery = parseFloat(d.toFixed(2))
-      t.total_x = parseFloat((f + i + d).toFixed(2))
-    })
-
-    queueMicrotask(() => (isUpdatingVolumetry = false))
-  },
-  { deep: true },
-)
-
-// 🔹 Actualizar tendencias cuando cambia algún porcentaje
-let isUpdatingPercentages = false
-
-watch(
-  () => tendencies.value.map(t => t.percentage),
-  percentages => {
-    if (isUpdatingPercentages) return
-    if (!volumetry.value?.[0]) return
-
-    isUpdatingPercentages = true
-
-    const totalFactory = parseFloat(volumetry.value[0]?.factory) || 0
-    const totalInstallation = parseFloat(volumetry.value[0]?.installation) || 0
-    const totalDelivery = parseFloat(volumetry.value[0]?.delivery) || 0
-
-    tendencies.value.forEach((t, i) => {
-      const percentage = parseFloat(percentages[i]) || 0
-      const f = (totalFactory * percentage) / 100
-      const inst = (totalInstallation * percentage) / 100
-      const d = (totalDelivery * percentage) / 100
-
-      t.factory = parseFloat(f.toFixed(2))
-      t.installation = parseFloat(inst.toFixed(2))
-      t.delivery = parseFloat(d.toFixed(2))
-      t.total_x = parseFloat((f + inst + d).toFixed(2))
-    })
-
-    queueMicrotask(() => (isUpdatingPercentages = false))
-  },
-  { deep: true },
-)
 
 // 🔹 Reactividad entre material seleccionado y volumetryData
 watch(
@@ -421,173 +309,8 @@ watch(
             </VRow>
           </VForm>
         </VCardText>
-
-        <!-- TENDENCIAS -->
-        <VDivider v-if="material?.its_trending && tendencies.length > 0" />
-        <VCardText
-          v-if="material?.its_trending && tendencies.length > 0"
-          class="mb-3"
-        >
-          <VRow>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              TENDENCIAS
-            </VCol>
-            <VCol
-              cols="12"
-              md="1"
-            >
-              PORCENTAJE
-            </VCol>
-            <VCol
-              cols="12"
-              md="1"
-            >
-              FÁBRICA
-            </VCol>
-            <VCol
-              cols="12"
-              md="1"
-            >
-              INSTALACIÓN
-            </VCol>
-            <VCol
-              cols="12"
-              md="1"
-            >
-              ENTREGA
-            </VCol>
-            <VCol
-              cols="12"
-              md="1"
-            >
-              TOTAL X CASA
-            </VCol>
-            <VCol
-              cols="12"
-              md="1"
-            >
-&nbsp;
-            </VCol>
-          </VRow>
-
-          <VRow
-            v-for="(item, index) in tendencies"
-            :key="item.id"
-            class="row-table"
-            style="margin-inline-start: 0;"
-          >
-            <VCol
-              cols="12"
-              md="3"
-              class="narrow-column"
-            >
-              <AppSelect
-                v-model="item.melamine"
-                placeholder="Melamina"
-                :items="melamines"
-              />
-            </VCol>
-            <VCol
-              cols="12"
-              md="3"
-              class="narrow-column"
-            >
-              <AppSelect
-                v-model="item.granite"
-                placeholder="Granito"
-                :items="granites"
-              />
-            </VCol>
-            <VCol
-              cols="12"
-              md="1"
-              class="narrow-column"
-            >
-              <AppTextField
-                v-model="item.percentage"
-                suffix="%"
-              />
-            </VCol>
-            <VCol
-              cols="12"
-              md="1"
-              class="narrow-column"
-            >
-              <AppTextField
-                v-model="item.factory"
-                disabled
-              />
-            </VCol>
-            <VCol
-              cols="12"
-              md="1"
-              class="narrow-column"
-            >
-              <AppTextField
-                v-model="item.installation"
-                disabled
-              />
-            </VCol>
-            <VCol
-              cols="12"
-              md="1"
-              class="narrow-column"
-            >
-              <AppTextField
-                v-model="item.delivery"
-                disabled
-              />
-            </VCol>
-            <VCol
-              cols="12"
-              md="1"
-              class="narrow-column"
-            >
-              <AppTextField
-                v-model="item.total_x"
-                disabled
-              />
-            </VCol>
-            <VCol
-              cols="12"
-              md="1"
-              class="d-flex align-center"
-            >
-              <IconBtn>
-                <VIcon
-                  icon="tabler-trash"
-                  @click="viewDeleteTendencyDialog(item.melamine, item.granite, index)"
-                />
-              </IconBtn>
-            </VCol>
-          </VRow>
-
-          <VAlert
-            v-if="totalPercentage > 100"
-            type="warning"
-            border="start"
-            border-color="warning"
-            class="mt-7"
-            variant="tonal"
-          >
-            El total de porcentajes supera el 100%. Ajusta los valores.
-          </VAlert>
-        </VCardText>
-
         <VCardText>
           <div>
-            <VBtn
-              v-if="material?.its_trending"
-              variant="outlined"
-              class="mr-3"
-              :disabled="totalPercentage >= 100"
-              @click="addNewTendency"
-            >
-              Agregar tendencia
-            </VBtn>
             <VBtn
               :disabled="totalPercentage !== 0 && totalPercentage !== 100"
               @click="refMaterialForm.requestSubmit()"
@@ -699,25 +422,6 @@ watch(
       </VWindowItem>
     </VWindow>
   </VCard>
-  <VDialog
-    v-model="isDeleteTendencyDialogVisible"
-    width="500"
-  >
-    <DialogCloseBtn @click="isDeleteTendencyDialogVisible = !isDeleteTendencyDialogVisible" />
-    <VCard title="Eliminar tendencia">
-      <VCardText>
-        ¿Confirma que desea eliminar la tendencia <b>{{ selectedTendency.name }}</b>?
-      </VCardText>
-      <VCardText class="d-flex justify-end">
-        <VBtn
-          color="error"
-          @click="removeTendency(selectedTendency.index)"
-        >
-          Eliminar
-        </VBtn>
-      </VCardText>
-    </VCard>
-  </VDialog>
 </template>
 
 <style lang="scss">

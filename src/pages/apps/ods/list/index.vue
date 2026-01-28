@@ -203,7 +203,7 @@ const deleteHomeProduction = async id => {
             <h6 class="text-base">
               <RouterLink
                 :to="{ name: 'apps-ods-view-id', params: { id: item._id } }"
-                class="font-weight-medium text-link"
+                class="font-weight-medium text-underline"
               >
                 {{ item.front }} - {{ item.od }}
               </RouterLink>
