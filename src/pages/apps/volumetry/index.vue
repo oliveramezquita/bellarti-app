@@ -44,7 +44,6 @@ const clientChange = async value => {
   resetVolumetry()
 
   // 🔹 Actualizar almacenamiento persistente
-  saveState('volumetry_type', null)
   saveState('volumetry_front', null)
   saveState('volumetry_prototype', null)
   saveState('volumetry_fronts', [])
@@ -202,6 +201,28 @@ const uploadVolumetry = async formsData => {
     isLoadingDialogVisible.value = false
   }
 }
+
+const deleteVolumetry = async item => {
+  if (item.hasOwnProperty('_id')) {
+    isLoadingDialogVisible.value = true
+
+    try {
+      await $api(`api/volumetry/${item?._id}`, { 
+        method: 'DELETE',
+        onResponse({ response }) {
+          notificationColor.value = getStatusColor(response.status)
+          if (response.status === 200)
+            notificationMessage.value = `El material: ${item.concept} ha sido eliminado correctamente de la volumetría.`
+          else 
+            notificationMessage.value = response._data 
+          isNotificationVisible.value = true
+        },
+      })
+    } finally {
+      isLoadingDialogVisible.value = false
+    }
+  }
+}
 </script>
 
 <template>
@@ -291,6 +312,7 @@ const uploadVolumetry = async formsData => {
             <DataForm
               v-model:volumetry="volumetry"
               @add-volumetry="addVolumetry"
+              @delete-volumetry="deleteVolumetry"
             />
           </VCardText>
         </VWindowItem>

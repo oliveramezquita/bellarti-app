@@ -80,7 +80,7 @@ const generate = () => {
 watch(
   () => props.selectedMaterials,
   newValue => {
-    selected.value = structuredClone(toRaw(newValue ?? []))
+    selected.value = JSON.parse(JSON.stringify(newValue ?? []))
   },
   { deep: true },
 )

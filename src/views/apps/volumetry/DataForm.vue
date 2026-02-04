@@ -12,7 +12,7 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['update:volumetry', 'addVolumetry'])
+const emit = defineEmits(['update:volumetry', 'addVolumetry', 'deleteVolumetry'])
 
 // ----------------------
 // Helpers (deben ir arriba)
@@ -30,10 +30,27 @@ function buildMaterialsArray(original = []) {
 }
 
 const toNumber = v => {
+  if (typeof v === 'string') v = v.replace(',', '.').trim()
   const n = Number(v)
   
-  return Number.isFinite(n) ? n : 0
+  return Number.isFinite(n) && n >= 0 ? n : 0
 }
+
+const toNumberLoose = v => {
+  if (v === null || v === undefined) return 0
+  if (typeof v === 'number') return Number.isFinite(v) && v >= 0 ? v : 0
+
+  const s = String(v).trim()
+
+  // permitir estados intermedios mientras escribe:
+  if (s === '' || s === '.' || s === '0.' || s.endsWith('.')) return null
+
+  const n = Number(s.replace(',', '.'))
+  
+  return Number.isFinite(n) && n >= 0 ? n : 0
+}
+
+const round2 = n => Math.round((Number(n) + Number.EPSILON) * 100) / 100
 
 const mergeById = (base = [], incoming = []) => {
   const existingIds = new Set((base ?? []).map(item => item?.id).filter(Boolean))
@@ -74,13 +91,44 @@ const recalcTotals = (localVolumetryRef, materialId) => {
       const delivery = toNumber(r.delivery)
       const total_x = factory + installation + delivery
 
-      total += total_x
+      total = round2(total + total_x)
 
       return { ...r, factory, installation, delivery, total_x }
     })
 
     return { ...m, volumetry: newRows, total }
   })
+}
+
+const recalcOneMaterialDebounced = useDebounceFn(material => {
+  recalcOneMaterial(material)
+}, 250)
+
+const recalcOneMaterial = material => {
+  const rows = Array.isArray(material.volumetry) ? material.volumetry : []
+  let total = 0
+
+  material.volumetry = rows.map(r => {
+    const f = toNumberLoose(r.factory)
+    const i = toNumberLoose(r.installation)
+    const d = toNumberLoose(r.delivery)
+
+    // si alguno está en estado intermedio, no lo forces todavía
+    const factory = f === null ? r.factory : f
+    const installation = i === null ? r.installation : i
+    const delivery = d === null ? r.delivery : d
+
+    const total_x =
+      (typeof f === 'number' ? f : 0) +
+      (typeof i === 'number' ? i : 0) +
+      (typeof d === 'number' ? d : 0)
+
+    total = round2(total + total_x)
+    
+    return { ...r, total_x }
+  })
+
+  material.total = total
 }
 
 // ----------------------
@@ -119,11 +167,14 @@ const viewDeleteVolumetryDialog = item => {
   isDeleteVolumetryDialogVisible.value = true
 }
 
-const deleteVolumetryItem = materialId => {
+const deleteVolumetryItem = item => {
+  const materialId = item?.id
+
   localVolumetry.value = (localVolumetry.value ?? []).filter(m => m.id !== materialId)
   selectedMaterials.value = (selectedMaterials.value ?? []).filter(m => m.id !== materialId)
   delete newAreas[materialId]
   isDeleteVolumetryDialogVisible.value = false
+  emit('deleteVolumetry', item)
 }
 
 const exportMaterials = materials => {
@@ -257,7 +308,7 @@ watch(
   <VDataTable
     :headers="headers"
     :items="localVolumetry"
-    :items-per-page="5"
+    :items-per-page="10"
     :search="search"
     expand-on-click
   >
@@ -274,6 +325,10 @@ watch(
           </h6>
         </div>
       </div>
+    </template>
+
+    <template #item.total="{ item }">
+      {{ item.total.toFixed(2) }}
     </template>
 
     <template #expanded-row="slotProps">
@@ -345,7 +400,7 @@ watch(
             >
               <AppTextField
                 v-model="slotProps.item.volumetry[i].factory"
-                @update:model-value="recalcTotals(localVolumetry, slotProps.item.id)"
+                @update:model-value="recalcOneMaterialDebounced(slotProps.item)"
               />
             </VCol>
 
@@ -356,7 +411,7 @@ watch(
             >
               <AppTextField
                 v-model="slotProps.item.volumetry[i].installation"
-                @update:model-value="recalcTotals(localVolumetry, slotProps.item.id)"
+                @update:model-value="recalcOneMaterialDebounced(slotProps.item)"
               />
             </VCol>
 
@@ -367,7 +422,7 @@ watch(
             >
               <AppTextField
                 v-model="slotProps.item.volumetry[i].delivery"
-                @update:model-value="recalcTotals(localVolumetry, slotProps.item.id)"
+                @update:model-value="recalcOneMaterialDebounced(slotProps.item)"
               />
             </VCol>
 
@@ -448,7 +503,7 @@ watch(
         </td>
       </tr>
     </template>
-
+    
     <template #item.actions="{ item }">
       <IconBtn @click="viewDeleteVolumetryDialog(item)">
         <VIcon icon="tabler-trash" />
@@ -467,14 +522,14 @@ watch(
       <VCardText class="d-flex justify-end">
         <VBtn
           color="error"
-          @click="deleteVolumetryItem(selectedVolumetryItem?.id)"
+          @click="deleteVolumetryItem(selectedVolumetryItem)"
         >
           Eliminar
         </VBtn>
       </VCardText>
     </VCard>
   </VDialog>
-
+  <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
   <SelectorDialog
     v-model:is-dialog-visible="isSelectorDialogVisible"
     :selected-materials="selectedMaterials"
