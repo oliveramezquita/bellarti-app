@@ -88,8 +88,6 @@ const addNewPrototype = async prototypeData => {
       method: 'POST',
       body: filtered,
       onResponse({ response }) {
-        console.log('RESPONSE:', response)
-
         notification.value = {
           visible: true,
           message: response._data,

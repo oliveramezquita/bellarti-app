@@ -47,6 +47,9 @@ const trends = ref({
       id: crypto.randomUUID(),
       name: null,
       percentage: 0,
+      bicolor: false,
+      color_a: 90,
+      color_b: 10,
     },
   ],
   granite: [
@@ -68,6 +71,9 @@ const makeRow = (row = {}) => ({
   id: row.id ?? crypto.randomUUID(),
   name: row.name ?? null,
   percentage: row.percentage ?? 0,
+  bicolor: row.bicolor ?? false,
+  color_a: row.color_a ?? 90,
+  color_b: row.color_b ?? 10,
 })
 
 const hydrateRows = rows => {
@@ -85,6 +91,9 @@ const addNewItem = itemType => {
     id: crypto.randomUUID(),
     name: null,
     percentage: 0,
+    bicolor: false,
+    color_a: 90,
+    color_b: 10,
   })
 }
 
@@ -128,38 +137,50 @@ const validateItems = items => {
   const cleanedItems = []
   let totalPercentage = 0
 
+  const fail = msg => (viewNotification(msg, 'warning'), null)
+
+  const parsePositive = value => {
+    const n = Number(value)
+    
+    return Number.isFinite(n) && n > 0 ? n : null
+  }
+
   for (const item of items) {
-    if (!item.name) {
-      viewNotification('Hay al menos una melamina no seleccionada.', 'warning')
-      
-      return null
-    }
+    if (!item.name) return fail('Hay al menos una melamina no seleccionada.')
 
-    const percentage = Number(item.percentage)
-
-    if (Number.isNaN(percentage) || percentage <= 0) {
-      viewNotification('Cada porcentaje debe ser mayor a cero.', 'warning')
-      
-      return null
-    }
+    const percentage = parsePositive(item.percentage)
+    if (percentage === null) return fail('Cada porcentaje debe ser mayor a cero.')
 
     totalPercentage += percentage
+    if (totalPercentage > 100) return fail('La suma de los porcentajes no puede ser mayor a 100%.')
 
-    if (totalPercentage > 100) {
-      viewNotification('La suma de los porcentajes no puede ser mayor a 100%.', 'warning')
-      
-      return null
+    let percentageA = null
+    let percentageB = null
+
+    if (item.bicolor === true) {
+      percentageA = parsePositive(item.color_a)
+      percentageB = parsePositive(item.color_b)
+
+      if (percentageA === null || percentageB === null)
+        return fail('Cada porcentaje bicolor debe ser mayor a cero.')
+
+      if (percentageA + percentageB > 100)
+        return fail('La suma de los porcentajes bicolor no puede ser mayor a 100%.')
     }
 
     cleanedItems.push({
       id: item.id,
       name: item.name,
       percentage,
+      bicolor: item.bicolor,
+      color_a: percentageA,
+      color_b: percentageB,
     })
   }
 
   return cleanedItems
 }
+
 
 const viewDeleteItemDialog = (itemType, item, index) => {
   selectedItem.value.type = itemType
@@ -178,6 +199,31 @@ const viewNotification = (message, color) => {
   notification.value.message = message
   isNotificationVisible.value = true
 }
+
+const checkItemsList = () => {
+  const melSelected = trends.value.melamine.map(i => i.name).filter(Boolean)
+  const graSelected = trends.value.granite.map(i => i.name).filter(Boolean)
+
+  melamines.value = melaminesList.value.values.filter(
+    item => !melSelected.includes(item),
+  )
+  
+  granites.value = granitesList.value.values.filter(
+    item => !graSelected.includes(item),
+  )
+}
+
+const getMelamine = (itemType, index) => {
+  trends.value[itemType][index].bicolor = trends.value[itemType][index].name.includes('Alto Brillo')
+}
+
+watch(
+  () => [trends.value.melamine, trends.value.granite],
+  () => {
+    checkItemsList()
+  },
+  { deep: true },
+)
 </script>
 
 <template>
@@ -222,24 +268,51 @@ const viewNotification = (message, color) => {
           >
             <VCol
               cols="12"
-              md="7"
+              :md="item.bicolor ? 5 : 6"
               class="narrow-column"
             >
               <AppSelect
                 v-model="item.name"
                 placeholder="Seleccione una melamina"
                 :items="melamines"
+                @update:model-value="getMelamine('melamine', index)"
               />
             </VCol>
             <VCol
               cols="12"
-              md="4"
+              :md="item.bicolor ? 2 : 5"
               class="narrow-column"
             >
               <AppTextField
                 v-model="item.percentage"
                 placeholder="Porcentaje"
                 suffix="%"
+                class="input-end"
+              />
+            </VCol>
+            <VCol
+              v-if="item.bicolor"
+              cols="12"
+              md="2"
+              class="narrow-column"
+            >
+              <AppTextField
+                v-model="item.color_a"
+                suffix="%"
+                prefix="A"
+                class="input-end"
+              />
+            </VCol>
+            <VCol
+              v-if="item.bicolor"
+              cols="12"
+              md="2"
+              class="narrow-column"
+            >
+              <AppTextField
+                v-model="item.color_b"
+                suffix="%"
+                prefix="B"
                 class="input-end"
               />
             </VCol>
@@ -261,6 +334,7 @@ const viewNotification = (message, color) => {
           <div>
             <VBtn
               variant="outlined"
+              :disabled="trends.melamine.length === melaminesList.values.length"
               @click="addNewItem('melamine')"
             >
               Agregar melamina
@@ -327,6 +401,7 @@ const viewNotification = (message, color) => {
           <div>
             <VBtn
               variant="outlined"
+              :disabled="trends.granite.length === granitesList.values.length"
               @click="addNewItem('granite')"
             >
               Agregar granito

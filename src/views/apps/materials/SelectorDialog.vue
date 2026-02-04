@@ -5,9 +5,20 @@ const props = defineProps({
     type: Boolean,
     required: true,
   },
+  action: {
+    type: String,
+    required: true,
+  },
+  selectedMaterials: {
+    type: Array,
+    default: () => [],
+  },
 })
 
-const emit = defineEmits(['update:isDialogVisible', 'generateFormat'])
+const emit = defineEmits([
+  'update:isDialogVisible',
+  'generateFormat',
+])
 
 const dialogVisibleUpdate = val => {
   emit('update:isDialogVisible', val)
@@ -22,25 +33,10 @@ const sortBy = ref()
 const orderBy = ref()
 
 const headers = [
-  {
-    title: 'Concepto',
-    key: 'concept',
-  },
-  {
-    title: 'División',
-    key: 'division',
-    sortable: false,
-  },
-  {
-    title: 'U. de Medida',
-    key: 'measurement',
-    sortable: false,
-  },
-  {
-    title: 'Presentación',
-    key: 'presentation',
-    sortable: false,
-  },
+  { title: 'Concepto', key: 'concept' },
+  { title: 'División', key: 'division', sortable: false },
+  { title: 'U. de Medida', key: 'measurement', sortable: false },
+  { title: 'Presentación', key: 'presentation', sortable: false },
 ]
 
 const { data: supplierList } = await useApi('api/suppliers?itemsPerPage=100')
@@ -60,20 +56,39 @@ const {
   },
 }))
 
-const materials = computed(() => materialsData.value.data)
-const totalMaterials = computed(() => materialsData.value.total_elements)
-const selectedMaterials = ref()
+// 👆 NO CAMBIO ESTO
+
+// ✅ safe defaults (evita errores mientras carga)
+const materials = computed(() => materialsData.value?.data ?? [])
+const totalMaterials = computed(() => materialsData.value?.total_elements ?? 0)
+
+// ✅ clonar para no mutar props
+const selected = ref(structuredClone(toRaw(props.selectedMaterials ?? [])))
 
 const updateOptions = options => {
   page.value = options.page
-  sortBy.value = options.sortBy[0]?.key
-  orderBy.value = options.sortBy[0]?.order
+  sortBy.value = options.sortBy?.[0]?.key
+  orderBy.value = options.sortBy?.[0]?.order
 }
 
 const generate = () => {
-  emit('generateFormat', selectedMaterials.value)
+  emit('generateFormat', selected.value)
   emit('update:isDialogVisible', false)
 }
+
+// ✅ cuando cambia el prop, vuelve a CLONAR (no asignar referencia directa)
+watch(
+  () => props.selectedMaterials,
+  newValue => {
+    selected.value = structuredClone(toRaw(newValue ?? []))
+  },
+  { deep: true },
+)
+
+// ✅ UX: si cambias filtros, regresa a página 1
+watch([searchQuery, supplier, division], () => {
+  page.value = 1
+})
 </script>
 
 <template>
@@ -82,30 +97,27 @@ const generate = () => {
     :width="$vuetify.display.smAndDown ? 'auto' : 1200"
     @update:model-value="dialogVisibleUpdate"
   >
-    <!-- 👉 Dialog close btn -->
     <DialogCloseBtn @click="$emit('update:isDialogVisible', false)" />
 
     <VCard>
       <VCardItem>
         <VCardTitle>
           <div class="d-flex justify-space-between align-center mt-4">
-            <div>
-              Seleccionar materiales
-            </div>
+            <div>Seleccionar materiales</div>
             <div>
               <VBtn
-                prepend-icon="tabler-file-excel"
+                :prepend-icon="props.action === 'generate' ? 'tabler-file-excel' : 'tabler-cube-plus'"
                 @click="generate"
               >
-                Generar formato
+                {{ props.action === 'generate' ? 'Generar formato' : 'Agregar materiales' }}
               </VBtn>
             </div>
           </div>
         </VCardTitle>
       </VCardItem>
+
       <VCardText>
         <VRow>
-          <!-- 👉 Select Supplier -->
           <VCol
             cols="12"
             sm="4"
@@ -113,30 +125,31 @@ const generate = () => {
             <AppAutocomplete
               v-model="supplier"
               placeholder="Seleccionar proveedor"
-              :items="supplierList.data"
+              :items="supplierList?.data ?? []"
               :item-title="item => item.name"
               :item-value="item => item._id"
               clearable
               clear-icon="tabler-x"
             />
           </VCol>
+
           <VCol
             cols="12"
             sm="4"
           >
             <AppSelect
               v-model="division"
-              :items="divisions.values"
+              :items="divisions?.values ?? []"
               placeholder="Seleccionar división"
               clearable
               clear-icon="tabler-x"
             />
           </VCol>
+
           <VCol
             cols="12"
             sm="4"
           >
-            <!-- 👉 Search  -->
             <AppTextField
               v-model="searchQuery"
               placeholder="Buscar material"
@@ -144,10 +157,12 @@ const generate = () => {
           </VCol>
         </VRow>
       </VCardText>
+
       <VDivider />
+
       <VCardText style="padding-inline: 0;">
         <VDataTableServer
-          v-model:model-value="selectedMaterials"
+          v-model:model-value="selected"
           v-model:items-per-page="itemsPerPage"
           v-model:page="page"
           :items-per-page-options="[
@@ -160,6 +175,7 @@ const generate = () => {
           :items-length="totalMaterials"
           :headers="headers"
           class="text-no-wrap"
+          item-value="json"
           show-select
           @update:options="updateOptions"
         >
@@ -177,6 +193,7 @@ const generate = () => {
               </div>
             </div>
           </template>
+
           <template #bottom>
             <TablePagination
               v-model:page="page"

@@ -32,23 +32,11 @@ const [
   { data: suppliers },
   { data: unitsOfMeasurement },
   { data: divisions },
-  { data: melamines },
-  { data: granites },
 ] = await Promise.all([
   useApi('api/suppliers?itemsPerPage=1000'),
   useApi('api/catalogs?name=Unidades de medida'),
   useApi('api/catalogs?name=División de materiales'),
-  useApi('api/catalogs?name=Melamina'),
-  useApi('api/catalogs?name=Granito'),
 ])
-
-melamines.value.values.push("Todas")
-granites.value.values.push("Todos")
-
-const trendTypes = [
-  { value: 'melamine', label: 'Melamina' },
-  { value: 'granite', label: 'Granito' },
-]
 
 const currentTab = ref('tab-1')
 const isFormValid = ref(false)
@@ -563,64 +551,6 @@ const deleteImages = async images => {
                   label="Redondeo automatizado (Se requiere la presentación del material)"
                 />
               </VCol>
-
-              <VCol
-                cols="12"
-                md="8"
-                style="margin-block-start: -25px;"
-              >
-                <VSwitch
-                  v-model="material.its_trending"
-                  label="Es un producto de tendencia"
-                />
-              </VCol>
-
-              <VCol
-                v-if="material.its_trending"
-                cols="12"
-                md="6"
-                style="margin-block-start: -10px;"
-              >
-                <AppSelect
-                  v-model="material.trend.type"
-                  label="Tipo de tendencia"
-                  placeholder="Tipo de tendencia"
-                  :item-title="item => item.label"
-                  :item-value="item => item.value"
-                  :items="trendTypes"
-                  @update:model-value="typeChange"
-                />
-              </VCol>
-
-              <!-- 👉 Malemines -->
-              <VCol
-                v-if="material.trend?.type === 'melamine'"
-                cols="12"
-                md="6"
-                style="margin-block-start: -10px;"
-              >
-                <AppSelect
-                  v-model="material.trend.value"
-                  label="Maleminas"
-                  placeholder="Maleminas"
-                  :items="melamines.values"
-                />
-              </VCol>
-              <!-- 👉 Granites -->
-              <VCol
-                v-if="material.trend?.type === 'granite'"
-                cols="12"
-                md="6"
-                style="margin-block-start: -10px;"
-              >
-                <AppSelect
-                  v-model="material.trend.value"
-                  label="Granitos"
-                  placeholder="Granitos"
-                  :items="granites.values"
-                />
-              </VCol>
-
               <VCol
                 cols="12"
                 class="d-flex gap-4"
