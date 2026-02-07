@@ -25,13 +25,12 @@ const { data: prototypeCatalog }= await useApi('api/prototypes?itemsPerPage=1000
 const {
   data: materialsData,
   execute: fetchMaterials,
-} = await useApi(createUrl(`api/explosion/${homeProductionData.value._id}`))
+} = await useApi(createUrl(`api/explosion/${homeProductionData.value._id}?status=0`))
 
 const prototypes = prototypeCatalog.value.data.filter(d => d.front === homeProductionData.value.front).map(d => d.name)
 const lots = ref(lotsData.value ? lotsData.value : [])
 const isLoadingDialogVisible = ref(false)
-const isNotificationVisible = ref(false)
-const notificationMessage = ref('')
+const notification = ref({ visible: false, message: '', color: 'info' })
 const isLotStatusDialogVisible = ref(false)
 const currentTab = ref('tab-1')
 const excelFile = ref()
@@ -61,8 +60,11 @@ const removeLot = async idx => {
           if (response.status === 200) {
             lots.value.splice(idx, 1)
           } else {
-            isNotificationVisible.value = true
-            notificationMessage.value = response._data
+            notification.value = {
+              visible: true,
+              message: response._data,
+              color: getStatusColor(response.status),
+            }
           }
         },
       })
@@ -73,6 +75,8 @@ const removeLot = async idx => {
     lots.value.splice(idx, 1)
   }
 }
+
+const sleep = ms => new Promise(r => setTimeout(r, ms))
 
 const saveLots = async () => {
   if (isValid()) {
@@ -86,15 +90,22 @@ const saveLots = async () => {
         method: 'POST',
         body: {
           lots: filtered,
-        }, onResponse({ response }) {
+        }, onResponse: async({ response }) => {
           if (response.status === 200 && response._data.hasOwnProperty('success')) {
             lots.value = response._data.success
-            isNotificationVisible.value = true
-            notificationMessage.value = "Lotes guardados de manera correcta."
-            fetchMaterials()
+            await sleep(3000)
+            await fetchMaterials()
+            notification.value = {
+              visible: true,
+              message: "Lotes guardados de manera correcta.",
+              color: getStatusColor(response.status),
+            }
           } else {
-            isNotificationVisible.value = true
-            notificationMessage.value = response._data
+            notification.value = {
+              visible: true,
+              message: response._data,
+              color: getStatusColor(response.status),
+            }
           }
         },
       })
@@ -102,8 +113,11 @@ const saveLots = async () => {
       isLoadingDialogVisible.value = false
     }
   } else {
-    isNotificationVisible.value = true
-    notificationMessage.value = "Error: Algunos campos obligatorios están vacíos. Por favor, asegúrese de completar los siguientes valores: Manzana, Lote, Sembrado y Prototipo."
+    notification.value = {
+      visible: true,
+      message: "Error: Algunos campos obligatorios están vacíos. Por favor, asegúrese de completar los siguientes valores: Manzana, Lote, Sembrado y Prototipo.",
+      color: 'error',
+    }
   }
 }
 
@@ -136,8 +150,11 @@ const saveProgress = async data => {
       onResponse({ response }) {
         if (response.status === 200)
           fetchLots()
-        isNotificationVisible.value = true
-        notificationMessage.value = response._data
+        notification.value = {
+          visible: true,
+          message: response._data,
+          color: getStatusColor(response.status),
+        }
       },
     })
   } finally {
@@ -250,9 +267,9 @@ watch(lotsData, newData => {
         <span>Materiales</span>
       </VTab>
     </VTabs>
-    <VCardText>
-      <VWindow v-model="currentTab">
-        <VWindowItem style="padding-block: 15px;">
+    <VWindow v-model="currentTab">
+      <VWindowItem style="padding-block: 15px;">
+        <VCardText>
           <VRow
             v-for="(_, i) in lots"
             :key="i"
@@ -353,12 +370,14 @@ watch(lotsData, newData => {
               </div>
             </VCol>
           </VRow>
-        </VWindowItem>
-        <VWindowItem>
+        </VCardText>
+      </VWindowItem>
+      <VWindowItem>
+        <VCardText style="padding-inline: 0;">
           <MaterialTable :materials="materialsData" />
-        </VWindowItem>
-      </VWindow>
-    </VCardText>
+        </VCardText>
+      </VWindowItem>
+    </VWindow>
     <VDivider v-if="homeProductionData.progress < 100" />
     <VCardItem
       v-if="homeProductionData.progress < 100"
@@ -442,8 +461,9 @@ watch(lotsData, newData => {
   </VCard>
   <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
   <Notification
-    v-model:is-notification-visible="isNotificationVisible"
-    :message="notificationMessage"
+    v-model:is-notification-visible="notification.visible"
+    :message="notification.message"
+    :color="notification.color"
   />
   <LotStatusDialog
     v-model:is-dialog-visible="isLotStatusDialogVisible"

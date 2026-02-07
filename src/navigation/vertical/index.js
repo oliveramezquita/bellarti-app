@@ -75,6 +75,12 @@ export default [
         action: 'read',
         subject: 'VSODs',
       },
+      {
+        title: 'Asign. de Tendencias',
+        to: 'apps-assignment',
+        action: 'read',
+        subject: 'VSAssignment',
+      },
     ],
   },
   {

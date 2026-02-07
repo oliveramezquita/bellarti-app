@@ -65,7 +65,7 @@ watch(() => props.materials, newValue => {}, { deep: true })
     <VDataTable
       :headers="headers"
       :items="props.materials"
-      :items-per-page="5"
+      :items-per-page="10"
       :search="search"
       expand-on-click
     >

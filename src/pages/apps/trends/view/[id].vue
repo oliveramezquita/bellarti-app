@@ -214,7 +214,7 @@ const checkItemsList = () => {
 }
 
 const getMelamine = (itemType, index) => {
-  trends.value[itemType][index].bicolor = trends.value[itemType][index].name.includes('Alto Brillo')
+  trends.value[itemType][index].bicolor = trends.value[itemType][index].name.includes('/')
 }
 
 watch(
