@@ -73,7 +73,7 @@ const checkAssignedTo = () => {
 
 checkAssignedTo()
 
-const calculatePercentage = (amount, percentage, decimals = 3) => {
+const calculatePercentage = (amount, percentage, decimals = 2) => {
   const a = Number(amount)
   const p = Number(percentage)
   if (!Number.isFinite(a) || !Number.isFinite(p)) return 0
@@ -120,7 +120,7 @@ const cancelAssignMaterial = () => {
 <template>
   <VCol
     cols="12"
-    md="4"
+    md="6"
   >
     <AppTextField
       v-model="granite.name"
@@ -131,7 +131,7 @@ const cancelAssignMaterial = () => {
 
   <VCol
     cols="12"
-    md="4"
+    md="3"
   >
     <AppTextField
       v-model="granite.percentage"
@@ -142,7 +142,7 @@ const cancelAssignMaterial = () => {
 
   <VCol
     cols="12"
-    md="4"
+    md="3"
   >
     <!-- ✅ mejor que v-model para algo calculado -->
     <AppTextField

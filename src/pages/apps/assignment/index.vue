@@ -1,6 +1,8 @@
 <!-- eslint-disable camelcase -->
 <script setup>
 import GraniteForm from '@/views/apps/assignment/GraniteForm.vue'
+import MelamineAssignment from '@/views/apps/assignment/MelamineAssignment.vue'
+import MelamineBreakdown from '@/views/apps/assignment/MelamineBreakdown.vue'
 
 definePage({
   meta: {
@@ -154,7 +156,6 @@ const assignMaterial = async assignment => {
             color: getStatusColor(response.status),
           }
         } else {
-          trend.value = resetTrend
           notification.value = {
             visible: true,
             message: response._data,
@@ -246,11 +247,27 @@ const assignMaterial = async assignment => {
               collapse-icon="tabler-minus"
               expand-icon="tabler-plus"
             >
-              {{ item.material.concept }}
+              {{ item.material.concept }}: {{ item.gran_total }}
             </VExpansionPanelTitle>
 
             <VExpansionPanelText>
-              Sweet roll ice cream chocolate bar. Ice cream croissant sugar plum I love cupcake gingerbread liquorice cake. Bonbon tart caramels marshmallow chocolate cake icing icing danish pie.
+              <VRow
+                v-for="(melamine, i) in trend.melamines"
+                :key="melamine.id"
+                :class="i % 2 === 0 ? 'even' : 'odd'"
+              >
+                <MelamineBreakdown
+                  :explosion-item="item"
+                  :gran-total="item.gran_total"
+                  :melamine-data="melamine"
+                />
+              </VRow>
+              <MelamineAssignment
+                :gran-total="item.gran_total"
+                :melamines-data="trend.melamines"
+                :explosion-item="item"
+                @assign-material="assignMaterial"
+              />
             </VExpansionPanelText>
           </VExpansionPanel>
         </VExpansionPanels>
