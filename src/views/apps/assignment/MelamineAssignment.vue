@@ -94,12 +94,45 @@ watch(
   { immediate: true },
 )
 
+const updateCocinaFactory = (data, newTotal) => {
+  return data.map(areaObj => {
+    if (areaObj.area !== "COCINA") {
+      return areaObj
+    }
+
+    const oldTotal = areaObj.total
+
+    const updatedPrototypes = areaObj.prototypes.map(proto => {
+      const oldFactory = proto.quantities.factory
+
+      const newFactory = Number(
+        ((oldFactory / oldTotal) * newTotal).toFixed(2),
+      )
+
+      return {
+        ...proto,
+        quantities: {
+          ...proto.quantities,
+          factory: newFactory,
+        },
+      }
+    })
+
+    return {
+      ...areaObj,
+      prototypes: updatedPrototypes,
+      total: newTotal,
+    }
+  })
+}
+
 const assignMaterial = ml => {
+  
   emit('assignMaterial', {
     supplier_id: ml.supplier_id,
     home_production_id: explosion.value.home_production_id,
     material_id: ml.material_id,
-    explosion: explosion.value.explosion,
+    explosion: updateCocinaFactory(explosion.value.explosion, ml.gran_total),
     gran_total: ml.gran_total,
     assigned_to: explosion.value?.assigned_to ?? {},
     trend: {

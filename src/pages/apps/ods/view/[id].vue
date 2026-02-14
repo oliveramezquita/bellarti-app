@@ -169,18 +169,17 @@ const uploadLots = async () => {
     const formData = new FormData()
 
     formData.append('file', excelFile.value)
-    formData.append('client_id', homeProductionData.value.client_id)
-    formData.append('front', homeProductionData.value.front)
 
     await $api(`api/lots/${homeProductionData.value._id}`, {
       method: 'PATCH',
       body: formData,
-      onResponse({ response }) {
+      onResponse: async({ response }) => {
         if (response.status === 200 && response._data.hasOwnProperty('success')) {
           lots.value = response._data.success
           successful.value = response._data.success
           warnings.value = response._data.errors
-          fetchMaterials()
+          await sleep(3000)
+          await fetchMaterials()
         } else {
           errors.value = response._data
         }
@@ -442,7 +441,7 @@ watch(lotsData, newData => {
               v-for="(warning, idx) in warnings"
               :key="idx"
             >
-              <li>Fila: {{ warning.row }} - {{ warning.errors[0] }}</li>
+              <li>Fila: {{ warning.row }} - {{ warning.error }}</li>
             </ul>
           </VAlert>
           <VAlert

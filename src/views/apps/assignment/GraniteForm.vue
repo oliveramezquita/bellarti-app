@@ -33,7 +33,6 @@ const assignment = ref({
   supplier_id: null,
   home_production_id: explosion.value.home_production_id,
   material_id: null,
-  explosion: explosion.value.explosion,
 })
 
 const getMaterials = async (supplierId, callback = null) => {
@@ -93,11 +92,44 @@ const confirmAssignMaterial = materialId => {
   isDialogVisible.value = true
 }
 
+const updateCocinaFactory = (data, newTotal) => {
+  return data.map(areaObj => {
+    if (areaObj.area !== "COCINA") {
+      return areaObj
+    }
+
+    const oldTotal = areaObj.total
+
+    const updatedPrototypes = areaObj.prototypes.map(proto => {
+      const oldFactory = proto.quantities.factory
+
+      const newFactory = Number(
+        ((oldFactory / oldTotal) * newTotal).toFixed(2),
+      )
+
+      return {
+        ...proto,
+        quantities: {
+          ...proto.quantities,
+          factory: newFactory,
+        },
+      }
+    })
+
+    return {
+      ...areaObj,
+      prototypes: updatedPrototypes,
+      total: newTotal,
+    }
+  })
+}
+
 const assignMaterial = () => {
   isDialogVisible.value = false
   
   emit('assignMaterial', {
     ...assignment.value,
+    explosion: updateCocinaFactory(explosion.value.explosion, granTotalCalculated.value),
     gran_total: granTotalCalculated.value,
     assigned_to: explosion.value?.assigned_to ?? {},
     trend: {

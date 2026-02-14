@@ -229,6 +229,26 @@ const assignMaterial = async assignment => {
         </VRow>
       </VCardText>
     </VCard>
+    <div
+      v-show="od && boards.length === 0 && stones.length === 0"
+      class="h-100"
+    >
+      <slot name="noData">
+        <VCardText class="h-100">
+          <div class="app-bar-search-suggestions d-flex flex-column align-center justify-center text-high-emphasis pa-12">
+            <VIcon
+              size="64"
+              icon="tabler-file-alert"
+            />
+            <div class="d-flex align-center flex-wrap justify-center gap-2 text-h5 mt-3">
+              <span>No hay resultados para la OD buscada</span>
+            </div>
+
+            <slot name="noDataSuggestion" />
+          </div>
+        </VCardText>
+      </slot>
+    </div>
     <VCard v-if="boards.length > 0 || stones.length > 0">
       <VCardItem v-if="boards.length > 0">
         <VCardTitle>Tableros</VCardTitle> 
