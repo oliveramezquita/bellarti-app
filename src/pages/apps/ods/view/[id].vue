@@ -39,6 +39,9 @@ const warnings = ref([])
 const errors = ref()
 const lotId = ref()
 const progressSelected = ref([])
+const isDeleteLotDialogVisible = ref(false)
+const selectedLot = ref()
+const selectedLotIdx = ref()
 
 const addNewLot = () => {
   lots.value.push({
@@ -50,15 +53,24 @@ const addNewLot = () => {
   })
 }
 
+const viewDeleteLotDialog = (lot, idx) => {
+  selectedLot.value = lot
+  selectedLotIdx.value = idx
+  isDeleteLotDialogVisible.value = true
+}
+
 const removeLot = async idx => {
+  isDeleteLotDialogVisible.value = false
   if(lots.value[idx].hasOwnProperty('_id')) {
     isLoadingDialogVisible.value = true
     try {
       await $api(`api/lot/${lots.value[idx]._id}`, {
         method: 'DELETE',
-        onResponse({ response }) {
+        onResponse: async({ response }) => {
           if (response.status === 200) {
             lots.value.splice(idx, 1)
+            await sleep(2000)
+            await fetchMaterials()
           } else {
             notification.value = {
               visible: true,
@@ -93,7 +105,7 @@ const saveLots = async () => {
         }, onResponse: async({ response }) => {
           if (response.status === 200 && response._data.hasOwnProperty('success')) {
             lots.value = response._data.success
-            await sleep(3000)
+            await sleep(2000)
             await fetchMaterials()
             notification.value = {
               visible: true,
@@ -178,7 +190,7 @@ const uploadLots = async () => {
           lots.value = response._data.success
           successful.value = response._data.success
           warnings.value = response._data.errors
-          await sleep(3000)
+          await sleep(2000)
           await fetchMaterials()
         } else {
           errors.value = response._data
@@ -341,7 +353,7 @@ watch(lotsData, newData => {
               <IconBtn v-if="lots[i].percentage === '0.00'">
                 <VIcon
                   icon="tabler-trash"
-                  @click="removeLot(i)"
+                  @click="viewDeleteLotDialog(lots[i], i)"
                 />
               </IconBtn>
             </VCol>
@@ -470,6 +482,26 @@ watch(lotsData, newData => {
     v-model:progress-data="progressSelected"
     @save-progress="saveProgress"
   />
+  <VDialog
+    v-model="isDeleteLotDialogVisible"
+    width="500"
+  >
+    <!-- Dialog close btn -->
+    <DialogCloseBtn @click="isDeleteLotDialogVisible = !isDeleteLotDialogVisible" />
+
+    <!-- Dialog Content -->
+    <VCard title="Eliminar Lote">
+      <VCardText>
+        ¿Estás seguro de eliminar el Lote: Manzana(<b>{{ selectedLot.block }}</b>), Lote(<b>{{ selectedLot.lot }}</b>), Sembrado(<b>{{ selectedLot.laid }}</b>) y Prototipo(<b>{{ selectedLot.prototype }}</b>)?
+      </VCardText>
+
+      <VCardText class="d-flex justify-end">
+        <VBtn @click="removeLot(selectedLotIdx)">
+          Eliminar
+        </VBtn>
+      </VCardText>
+    </VCard>
+  </VDialog>
 </template>
 
 <style lang="scss">

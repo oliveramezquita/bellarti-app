@@ -125,22 +125,6 @@ const prototypeChange = async () => {
   }
 }
 
-const resetVolumetry = () => {
-  isViewVolumetry.value = false
-  volumetry.value = []
-}
-
-// ✅ Si hay un prototipo guardado, ejecuta la carga automática
-watch(
-  prototype,
-  async newVal => {
-    if (newVal) {
-      await prototypeChange()
-    }
-  },
-  { immediate: true }, // ✅ ejecuta una vez al montar si prototype ya tiene valor
-)
-
 const addVolumetry  = async volumetryData => {
   if (volumetryData.every(item => Number(item.total) === 0)) {
     notificationColor.value = 'error'
@@ -223,6 +207,38 @@ const deleteVolumetry = async item => {
     }
   }
 }
+
+const resetVolumetry = () => {
+  isViewVolumetry.value = false
+  volumetry.value = []
+}
+
+const resetDataVolumetry = () => {
+  client.value = null
+  front.value = null
+  prototype.value = null
+  fronts.value = []
+  prototypes.value = []
+  
+  saveState('volumetry_client', null)
+  saveState('volumetry_front', null)
+  saveState('volumetry_prototype', null)
+  saveState('volumetry_fronts', [])
+  saveState('volumetry_prototypes', [])
+
+  resetVolumetry()
+}
+
+// ✅ Si hay un prototipo guardado, ejecuta la carga automática
+watch(
+  prototype,
+  async newVal => {
+    if (newVal) {
+      await prototypeChange()
+    }
+  },
+  { immediate: true }, // ✅ ejecuta una vez al montar si prototype ya tiene valor
+)
 </script>
 
 <template>
@@ -266,7 +282,7 @@ const deleteVolumetry = async item => {
           <!-- 👉 Prototypes -->
           <VCol
             cols="12"
-            md="4"
+            md="3"
           >
             <AppSelect
               v-model="prototype"
@@ -275,6 +291,17 @@ const deleteVolumetry = async item => {
               :items="prototypes"
               class="font-weight-bold"
               @update:model-value="prototypeChange"
+            />
+          </VCol>
+          <VCol
+            cols="12"
+            md="1"
+            class="d-flex align-end"
+          >
+            <VBtn
+              icon="tabler-refresh"
+              rounded
+              @click="resetDataVolumetry"
             />
           </VCol>
         </VRow>
