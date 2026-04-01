@@ -13,14 +13,36 @@ import UploadInvoiceDrawer from '@/views/apps/purchase-orders/UploadInvoiceDrawe
 
 const userData = useCookie('userData')
 const route = useRoute('apps-purchase-orders-view-id')
-const { data: purchaseOrderData, execute: fetchPurchaseOrder } = await useApi(`api/purchase_order/${ route.params.id }`)
-const { data: projects } = await useApi('api/purchase_orders/get_projects')
-const { data: purchaseOrdersLIst } =  await useApi('api/purchase_orders?status=processed&itemsPerPage=100')
-const { data: companiesList } = await useApi('api/companies?itemsPerPage=100')
-const { data: divisionsList } = await useApi('api/catalogs?name=División de materiales')
-const { data: paymentMethodsList } = await useApi('api/catalogs?name=Métodos de Pago')
-const { data: paymentFormsList  } = await useApi('api/catalogs?name=Formas de Pago')
-const { data: useOfCFDIList } = await useApi('api/catalogs?name=Uso de CFDI')
+
+const [
+  purchaseOrderRes,
+  projectsRes,
+  purchaseOrdersListRes,
+  companiesListRes,
+  divisionsListRes,
+  paymentMethodsListRes,
+  paymentFormsListRes,
+  useOfCFDIListRes,
+] = await Promise.all([
+  useApi(`api/purchase_order/${route.params.id}`),
+  useApi('api/purchase_orders/get_projects'),
+  useApi('api/purchase_orders?status=processed&itemsPerPage=100'),
+  useApi('api/companies?itemsPerPage=100'),
+  useApi('api/catalogs?name=División de materiales'),
+  useApi('api/catalogs?name=Métodos de Pago'),
+  useApi('api/catalogs?name=Formas de Pago'),
+  useApi('api/catalogs?name=Uso de CFDI'),
+])
+
+const { data: purchaseOrderData, execute: fetchPurchaseOrder } = purchaseOrderRes
+const { data: projects } = projectsRes
+const { data: purchaseOrdersList } = purchaseOrdersListRes
+const { data: companiesList } = companiesListRes
+const { data: divisionsList } = divisionsListRes
+const { data: paymentMethodsList } = paymentMethodsListRes
+const { data: paymentFormsList } = paymentFormsListRes
+const { data: useOfCFDIList } = useOfCFDIListRes
+
 const isAddNewMaterialDrawerVisible = ref(false)
 const isEditMaterialDrawerVisible = ref(false)
 const isDeleteMaterialDialogVisible = ref(false)
@@ -113,7 +135,7 @@ const extractData = () => {
 }
 
 const getProjectInformation = async () => {
-  const response = await $api(`api/purchase_orders/get_suppliers/${purchaseOrderData.value.home_production_id}?type=${purchaseOrderData.value.type}`, { method: 'GET' })
+  const response = await $api(`api/purchase_orders/get_suppliers?project_id=${purchaseOrderData.value.home_production_id}&type=${purchaseOrderData.value.type}`, { method: 'GET' })
 
   suppliers.value = response.suppliers_list
   items.value = purchaseOrderData.value.items
@@ -383,7 +405,7 @@ watch(selectedRows, val => {
               :item-value="item => item.home_production_id"
               :items="projects"
               class="font-weight-bold"
-              :disabled="purchaseOrderData.status > 0"
+              :disabled="purchaseOrderData.status > 0 || purchaseOrderData.type === 'SP'"
               @update:model-value="getProjectInformation"
             />
           </VCol>
@@ -424,7 +446,7 @@ watch(selectedRows, val => {
               placeholder="Asignar a orden de compra"
               :item-title="item => item.number"
               :item-value="item => item.number"
-              :items="purchaseOrdersLIst.data"
+              :items="purchaseOrdersList.data"
               @update:model-value="changePurchaseOrderNUmber"
             />
           </VCol>
@@ -671,7 +693,6 @@ watch(selectedRows, val => {
         :items="items"
         show-select
         :items-length="totalItems"
-        class="text-no-wrap"
       >
         <template #item.concept="{ item }">
           <div

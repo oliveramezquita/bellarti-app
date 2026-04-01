@@ -33,7 +33,7 @@ const emit = defineEmits([
 
 const isFormValid = ref(false)
 const refForm = ref()
-const { data: suppliers } = await useApi('api/suppliers?itemsPerPage=1000')
+const { data: suppliers } = await useApi('api/suppliers?itemsPerPage=1000&excludeTrend=true')
 const { data: colors } = await useApi('api/catalogs?name=Colores')
 const { data: divisionsList } = await useApi('api/catalogs?name=División de materiales')
 const supplier = ref()

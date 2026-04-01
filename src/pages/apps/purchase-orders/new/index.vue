@@ -54,7 +54,7 @@ const onTypeChange = async value => {
   try {
     if (value === 'SP') {
       const [suppliers, last_consecutive, purchaseOrdersRes] = await Promise.all([
-        useApi('api/suppliers?itemsPerPage=1000'),
+        useApi('api/suppliers?itemsPerPage=1000&excludeTrend=true'),
         useApi('api/purchase_orders/get_last_consecutive'),
         useApi(`api/purchase_orders?type=${value}&status=processed&itemsPerPage=10000`),
       ])
@@ -160,6 +160,7 @@ const addMaterial = m => {
 const updateMaterial = m => {
   const i = table.value.items.findIndex(it => it.id === m.id)
   if (i >= 0) table.value.items[i] = { ...table.value.items[i], ...m }
+  recalcCosts()
 }
 
 const deleteMaterial = id => {
@@ -185,7 +186,7 @@ const addPurchaseOrder = async status => {
       linked_id: form.value.linkedOrder,
       number: form.value.purchaseOrderNumber,
       company_id: form.value.company,
-      home_production_id: form.value.project.home_production_id,
+      home_production_id: form.value.project?.home_production_id,
       division: form.value.selectedDivisions,
       request_by: userData.value._id,
       created: form.value.created,
@@ -211,7 +212,7 @@ const addPurchaseOrder = async status => {
           nextTick(() => router.replace(`/apps/purchase-orders/view/${response._data.id}?new=true`))
         } else {
           ui.notificationColor = 'error'
-          ui.notificationMessage = res._data || 'Error al crear orden'
+          ui.notificationMessage = response._data || 'Error al crear orden'
           ui.isNotificationVisible = true
         }
       },
@@ -417,6 +418,7 @@ const headers = [
               :items="lists.suppliers"
               :item-title="i=>i.name"
               :item-value="i=>i._id"
+              :disabled="table.items.length > 0"
               @update:model-value="getMaterials"
             />
           </VCol>
