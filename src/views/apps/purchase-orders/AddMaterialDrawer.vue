@@ -85,7 +85,7 @@ const onSubmit = () => {
       emit('addMaterial', {
         color: color.value ? color.value : null,
         sku: material.value.hasOwnProperty('sku') ? material.value.sku : null,
-        inventory_price: material.value.inventory_price,
+        inventory_price: price.value,
         market_price: material.value.market_price,
         material_id: material.value._id,
         measurement: material.value.measurement,

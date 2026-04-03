@@ -153,8 +153,40 @@ watch(() => table.value.selectedRows, recalcCosts)
 
 // 🔹 Agregar/editar/eliminar material
 const addMaterial = m => {
-  table.value.items.push({ ...m, id: table.value.items.length + 1 })
+  const existingMaterial = table.value.items.find(
+    item =>
+      item.material_id === m.material_id &&
+      item.supplier_id === m.supplier_id &&
+      item.sku === m.sku,
+  )
+
+  const newRequired = Number(m.required || 0)
+
+  if (existingMaterial) {
+    const currentQty = Number(existingMaterial.total_quantity || 0)
+    const updatedQty = currentQty + newRequired
+
+    existingMaterial.total_quantity = String(updatedQty)
+
+    // recalcular total
+    const inventoryPrice = Number(existingMaterial.inventory_price || 0)
+
+    existingMaterial.total = inventoryPrice * updatedQty
+
+  } else {
+    const inventoryPrice = Number(m.inventory_price || 0)
+    const totalQty = newRequired
+
+    table.value.items.push({
+      ...m,
+      id: table.value.items.length + 1,
+      total_quantity: String(totalQty),
+      total: inventoryPrice * totalQty,
+    })
+  }
+
   table.value.totalItems = table.value.items.length
+  recalcCosts()
 }
 
 const updateMaterial = m => {

@@ -1,3 +1,4 @@
+<!-- eslint-disable camelcase -->
 <script setup>
 definePage({
   meta: {
@@ -9,7 +10,8 @@ definePage({
 import AddMaterialDrawer from '@/views/apps/purchase-orders/AddMaterialDrawer.vue'
 import EditMaterialDrawer from '@/views/apps/purchase-orders/EditMaterialDrawer.vue'
 import InputMaterialsDialog from '@/views/apps/purchase-orders/InputMaterialsDialog.vue'
-import UploadInvoiceDrawer from '@/views/apps/purchase-orders/UploadInvoiceDrawer.vue'
+
+//import UploadInvoiceDrawer from '@/views/apps/purchase-orders/UploadInvoiceDrawer.vue'
 
 const userData = useCookie('userData')
 const route = useRoute('apps-purchase-orders-view-id')
@@ -47,10 +49,16 @@ const isAddNewMaterialDrawerVisible = ref(false)
 const isEditMaterialDrawerVisible = ref(false)
 const isDeleteMaterialDialogVisible = ref(false)
 const isInputMaterialDialogVisible = ref(false)
-const isUploadInvoiceDrawerVisible = ref(false)
+
+//const isUploadInvoiceDrawerVisible = ref(false)
 const isLoadingDialogVisible = ref(false)
 const isNotificationVisible = ref(false)
-const notificationMessage = ref('')
+
+const notification = ref({
+  message: '',
+  color: 'info',
+})
+
 const project = ref(purchaseOrderData.value.home_production_id)
 const purchaseOrderLinked = ref(purchaseOrderData.value.linked_id)
 const purchaseOrderNumber = ref(purchaseOrderData.value.number)
@@ -71,11 +79,11 @@ const paymentForm = ref(purchaseOrderData.value.payment_form)
 const cfdi = ref(purchaseOrderData.value.cfdi)
 const invoiceEmail = ref(purchaseOrderData.value.invoice_email)
 
-const invoicedStatusList = [
-  { name: 'FACTURA PENDIENTE', color: 'secondary', icon: 'tabler-receipt-2', value: 0 },
-  { name: 'FACTURA ENTREGADA', color: 'warning', icon: 'tabler-receipt-2', value: 1 },
-  { name: 'FACTURA PAGADA', color: 'success', icon: 'tabler-receipt-2', value: 2 },
-]
+// const invoicedStatusList = [
+//   { name: 'FACTURA PENDIENTE', color: 'secondary', icon: 'tabler-receipt-2', value: 0 },
+//   { name: 'FACTURA ENTREGADA', color: 'warning', icon: 'tabler-receipt-2', value: 1 },
+//   { name: 'FACTURA PAGADA', color: 'success', icon: 'tabler-receipt-2', value: 2 },
+// ]
 
 const costs = ref({
   subtotal: purchaseOrderData.value.subtotal,
@@ -182,10 +190,12 @@ const updatePurchaseOrder = async status => {
           'type': purchaseOrderData.value.project === 'Sin proyecto' ? 'SP' : 'OD',
         },
         onResponse({ response }) {
-          if (response.status === 200)
+          if (response.status === 200) {
             fetchPurchaseOrder()
+            notification.value.color = 'success'
+          }
           isNotificationVisible.value = true
-          notificationMessage.value = response._data
+          notification.value.message = response._data
         },
       })
     } finally {
@@ -212,10 +222,12 @@ const approve = async () => {
         'invoice_email': invoiceEmail.value,
       },
       onResponse({ response }) {
-        if (response.status === 200)
+        if (response.status === 200) {
           fetchPurchaseOrder()
+          notification.value.color = 'success'
+        }
         isNotificationVisible.value = true
-        notificationMessage.value = response._data
+        notification.value.message = response._data
       },
     })
   } finally {
@@ -234,10 +246,12 @@ const decline = async () => {
         'status': 3,
       },
       onResponse({ response }) {
-        if (response.status === 200)
+        if (response.status === 200) {
           fetchPurchaseOrder()
+          notification.value.color = 'success'
+        }
         isNotificationVisible.value = true
-        notificationMessage.value = response._data
+        notification.value.message = response._data
       },
     })
   } finally {
@@ -245,35 +259,71 @@ const decline = async () => {
   }
 }
 
+const recalcCosts = useDebounceFn(() => {
+  const selected = table.value.selectedRows?.map(id => table.value.items.find(i => i.id === id)) || []
+  const subtotal = selected.reduce((s, i) => s + (i?.total || 0), 0)
+
+  costs.value.subtotal = parseFloat(subtotal.toFixed(2))
+  costs.value.iva = parseFloat((subtotal * 0.16).toFixed(2))
+  costs.value.total = parseFloat((subtotal * 1.16).toFixed(2))
+}, 200)
+
+watch(() => selectedRows, recalcCosts)
+
 const viewAddMaterial = () => {
   supplierId.value = supplier.value
   materialsList.value = items.value.map(item => item.material_id)
   isAddNewMaterialDrawerVisible.value = true
 }
 
-const addMaterial = material => {
-  material.id = items.value.length
-  items.value.push(material)
-  totalItems.value = items.value.length
+const addMaterial = m => {
+  const existingMaterial = items.value .find(
+    item =>
+      item.material_id === m.material_id &&
+      item.supplier_id === m.supplier_id &&
+      item.sku === m.sku,
+  )
 
-  if (!selectedRows.value) {
-    const totalSum = costs.value.subtotal + material.total
-    
-    updateCosts(totalSum)
+  const newRequired = Number(m.required || 0)
+
+  if (existingMaterial) {
+    const currentQty = Number(existingMaterial.total_quantity || 0)
+    const updatedQty = currentQty + newRequired
+
+    existingMaterial.total_quantity = String(updatedQty)
+
+    // recalcular total
+    const inventoryPrice = Number(existingMaterial.inventory_price || 0)
+
+    existingMaterial.total = inventoryPrice * updatedQty
+
+  } else {
+    const inventoryPrice = Number(m.inventory_price || 0)
+    const totalQty = newRequired
+
+    items.value .push({
+      ...m,
+      id: items.value .length + 1,
+      total_quantity: String(totalQty),
+      total: inventoryPrice * totalQty,
+    })
   }
+
+  totalItems.value = items.value.length
+  recalcCosts()
 }
 
 const updateMaterial = material => {
-  const item = items.value.find(obj => obj.id === material.id)
+  // const item = items.value.find(obj => obj.id === material.id)
 
-  if (item) {
-    Object.assign(item, material)
-    if (!selectedRows.value) {
-      const totalSum = Object.values(items.value).reduce((sum, item) => sum + (item.total || 0), 0)
+  // if (item) {
+  //   Object.assign(item, material)
+  //   if (!selectedRows.value) {
+  //     const totalSum = Object.values(items.value).reduce((sum, item) => sum + (item.total || 0), 0)
 
-      updateCosts(totalSum)
-    }
-  }
+  //     updateCosts(totalSum)
+  //   }
+  // }
 }
 
 const viewEditMaterialDrawer = material => {
@@ -290,12 +340,6 @@ const deleteMaterial = id => {
   items.value = items.value.filter(item => item.id !== id)
 
   isDeleteMaterialDialogVisible.value = false
-}
-
-const updateCosts = subtotal => {
-  costs.value.subtotal = subtotal.toFixed(2)
-  costs.value.iva = parseFloat((subtotal * 0.16).toFixed(2))
-  costs.value.total = parseFloat((subtotal * 1.16).toFixed(2))
 }
 
 const downloadExcel = () => {
@@ -324,10 +368,12 @@ const inputEntryRegister = async inputData => {
         method: 'PATCH',
         body: inputData,
         onResponse({ response }) {
-          if (response.status === 200)
+          if (response.status === 200) {
             fetchPurchaseOrder()
+            notification.value.color = 'success'
+          }
           isNotificationVisible.value = true
-          notificationMessage.value = response._data
+          notification.value.message = response._data
         },
       })
     } finally {
@@ -336,35 +382,36 @@ const inputEntryRegister = async inputData => {
   }
 }
 
-const getStatusValue = (list, value, key) => {
-  const status = list.find(item => item.value === value)
+// const getStatusValue = (list, value, key) => {
+//   const status = list.find(item => item.value === value)
   
-  return status ? status[key] : null
-}
+//   return status ? status[key] : null
+// }
 
-const uploadInvoiceFiles = async formsData => {
-  isLoadingDialogVisible.value = true
+// const uploadInvoiceFiles = async formsData => {
+//   isLoadingDialogVisible.value = true
 
-  try {
-    await $api(`api/purchase_orders/invoice/${route.params.id}`, {
-      method: 'PATCH',
-      body: formsData,
-      onResponse({ response }) {
-        if (response.status === 200)
-          fetchPurchaseOrder()
-        notificationMessage.value = response._data
-        isNotificationVisible.value = true
-      },
-    })
-  } finally {
-    isLoadingDialogVisible.value = false
-  }
-}
+//   try {
+//     await $api(`api/purchase_orders/invoice/${route.params.id}`, {
+//       method: 'PATCH',
+//       body: formsData,
+//       onResponse({ response }) {
+//         if (response.status === 200)
+//           fetchPurchaseOrder()
+//         notificationMessage.value = response._data
+//         isNotificationVisible.value = true
+//       },
+//     })
+//   } finally {
+//     isLoadingDialogVisible.value = false
+//   }
+// }
 
 if (route.query.new) {
   const messageStatus = purchaseOrderData.value.status === 0 ? 'guardada' : 'generada'
 
-  notificationMessage.value = `La orden de compra ha sido ${messageStatus} con éxito`
+  notification.value.color = 'success'
+  notification.value.message = `La orden de compra ha sido ${messageStatus} con éxito`
   isNotificationVisible.value = true
 }
 
@@ -375,12 +422,12 @@ if (route.query.input) {
 extractData()
 getProjectInformation()
 
-watch(selectedRows, val => {
-  const itemsSelected = getItemsByIds(Object.values(val))
-  const totalSum = Object.values(itemsSelected).reduce((sum, item) => sum + (item.total || 0), 0)
+// watch(selectedRows, val => {
+//   const itemsSelected = getItemsByIds(Object.values(val))
+//   const totalSum = Object.values(itemsSelected).reduce((sum, item) => sum + (item.total || 0), 0)
 
-  updateCosts(totalSum)
-})
+//   updateCosts(totalSum)
+// })
 </script>
 
 <template>
@@ -911,14 +958,16 @@ watch(selectedRows, val => {
               PDF
             </VBtn>
             <!-- 👉 INVOICE -->
-            <VBtn
+            <!--
+              <VBtn
               v-if="purchaseOrderData.delivered_status === 2"
               :color="getStatusValue(invoicedStatusList, purchaseOrderData.invoiced_status, 'color')"
               :prepend-icon="getStatusValue(invoicedStatusList, purchaseOrderData.invoiced_status, 'icon')"
               @click="isUploadInvoiceDrawerVisible = true"
-            >
+              >
               {{ getStatusValue(invoicedStatusList, purchaseOrderData.invoiced_status, 'name') }}
-            </VBtn>
+              </VBtn> 
+            -->
             <!-- 👉 Return -->
             <VBtn
               prepend-icon="tabler-arrow-left"
@@ -948,7 +997,8 @@ watch(selectedRows, val => {
     <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
     <Notification
       v-model:is-notification-visible="isNotificationVisible"
-      :message="notificationMessage"
+      :message="notification.message"
+      :color="notification.color"
     />
     <AddMaterialDrawer
       v-model:is-drawer-open="isAddNewMaterialDrawerVisible"
@@ -987,14 +1037,16 @@ watch(selectedRows, val => {
       v-model:purchase-order-data="purchaseOrderData"
       @input-entry-register="inputEntryRegister"
     />
-    <UploadInvoiceDrawer
+    <!--
+      <UploadInvoiceDrawer
       v-model:is-drawer-open="isUploadInvoiceDrawerVisible"
       v-model:purchase-order-id="route.params.id"
       v-model:invoice-pdf-file="purchaseOrderData.invoice_pdf_file"
       v-model:invoice-xml-file="purchaseOrderData.invoice_xml_file"
       v-model:invoice-paid="purchaseOrderData.paid"
       @upload-files="uploadInvoiceFiles"
-    />
+      /> 
+    -->
   </section>
 </template>
 
