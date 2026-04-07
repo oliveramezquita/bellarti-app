@@ -66,6 +66,7 @@ const onSubmit = () => {
         modified: (material.value.total !== total.value) ? 1 : 0,
         reference: reference.value ? reference.value : null,
         required: amount.value,
+        inventory_price: price.value,
         total: total.value,
         total_quantity: amount.value,
       })

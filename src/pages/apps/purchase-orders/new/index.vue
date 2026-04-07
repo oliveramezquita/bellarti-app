@@ -161,20 +161,17 @@ const addMaterial = m => {
   )
 
   const newRequired = Number(m.required || 0)
+  const inventoryPrice = Number(m.inventory_price || 0)
 
   if (existingMaterial) {
     const currentQty = Number(existingMaterial.total_quantity || 0)
     const updatedQty = currentQty + newRequired
 
+    existingMaterial.inventory_price = inventoryPrice
     existingMaterial.total_quantity = String(updatedQty)
-
-    // recalcular total
-    const inventoryPrice = Number(existingMaterial.inventory_price || 0)
-
     existingMaterial.total = inventoryPrice * updatedQty
 
   } else {
-    const inventoryPrice = Number(m.inventory_price || 0)
     const totalQty = newRequired
 
     table.value.items.push({

@@ -60,6 +60,7 @@ const notification = ref({
 })
 
 const project = ref(purchaseOrderData.value.home_production_id)
+const typeProject = ref(purchaseOrderData.value.type)
 const purchaseOrderLinked = ref(purchaseOrderData.value.linked_id)
 const purchaseOrderNumber = ref(purchaseOrderData.value.number)
 const company = ref(purchaseOrderData.value.company_id)
@@ -260,7 +261,7 @@ const decline = async () => {
 }
 
 const recalcCosts = useDebounceFn(() => {
-  const selected = table.value.selectedRows?.map(id => table.value.items.find(i => i.id === id)) || []
+  const selected = selectedRows.value?.map(id => items.value.find(i => i.id === id)) || []
   const subtotal = selected.reduce((s, i) => s + (i?.total || 0), 0)
 
   costs.value.subtotal = parseFloat(subtotal.toFixed(2))
@@ -268,7 +269,7 @@ const recalcCosts = useDebounceFn(() => {
   costs.value.total = parseFloat((subtotal * 1.16).toFixed(2))
 }, 200)
 
-watch(() => selectedRows, recalcCosts)
+watch(() => selectedRows.value, recalcCosts)
 
 const viewAddMaterial = () => {
   supplierId.value = supplier.value
@@ -277,7 +278,7 @@ const viewAddMaterial = () => {
 }
 
 const addMaterial = m => {
-  const existingMaterial = items.value .find(
+  const existingMaterial = items.value.find(
     item =>
       item.material_id === m.material_id &&
       item.supplier_id === m.supplier_id &&
@@ -285,20 +286,17 @@ const addMaterial = m => {
   )
 
   const newRequired = Number(m.required || 0)
+  const inventoryPrice = Number(m.inventory_price || 0)
 
   if (existingMaterial) {
     const currentQty = Number(existingMaterial.total_quantity || 0)
     const updatedQty = currentQty + newRequired
 
+    existingMaterial.inventory_price = inventoryPrice
     existingMaterial.total_quantity = String(updatedQty)
-
-    // recalcular total
-    const inventoryPrice = Number(existingMaterial.inventory_price || 0)
-
     existingMaterial.total = inventoryPrice * updatedQty
 
   } else {
-    const inventoryPrice = Number(m.inventory_price || 0)
     const totalQty = newRequired
 
     items.value .push({
@@ -313,7 +311,11 @@ const addMaterial = m => {
   recalcCosts()
 }
 
-const updateMaterial = material => {
+const updateMaterial = m => {
+  const i = items.value.findIndex(it => it.id === m.id)
+  if (i >= 0) items.value[i] = { ...items.value[i], ...m }
+  recalcCosts()
+
   // const item = items.value.find(obj => obj.id === material.id)
 
   // if (item) {
@@ -564,8 +566,8 @@ getProjectInformation()
           </VCol>
         </VRow>
       </VCardText>
-      <VDivider v-if="project" />
-      <VCardText v-if="project">
+      <VDivider v-if="project || typeProject === 'SP'" />
+      <VCardText v-if="project || typeProject === 'SP'">
         <VRow>
           <VCol
             cols="12"
