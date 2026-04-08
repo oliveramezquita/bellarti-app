@@ -60,6 +60,8 @@ declare module 'vue-router/auto-routes' {
     'apps-invoice-list': RouteRecordInfo<'apps-invoice-list', '/apps/invoice/list', Record<never, never>, Record<never, never>>,
     'apps-invoice-preview-id': RouteRecordInfo<'apps-invoice-preview-id', '/apps/invoice/preview/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     'apps-invoices-list': RouteRecordInfo<'apps-invoices-list', '/apps/invoices/list', Record<never, never>, Record<never, never>>,
+    'apps-invoices-new': RouteRecordInfo<'apps-invoices-new', '/apps/invoices/new', Record<never, never>, Record<never, never>>,
+    'apps-invoices-view-id': RouteRecordInfo<'apps-invoices-view-id', '/apps/invoices/view/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     'apps-kanban': RouteRecordInfo<'apps-kanban', '/apps/kanban', Record<never, never>, Record<never, never>>,
     'apps-logistics-dashboard': RouteRecordInfo<'apps-logistics-dashboard', '/apps/logistics/dashboard', Record<never, never>, Record<never, never>>,
     'apps-logistics-fleet': RouteRecordInfo<'apps-logistics-fleet', '/apps/logistics/fleet', Record<never, never>, Record<never, never>>,

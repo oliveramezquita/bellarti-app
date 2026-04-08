@@ -14,11 +14,6 @@ definePage({ meta: { action: 'read', subject: 'OC', navActiveLink: 'apps-purchas
 const AddMaterialDrawer = defineAsyncComponent(() => import('@/views/apps/purchase-orders/AddMaterialDrawer.vue'))
 const EditMaterialDrawer = defineAsyncComponent(() => import('@/views/apps/purchase-orders/EditMaterialDrawer.vue'))
 
-// 🔹 Helpers
-const formatCurrency = valor => new Intl.NumberFormat('es-MX', {
-  style: 'currency', currency: 'MXN', minimumFractionDigits: 2,
-}).format(parseFloat(valor || 0))
-
 // 🔹 Estado principal
 const router = useRouter()
 const userData = useCookie('userData')
@@ -286,7 +281,7 @@ const headers = [
   <section>
     <Breadcrumb
       :items="[{title:'Órdenes de Compra',to:{name:'apps-purchase-orders-list'},class:'text-underline'},{title:'Nuevo'}]"
-      icon="credit-card-pay"
+      icon="shopping-cart"
     />
     <VCard>
       <!-- 1: General information -->

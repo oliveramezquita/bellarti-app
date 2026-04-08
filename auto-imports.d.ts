@@ -59,6 +59,7 @@ declare global {
   const emailValidator: typeof import('./src/@core/utils/validators.js')['emailValidator']
   const extendRef: typeof import('@vueuse/core')['extendRef']
   const extractStoragePermissions: typeof import('./src/@core/composable/useCookie.js')['extractStoragePermissions']
+  const formatCurrency: typeof import('./src/utils/formatCurrency.js')['formatCurrency']
   const formatDate: typeof import('./src/utils/formatDate.js')['formatDate']
   const formatDateToMonthShort: typeof import('./src/@core/utils/formatters.js')['formatDateToMonthShort']
   const formatNumber: typeof import('./src/utils/formatNumber.js')['formatNumber']
@@ -432,6 +433,7 @@ declare module 'vue' {
     readonly emailValidator: UnwrapRef<typeof import('./src/@core/utils/validators.js')['emailValidator']>
     readonly extendRef: UnwrapRef<typeof import('@vueuse/core')['extendRef']>
     readonly extractStoragePermissions: UnwrapRef<typeof import('./src/@core/composable/useCookie.js')['extractStoragePermissions']>
+    readonly formatCurrency: UnwrapRef<typeof import('./src/utils/formatCurrency.js')['formatCurrency']>
     readonly formatDate: UnwrapRef<typeof import('./src/@core/utils/formatters.js')['formatDate']>
     readonly formatDate: UnwrapRef<typeof import('./src/utils/formatDate.js')['formatDate']>
     readonly formatDateToMonthShort: UnwrapRef<typeof import('./src/@core/utils/formatters.js')['formatDateToMonthShort']>

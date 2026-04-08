@@ -11,8 +11,6 @@ import AddMaterialDrawer from '@/views/apps/purchase-orders/AddMaterialDrawer.vu
 import EditMaterialDrawer from '@/views/apps/purchase-orders/EditMaterialDrawer.vue'
 import InputMaterialsDialog from '@/views/apps/purchase-orders/InputMaterialsDialog.vue'
 
-//import UploadInvoiceDrawer from '@/views/apps/purchase-orders/UploadInvoiceDrawer.vue'
-
 const userData = useCookie('userData')
 const route = useRoute('apps-purchase-orders-view-id')
 
@@ -49,8 +47,6 @@ const isAddNewMaterialDrawerVisible = ref(false)
 const isEditMaterialDrawerVisible = ref(false)
 const isDeleteMaterialDialogVisible = ref(false)
 const isInputMaterialDialogVisible = ref(false)
-
-//const isUploadInvoiceDrawerVisible = ref(false)
 const isLoadingDialogVisible = ref(false)
 const isNotificationVisible = ref(false)
 
@@ -79,12 +75,6 @@ const paymentMethod = ref(purchaseOrderData.value.payment_method)
 const paymentForm = ref(purchaseOrderData.value.payment_form)
 const cfdi = ref(purchaseOrderData.value.cfdi)
 const invoiceEmail = ref(purchaseOrderData.value.invoice_email)
-
-// const invoicedStatusList = [
-//   { name: 'FACTURA PENDIENTE', color: 'secondary', icon: 'tabler-receipt-2', value: 0 },
-//   { name: 'FACTURA ENTREGADA', color: 'warning', icon: 'tabler-receipt-2', value: 1 },
-//   { name: 'FACTURA PAGADA', color: 'success', icon: 'tabler-receipt-2', value: 2 },
-// ]
 
 const costs = ref({
   subtotal: purchaseOrderData.value.subtotal,
@@ -152,14 +142,6 @@ const getProjectInformation = async () => {
 
   if (purchaseOrderData.value.status === 0)
     headers.push({ title: 'Acciones', key: 'actions', sortable: false })
-}
-
-const formatCurrency = valor => {
-  return new Intl.NumberFormat('es-MX', {
-    style: 'currency',
-    currency: 'MXN',
-    minimumFractionDigits: 2,
-  }).format(valor)
 }
 
 const getItemsByIds = ids => {
@@ -315,17 +297,6 @@ const updateMaterial = m => {
   const i = items.value.findIndex(it => it.id === m.id)
   if (i >= 0) items.value[i] = { ...items.value[i], ...m }
   recalcCosts()
-
-  // const item = items.value.find(obj => obj.id === material.id)
-
-  // if (item) {
-  //   Object.assign(item, material)
-  //   if (!selectedRows.value) {
-  //     const totalSum = Object.values(items.value).reduce((sum, item) => sum + (item.total || 0), 0)
-
-  //     updateCosts(totalSum)
-  //   }
-  // }
 }
 
 const viewEditMaterialDrawer = material => {
@@ -384,31 +355,6 @@ const inputEntryRegister = async inputData => {
   }
 }
 
-// const getStatusValue = (list, value, key) => {
-//   const status = list.find(item => item.value === value)
-  
-//   return status ? status[key] : null
-// }
-
-// const uploadInvoiceFiles = async formsData => {
-//   isLoadingDialogVisible.value = true
-
-//   try {
-//     await $api(`api/purchase_orders/invoice/${route.params.id}`, {
-//       method: 'PATCH',
-//       body: formsData,
-//       onResponse({ response }) {
-//         if (response.status === 200)
-//           fetchPurchaseOrder()
-//         notificationMessage.value = response._data
-//         isNotificationVisible.value = true
-//       },
-//     })
-//   } finally {
-//     isLoadingDialogVisible.value = false
-//   }
-// }
-
 if (route.query.new) {
   const messageStatus = purchaseOrderData.value.status === 0 ? 'guardada' : 'generada'
 
@@ -423,20 +369,13 @@ if (route.query.input) {
 
 extractData()
 getProjectInformation()
-
-// watch(selectedRows, val => {
-//   const itemsSelected = getItemsByIds(Object.values(val))
-//   const totalSum = Object.values(itemsSelected).reduce((sum, item) => sum + (item.total || 0), 0)
-
-//   updateCosts(totalSum)
-// })
 </script>
 
 <template>
   <section>
     <Breadcrumb
       :items="[{ title: 'Órdenes de Compra', to: { name: 'apps-purchase-orders-list' }, class: 'text-underline' }, { title: purchaseOrderData.number }]"
-      icon="credit-card-pay"
+      icon="shopping-cart"
     />
     <VCard class="mb-2">
       <VCardText>
@@ -959,17 +898,6 @@ getProjectInformation()
             >
               PDF
             </VBtn>
-            <!-- 👉 INVOICE -->
-            <!--
-              <VBtn
-              v-if="purchaseOrderData.delivered_status === 2"
-              :color="getStatusValue(invoicedStatusList, purchaseOrderData.invoiced_status, 'color')"
-              :prepend-icon="getStatusValue(invoicedStatusList, purchaseOrderData.invoiced_status, 'icon')"
-              @click="isUploadInvoiceDrawerVisible = true"
-              >
-              {{ getStatusValue(invoicedStatusList, purchaseOrderData.invoiced_status, 'name') }}
-              </VBtn> 
-            -->
             <!-- 👉 Return -->
             <VBtn
               prepend-icon="tabler-arrow-left"
@@ -1039,16 +967,6 @@ getProjectInformation()
       v-model:purchase-order-data="purchaseOrderData"
       @input-entry-register="inputEntryRegister"
     />
-    <!--
-      <UploadInvoiceDrawer
-      v-model:is-drawer-open="isUploadInvoiceDrawerVisible"
-      v-model:purchase-order-id="route.params.id"
-      v-model:invoice-pdf-file="purchaseOrderData.invoice_pdf_file"
-      v-model:invoice-xml-file="purchaseOrderData.invoice_xml_file"
-      v-model:invoice-paid="purchaseOrderData.paid"
-      @upload-files="uploadInvoiceFiles"
-      /> 
-    -->
   </section>
 </template>
 

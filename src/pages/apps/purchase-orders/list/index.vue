@@ -67,12 +67,6 @@ const statusList = [
   { name: 'Cancelada', color: 'error', icon: 'tabler-shopping-cart-x', value: 3 },
 ]
 
-// const invoicedStatusList = [
-//   { name: 'Pendiente', color: 'secondary', icon: 'tabler-receipt-2', value: 0 },
-//   { name: 'Entregada', color: 'warning', icon: 'tabler-receipt-2', value: 1 },
-//   { name: 'Pagada', color: 'success', icon: 'tabler-receipt-2', value: 2 },
-// ]
-
 const deliveredStatusList = [
   { name: 'Pendiente', color: 'secondary', icon: 'tabler-alert-circle', value: 0 },
   { name: 'Entrega parcial', color: 'info', icon: 'tabler-parking-circle', value: 1 },
@@ -111,21 +105,13 @@ const deletePurchaseOrder = async id => {
   isDeletePurchaseOrderDialogVisible.value = false
   fetchPurchaseOrders()
 }
-
-const formatCurrency = valor => {
-  return new Intl.NumberFormat('es-MX', {
-    style: 'currency',
-    currency: 'MXN',
-    minimumFractionDigits: 2,
-  }).format(valor)
-}
 </script>
 
 <template>
   <Breadcrumb
     :items="breadcrumbItems"
     :return="false"
-    icon="credit-card-pay"
+    icon="shopping-cart"
   />
   <section>
     <VCard>
@@ -275,17 +261,6 @@ const formatCurrency = valor => {
                       {{ getStatusValue(statusList, slotProps.item.status, 'name') }}
                     </VChip>
                   </div>
-                  <!--
-                    <div class="cell">
-                    <VChip :color="getStatusValue(invoicedStatusList, slotProps.item.invoiced_status, 'color')">
-                    <VIcon
-                    start
-                    :icon="getStatusValue(invoicedStatusList, slotProps.item.invoiced_status, 'icon')"
-                    />
-                    {{ getStatusValue(invoicedStatusList, slotProps.item.invoiced_status, 'name') }}
-                    </VChip>
-                    </div> 
-                  -->
                   <div class="cell">
                     <VChip :color="getStatusValue(deliveredStatusList, slotProps.item.delivered_status, 'color')">
                       <VIcon
@@ -354,20 +329,6 @@ const formatCurrency = valor => {
             />
           </div>
         </template>
-
-        <!--
-          <template #item.invoiced_status="{ item }">
-          <div class="align-center">
-          <VAvatar
-          :color="getStatusValue(invoicedStatusList, item.invoiced_status, 'color')"
-          :icon="getStatusValue(invoicedStatusList, item.invoiced_status, 'icon')"
-          size="small"
-          variant="text"
-          />
-          </div>
-          </template> 
-        -->
-
         <template #item.delivered_status="{ item }">
           <div class="align-center">
             <VAvatar
@@ -408,33 +369,6 @@ const formatCurrency = valor => {
                   </template>
                   <VListItemTitle>Ver</VListItemTitle>
                 </VListItem>
-
-                <!--
-                  <VListItem
-                  v-if="item.invoice_pdf_file"
-                  :href="item.invoice_pdf_file"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >
-                  <template #prepend>
-                  <VIcon icon="tabler-file-type-pdf" />
-                  </template>
-                  <VListItemTitle>Factura PDF</VListItemTitle>
-                  </VListItem>
-
-                  <VListItem
-                  v-if="item.invoice_xml_file"
-                  :href="item.invoice_xml_file"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >
-                  <template #prepend>
-                  <VIcon icon="tabler-file-type-xml" />
-                  </template>
-                  <VListItemTitle>Factura XML</VListItemTitle>
-                  </VListItem> 
-                -->
-
                 <VListItem
                   v-if="item.status === 0 || item.status === 3"
                   @click="viewDeletePurchaseOrderDialog(item)"
