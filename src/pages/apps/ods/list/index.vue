@@ -15,8 +15,7 @@ const page = ref(1)
 const isAddNewODDrawerVisible = ref(false)
 const isEditNewODDrawerVisible = ref(false)
 const isLoadingDialogVisible = ref(false)
-const isNotificationVisible = ref(false)
-const notificationMessage = ref('')
+const notification = ref({ visible: false, message: '', color: 'info' })
 const selectedHomeProduction = ref()
 const isDeleteHomeProductionDialogVisible = ref(false)
 
@@ -67,8 +66,11 @@ const addNewOD = async hp => {
       method: 'POST',
       body: hp,
       onResponse({ response }) {
-        isNotificationVisible.value = true
-        notificationMessage.value = response._data
+        notification.value = {
+          visible: true,
+          message: response._data,
+          color: getStatusColor(response.status),
+        }
       },
     })
 
@@ -94,8 +96,11 @@ const updateOD = async hp => {
       method: 'PATCH',
       body: filtered,
       onResponse({ response }) {
-        isNotificationVisible.value = true
-        notificationMessage.value = response._data
+        notification.value = {
+          visible: true,
+          message: response._data,
+          color: getStatusColor(response.status),
+        }
       },
     })
     fetchHomeProduction()
@@ -203,7 +208,7 @@ const deleteHomeProduction = async id => {
             <h6 class="text-base">
               <RouterLink
                 :to="{ name: 'apps-ods-view-id', params: { id: item._id } }"
-                class="font-weight-medium text-link"
+                class="font-weight-medium text-underline"
               >
                 {{ item.front }} - {{ item.od }}
               </RouterLink>
@@ -259,8 +264,9 @@ const deleteHomeProduction = async id => {
     </VCard>
     <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
     <Notification
-      v-model:is-notification-visible="isNotificationVisible"
-      :message="notificationMessage"
+      v-model:is-notification-visible="notification.visible"
+      :message="notification.message"
+      :color="notification.color"
     />
     <AddNewODDrawer
       v-model:is-drawer-open="isAddNewODDrawerVisible"

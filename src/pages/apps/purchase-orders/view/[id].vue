@@ -1,3 +1,4 @@
+<!-- eslint-disable camelcase -->
 <script setup>
 definePage({
   meta: {
@@ -9,27 +10,53 @@ definePage({
 import AddMaterialDrawer from '@/views/apps/purchase-orders/AddMaterialDrawer.vue'
 import EditMaterialDrawer from '@/views/apps/purchase-orders/EditMaterialDrawer.vue'
 import InputMaterialsDialog from '@/views/apps/purchase-orders/InputMaterialsDialog.vue'
-import UploadInvoiceDrawer from '@/views/apps/purchase-orders/UploadInvoiceDrawer.vue'
 
 const userData = useCookie('userData')
 const route = useRoute('apps-purchase-orders-view-id')
-const { data: purchaseOrderData, execute: fetchPurchaseOrder } = await useApi(`api/purchase_order/${ route.params.id }`)
-const { data: projects } = await useApi('api/purchase_orders/get_projects')
-const { data: purchaseOrdersLIst } =  await useApi('api/purchase_orders?status=processed&itemsPerPage=100')
-const { data: companiesList } = await useApi('api/companies?itemsPerPage=100')
-const { data: divisionsList } = await useApi('api/catalogs?name=División de materiales')
-const { data: paymentMethodsList } = await useApi('api/catalogs?name=Métodos de Pago')
-const { data: paymentFormsList  } = await useApi('api/catalogs?name=Formas de Pago')
-const { data: useOfCFDIList } = await useApi('api/catalogs?name=Uso de CFDI')
+
+const [
+  purchaseOrderRes,
+  projectsRes,
+  purchaseOrdersListRes,
+  companiesListRes,
+  divisionsListRes,
+  paymentMethodsListRes,
+  paymentFormsListRes,
+  useOfCFDIListRes,
+] = await Promise.all([
+  useApi(`api/purchase_order/${route.params.id}`),
+  useApi('api/purchase_orders/get_projects'),
+  useApi('api/purchase_orders?status=processed&itemsPerPage=100'),
+  useApi('api/companies?itemsPerPage=100'),
+  useApi('api/catalogs?name=División de materiales'),
+  useApi('api/catalogs?name=Métodos de Pago'),
+  useApi('api/catalogs?name=Formas de Pago'),
+  useApi('api/catalogs?name=Uso de CFDI'),
+])
+
+const { data: purchaseOrderData, execute: fetchPurchaseOrder } = purchaseOrderRes
+const { data: projects } = projectsRes
+const { data: purchaseOrdersList } = purchaseOrdersListRes
+const { data: companiesList } = companiesListRes
+const { data: divisionsList } = divisionsListRes
+const { data: paymentMethodsList } = paymentMethodsListRes
+const { data: paymentFormsList } = paymentFormsListRes
+const { data: useOfCFDIList } = useOfCFDIListRes
+
 const isAddNewMaterialDrawerVisible = ref(false)
 const isEditMaterialDrawerVisible = ref(false)
 const isDeleteMaterialDialogVisible = ref(false)
 const isInputMaterialDialogVisible = ref(false)
-const isUploadInvoiceDrawerVisible = ref(false)
 const isLoadingDialogVisible = ref(false)
 const isNotificationVisible = ref(false)
-const notificationMessage = ref('')
+
+const notification = ref({
+  message: '',
+  color: 'info',
+})
+
 const project = ref(purchaseOrderData.value.home_production_id)
+const typeProject = ref(purchaseOrderData.value.type)
 const purchaseOrderLinked = ref(purchaseOrderData.value.linked_id)
 const purchaseOrderNumber = ref(purchaseOrderData.value.number)
 const company = ref(purchaseOrderData.value.company_id)
@@ -48,12 +75,6 @@ const paymentMethod = ref(purchaseOrderData.value.payment_method)
 const paymentForm = ref(purchaseOrderData.value.payment_form)
 const cfdi = ref(purchaseOrderData.value.cfdi)
 const invoiceEmail = ref(purchaseOrderData.value.invoice_email)
-
-const invoicedStatusList = [
-  { name: 'FACTURA PENDIENTE', color: 'secondary', icon: 'tabler-receipt-2', value: 0 },
-  { name: 'FACTURA ENTREGADA', color: 'warning', icon: 'tabler-receipt-2', value: 1 },
-  { name: 'FACTURA PAGADA', color: 'success', icon: 'tabler-receipt-2', value: 2 },
-]
 
 const costs = ref({
   subtotal: purchaseOrderData.value.subtotal,
@@ -113,7 +134,7 @@ const extractData = () => {
 }
 
 const getProjectInformation = async () => {
-  const response = await $api(`api/purchase_orders/get_suppliers/${purchaseOrderData.value.home_production_id}?type=${purchaseOrderData.value.type}`, { method: 'GET' })
+  const response = await $api(`api/purchase_orders/get_suppliers?project_id=${purchaseOrderData.value.home_production_id}&type=${purchaseOrderData.value.type}`, { method: 'GET' })
 
   suppliers.value = response.suppliers_list
   items.value = purchaseOrderData.value.items
@@ -121,14 +142,6 @@ const getProjectInformation = async () => {
 
   if (purchaseOrderData.value.status === 0)
     headers.push({ title: 'Acciones', key: 'actions', sortable: false })
-}
-
-const formatCurrency = valor => {
-  return new Intl.NumberFormat('es-MX', {
-    style: 'currency',
-    currency: 'MXN',
-    minimumFractionDigits: 2,
-  }).format(valor)
 }
 
 const getItemsByIds = ids => {
@@ -160,10 +173,12 @@ const updatePurchaseOrder = async status => {
           'type': purchaseOrderData.value.project === 'Sin proyecto' ? 'SP' : 'OD',
         },
         onResponse({ response }) {
-          if (response.status === 200)
+          if (response.status === 200) {
             fetchPurchaseOrder()
+            notification.value.color = 'success'
+          }
           isNotificationVisible.value = true
-          notificationMessage.value = response._data
+          notification.value.message = response._data
         },
       })
     } finally {
@@ -190,10 +205,12 @@ const approve = async () => {
         'invoice_email': invoiceEmail.value,
       },
       onResponse({ response }) {
-        if (response.status === 200)
+        if (response.status === 200) {
           fetchPurchaseOrder()
+          notification.value.color = 'success'
+        }
         isNotificationVisible.value = true
-        notificationMessage.value = response._data
+        notification.value.message = response._data
       },
     })
   } finally {
@@ -212,10 +229,12 @@ const decline = async () => {
         'status': 3,
       },
       onResponse({ response }) {
-        if (response.status === 200)
+        if (response.status === 200) {
           fetchPurchaseOrder()
+          notification.value.color = 'success'
+        }
         isNotificationVisible.value = true
-        notificationMessage.value = response._data
+        notification.value.message = response._data
       },
     })
   } finally {
@@ -223,35 +242,61 @@ const decline = async () => {
   }
 }
 
+const recalcCosts = useDebounceFn(() => {
+  const selected = selectedRows.value?.map(id => items.value.find(i => i.id === id)) || []
+  const subtotal = selected.reduce((s, i) => s + (i?.total || 0), 0)
+
+  costs.value.subtotal = parseFloat(subtotal.toFixed(2))
+  costs.value.iva = parseFloat((subtotal * 0.16).toFixed(2))
+  costs.value.total = parseFloat((subtotal * 1.16).toFixed(2))
+}, 200)
+
+watch(() => selectedRows.value, recalcCosts)
+
 const viewAddMaterial = () => {
   supplierId.value = supplier.value
   materialsList.value = items.value.map(item => item.material_id)
   isAddNewMaterialDrawerVisible.value = true
 }
 
-const addMaterial = material => {
-  material.id = items.value.length
-  items.value.push(material)
-  totalItems.value = items.value.length
+const addMaterial = m => {
+  const existingMaterial = items.value.find(
+    item =>
+      item.material_id === m.material_id &&
+      item.supplier_id === m.supplier_id &&
+      item.sku === m.sku,
+  )
 
-  if (!selectedRows.value) {
-    const totalSum = costs.value.subtotal + material.total
-    
-    updateCosts(totalSum)
+  const newRequired = Number(m.required || 0)
+  const inventoryPrice = Number(m.inventory_price || 0)
+
+  if (existingMaterial) {
+    const currentQty = Number(existingMaterial.total_quantity || 0)
+    const updatedQty = currentQty + newRequired
+
+    existingMaterial.inventory_price = inventoryPrice
+    existingMaterial.total_quantity = String(updatedQty)
+    existingMaterial.total = inventoryPrice * updatedQty
+
+  } else {
+    const totalQty = newRequired
+
+    items.value .push({
+      ...m,
+      id: items.value .length + 1,
+      total_quantity: String(totalQty),
+      total: inventoryPrice * totalQty,
+    })
   }
+
+  totalItems.value = items.value.length
+  recalcCosts()
 }
 
-const updateMaterial = material => {
-  const item = items.value.find(obj => obj.id === material.id)
-
-  if (item) {
-    Object.assign(item, material)
-    if (!selectedRows.value) {
-      const totalSum = Object.values(items.value).reduce((sum, item) => sum + (item.total || 0), 0)
-
-      updateCosts(totalSum)
-    }
-  }
+const updateMaterial = m => {
+  const i = items.value.findIndex(it => it.id === m.id)
+  if (i >= 0) items.value[i] = { ...items.value[i], ...m }
+  recalcCosts()
 }
 
 const viewEditMaterialDrawer = material => {
@@ -268,12 +313,6 @@ const deleteMaterial = id => {
   items.value = items.value.filter(item => item.id !== id)
 
   isDeleteMaterialDialogVisible.value = false
-}
-
-const updateCosts = subtotal => {
-  costs.value.subtotal = subtotal.toFixed(2)
-  costs.value.iva = parseFloat((subtotal * 0.16).toFixed(2))
-  costs.value.total = parseFloat((subtotal * 1.16).toFixed(2))
 }
 
 const downloadExcel = () => {
@@ -302,10 +341,12 @@ const inputEntryRegister = async inputData => {
         method: 'PATCH',
         body: inputData,
         onResponse({ response }) {
-          if (response.status === 200)
+          if (response.status === 200) {
             fetchPurchaseOrder()
+            notification.value.color = 'success'
+          }
           isNotificationVisible.value = true
-          notificationMessage.value = response._data
+          notification.value.message = response._data
         },
       })
     } finally {
@@ -314,35 +355,11 @@ const inputEntryRegister = async inputData => {
   }
 }
 
-const getStatusValue = (list, value, key) => {
-  const status = list.find(item => item.value === value)
-  
-  return status ? status[key] : null
-}
-
-const uploadInvoiceFiles = async formsData => {
-  isLoadingDialogVisible.value = true
-
-  try {
-    await $api(`api/purchase_orders/invoice/${route.params.id}`, {
-      method: 'PATCH',
-      body: formsData,
-      onResponse({ response }) {
-        if (response.status === 200)
-          fetchPurchaseOrder()
-        notificationMessage.value = response._data
-        isNotificationVisible.value = true
-      },
-    })
-  } finally {
-    isLoadingDialogVisible.value = false
-  }
-}
-
 if (route.query.new) {
   const messageStatus = purchaseOrderData.value.status === 0 ? 'guardada' : 'generada'
 
-  notificationMessage.value = `La orden de compra ha sido ${messageStatus} con éxito`
+  notification.value.color = 'success'
+  notification.value.message = `La orden de compra ha sido ${messageStatus} con éxito`
   isNotificationVisible.value = true
 }
 
@@ -352,20 +369,13 @@ if (route.query.input) {
 
 extractData()
 getProjectInformation()
-
-watch(selectedRows, val => {
-  const itemsSelected = getItemsByIds(Object.values(val))
-  const totalSum = Object.values(itemsSelected).reduce((sum, item) => sum + (item.total || 0), 0)
-
-  updateCosts(totalSum)
-})
 </script>
 
 <template>
   <section>
     <Breadcrumb
       :items="[{ title: 'Órdenes de Compra', to: { name: 'apps-purchase-orders-list' }, class: 'text-underline' }, { title: purchaseOrderData.number }]"
-      icon="credit-card-pay"
+      icon="shopping-cart"
     />
     <VCard class="mb-2">
       <VCardText>
@@ -383,7 +393,7 @@ watch(selectedRows, val => {
               :item-value="item => item.home_production_id"
               :items="projects"
               class="font-weight-bold"
-              :disabled="purchaseOrderData.status > 0"
+              :disabled="purchaseOrderData.status > 0 || purchaseOrderData.type === 'SP'"
               @update:model-value="getProjectInformation"
             />
           </VCol>
@@ -424,7 +434,7 @@ watch(selectedRows, val => {
               placeholder="Asignar a orden de compra"
               :item-title="item => item.number"
               :item-value="item => item.number"
-              :items="purchaseOrdersLIst.data"
+              :items="purchaseOrdersList.data"
               @update:model-value="changePurchaseOrderNUmber"
             />
           </VCol>
@@ -495,8 +505,8 @@ watch(selectedRows, val => {
           </VCol>
         </VRow>
       </VCardText>
-      <VDivider v-if="project" />
-      <VCardText v-if="project">
+      <VDivider v-if="project || typeProject === 'SP'" />
+      <VCardText v-if="project || typeProject === 'SP'">
         <VRow>
           <VCol
             cols="12"
@@ -671,7 +681,6 @@ watch(selectedRows, val => {
         :items="items"
         show-select
         :items-length="totalItems"
-        class="text-no-wrap"
       >
         <template #item.concept="{ item }">
           <div
@@ -889,15 +898,6 @@ watch(selectedRows, val => {
             >
               PDF
             </VBtn>
-            <!-- 👉 INVOICE -->
-            <VBtn
-              v-if="purchaseOrderData.delivered_status === 2"
-              :color="getStatusValue(invoicedStatusList, purchaseOrderData.invoiced_status, 'color')"
-              :prepend-icon="getStatusValue(invoicedStatusList, purchaseOrderData.invoiced_status, 'icon')"
-              @click="isUploadInvoiceDrawerVisible = true"
-            >
-              {{ getStatusValue(invoicedStatusList, purchaseOrderData.invoiced_status, 'name') }}
-            </VBtn>
             <!-- 👉 Return -->
             <VBtn
               prepend-icon="tabler-arrow-left"
@@ -927,7 +927,8 @@ watch(selectedRows, val => {
     <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
     <Notification
       v-model:is-notification-visible="isNotificationVisible"
-      :message="notificationMessage"
+      :message="notification.message"
+      :color="notification.color"
     />
     <AddMaterialDrawer
       v-model:is-drawer-open="isAddNewMaterialDrawerVisible"
@@ -965,14 +966,6 @@ watch(selectedRows, val => {
       v-model:is-dialog-open="isInputMaterialDialogVisible"
       v-model:purchase-order-data="purchaseOrderData"
       @input-entry-register="inputEntryRegister"
-    />
-    <UploadInvoiceDrawer
-      v-model:is-drawer-open="isUploadInvoiceDrawerVisible"
-      v-model:purchase-order-id="route.params.id"
-      v-model:invoice-pdf-file="purchaseOrderData.invoice_pdf_file"
-      v-model:invoice-xml-file="purchaseOrderData.invoice_xml_file"
-      v-model:invoice-paid="purchaseOrderData.paid"
-      @upload-files="uploadInvoiceFiles"
     />
   </section>
 </template>

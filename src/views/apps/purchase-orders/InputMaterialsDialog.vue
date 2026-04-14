@@ -39,14 +39,6 @@ const formatMeasurement = item => {
   return measurement
 }
 
-const formatCurrency = valor => {
-  return new Intl.NumberFormat('es-MX', {
-    style: 'currency',
-    currency: 'MXN',
-    minimumFractionDigits: 2,
-  }).format(valor)
-}
-
 const saveInputRegister = () => {
   emit('inputEntryRegister', { items: items.value, notes: notes.value })
   emit('update:isDialogOpen', false)

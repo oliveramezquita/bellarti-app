@@ -8,7 +8,6 @@ definePage({
   },
 })
 
-const breadcrumbItems = ref([{ title: 'Materiales', class: 'text-primary' }, { title: 'Materiales', to: { name: 'apps-materials-list' }, class: 'text-underline' }, { title: 'Nuevo' }])
 const currentTab = ref('tab-1')
 const isFormValid = ref(false)
 const refForm = ref()
@@ -16,6 +15,18 @@ const isLoadingDialogVisible = ref(false)
 const isNotificationVisible = ref(false)
 const notificationMessage = ref('')
 const router = useRouter()
+const route = useRoute('apps-materials-new-group')
+
+const breadcrumbItems = ref([
+  { title: 'Materiales', class: 'text-primary' },
+  { 
+    title: route.params.group === 'EQUIPMENT_GROUP' ? 'Equipamiento y Accesorios' : 'Materiales', 
+    to: { 
+      name: route.params.group === 'EQUIPMENT_GROUP' ? 'apps-equipment-list' : 'apps-materials-list',
+    }, 
+    class: 'text-underline' },
+  { title: 'Nuevo' },
+])
 
 const material = ref({
   division: null,
@@ -76,22 +87,28 @@ const sku = computed(() => {
   return parts.join('-')
 }) 
 
-const { data: suppliers } = await useApi('api/suppliers?itemsPerPage=1000')
-const { data: unitsOfMeasurement }= await useApi('api/catalogs?name=Unidades de medida')
-const { data: divisions } = await useApi('api/catalogs?name=División de materiales')
+const [
+  { data: suppliers },
+  { data: unitsOfMeasurement },
+  { data: divisions },
+] = await Promise.all([
+  useApi('api/suppliers?itemsPerPage=1000'),
+  useApi('api/catalogs?name=Unidades de medida'),
+  useApi('api/catalogs?name=División de materiales'),
+])
 
 const onSubmit = () => {
   isLoadingDialogVisible.value = true
   refForm.value?.validate().then(({ valid }) => {
     if (valid) {
-      createMateiral()
+      createMaterial()
     } else {
       isLoadingDialogVisible.value = false
     }
   })
 }
 
-const createMateiral = async() => {
+const createMaterial = async() => {
   isLoadingDialogVisible.value = true
   material.value.concept = concept.value
   material.value.sku = sku.value
@@ -443,21 +460,9 @@ const differentiatePrices = () => {
                   label="Redondeo automatizado (Se requiere la presentación del material)"
                 />
               </VCol>
-
               <VCol
                 cols="12"
-                md="8"
-                style="margin-block-start: -25px;"
-              >
-                <VSwitch
-                  v-model="material.its_trending"
-                  label="Es un producto de tendencia"
-                />
-              </VCol>
-
-              <VCol
-                cols="12"
-                class="d-flex gap-4"
+                class="d-flex gap-4 mt-4"
               >
                 <VBtn type="submit">
                   Guardar

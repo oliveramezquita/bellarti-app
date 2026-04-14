@@ -7,38 +7,17 @@ const props = defineProps({
     type: Boolean,
     required: true,
   },
-  purchaseOrderId: {
-    type: Object,
-    required: true,
-  },
-  invoicePdfFile: {
-    type: String,
-    required: false,
-  },
-  invoiceXmlFile: {
-    type: String,
-    required: false,
-  },
-  invoicePaid: {
-    type: Boolean,
-    required: false,
-    default: false,
-  },
 })
 
 const emit = defineEmits([
   'update:isDrawerOpen',
-  'update:purchaseOrderId',
   'uploadFiles',
 ])
 
 const isFormValid = ref(false)
 const refForm = ref()
 const pdfFile = ref()
-const pdfUrl = ref(structuredClone(toRaw(props.invoicePdfFile)))
 const xmlFile = ref()
-const xmlUrl = ref(structuredClone(toRaw(props.invoiceXmlFile)))
-const paid = ref(structuredClone(toRaw(props.invoicePaid)))
 
 const onSubmit = () => {
   refForm.value?.validate().then(({ valid }) => {
@@ -47,7 +26,6 @@ const onSubmit = () => {
 
       formData.append('pdf_file', pdfFile.value)
       formData.append('xml_file', xmlFile.value)
-      formData.append('paid', paid.value)
       emit('uploadFiles', formData)
       emit('update:isDrawerOpen', false)
 
@@ -85,7 +63,7 @@ const handleDrawerModelValueUpdate = val => {
   >
     <!-- 👉 Title -->
     <AppDrawerHeaderSection
-      title="Factura"
+      title="Nueva Factura"
       @cancel="closeNavigationDrawer"
     />
 
@@ -104,7 +82,6 @@ const handleDrawerModelValueUpdate = val => {
               <!-- 👉 PDF Fiule -->
               <VCol cols="12">
                 <VFileInput
-                  v-if="!pdfUrl"
                   v-model="pdfFile"
                   label="Archivo PDF"
                   accept=".pdf"
@@ -113,31 +90,10 @@ const handleDrawerModelValueUpdate = val => {
                   required
                   :rules="[requiredValidator]"
                 />
-                <div v-if="pdfUrl">
-                  <VBtn
-                    :href="pdfUrl"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    variant="tonal"
-                  >
-                    <VIcon
-                      start
-                      icon="tabler-file-type-pdf"
-                    />Archivo PDF
-                  </VBtn>
-                  <VBtn
-                    icon="tabler-x"
-                    variant="text"
-                    color="secondary"
-                    class="ml-2"
-                    @click="pdfUrl = null"
-                  />
-                </div>
               </VCol>
               <!-- 👉 XML File -->
               <VCol cols="12">
                 <VFileInput
-                  v-if="!xmlUrl"
                   v-model="xmlFile"
                   label="Archivo XML"
                   accept=".xml"
@@ -146,35 +102,7 @@ const handleDrawerModelValueUpdate = val => {
                   required
                   :rules="[requiredValidator]"
                 />
-                <div v-if="xmlUrl">
-                  <VBtn
-                    :href="xmlUrl"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    variant="tonal"
-                  >
-                    <VIcon
-                      start
-                      icon="tabler-file-type-xml"
-                    />Archivo XML
-                  </VBtn>
-                  <VBtn
-                    icon="tabler-x"
-                    variant="text"
-                    color="secondary"
-                    class="ml-2"
-                    @click="xmlUrl = null"
-                  />
-                </div>
               </VCol>
-              <!-- 👉 Check payment -->
-              <VCol cols="12">
-                <VCheckbox
-                  v-model="paid"
-                  label="Pagada"
-                />
-              </VCol>
-              
               <!-- 👉 Submit and Cancel -->
               <VCol cols="12">
                 <VBtn

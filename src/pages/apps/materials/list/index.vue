@@ -9,9 +9,18 @@ definePage({
 })
 
 const breadcrumbItems = ref([{ title: 'Materiales', class: 'text-primary' }, { title: 'Materiales' }])
-const { data: supplierList } = await useApi('api/suppliers?itemsPerPage=100')
-const { data: divisions } = await useApi('api/catalogs?name=División de materiales')
+
+const [
+  { data: supplierList },
+  { data: divisions },
+] = await Promise.all([
+  useApi('api/suppliers?itemsPerPage=100'),
+  useApi('api/catalogs?name=División de materiales'),
+])
+
 const isLoadingDialogVisible = ref(false)
+const isLoading = ref(false)
+const notification = ref({ visible: false, message: '', color: 'info' })
 const searchQuery = ref('')
 const itemsPerPage = ref(10)
 const page = ref(1)
@@ -62,6 +71,7 @@ const headers = [
 const {
   data: materialsData,
   execute: fetchMaterials,
+  error,
 } = await useApi(createUrl('api/materials', {
   query: {
     q: searchQuery,
@@ -75,8 +85,18 @@ const {
   },
 }))
 
-const materials = computed(() => materialsData.value.data)
-const totalMaterials = computed(() => materialsData.value.total_elements)
+watch(error, e => {
+  if (!e || e === "signal is aborted without reason") return
+
+  notification.value = {
+    visible: true, 
+    message: 'Ocurrió un error al intentar obtener los materiales.',
+    color: 'error',
+  }
+}, { immediate: true })
+
+const materials = computed(() => materialsData.value?.data ?? [])
+const totalMaterials = computed(() => materialsData.value?.total_elements ?? 0)
 
 const updateOptions = options => {
   page.value = options.page
@@ -196,7 +216,7 @@ const download = async() => {
           <!-- 👉 Add material button -->
           <VBtn
             prepend-icon="tabler-plus"
-            :to="{name: 'apps-materials-new'}"
+            :to="{name: 'apps-materials-new-group', params: { group: 'MATERIALS_GROUP' }}"
           >
             Agregar
           </VBtn>
@@ -247,7 +267,7 @@ const download = async() => {
               >
                 <RouterLink
                   :to="{ name: 'apps-materials-view-id', params: { id: item._id } }"
-                  class="font-weight-medium text-link"
+                  class="font-weight-medium text-underline"
                 >
                   {{ item.concept }}
                 </RouterLink>
@@ -296,5 +316,11 @@ const download = async() => {
         </VCardText>
       </VCard>
     </VDialog>
+    <LoadingDataDialog v-model:is-dialog-visible="isLoading" />
+    <Notification
+      v-model:is-notification-visible="notification.visible"
+      :message="notification.message"
+      :color="notification.color"
+    />
   </section>
 </template>

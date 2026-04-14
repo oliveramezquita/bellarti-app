@@ -48,9 +48,15 @@ export default [
     children: [
       {
         title: 'Prototipos',
-        to: 'apps-prototypes-list',
+        to: 'apps-prototypes',
         action: 'read',
         subject: 'VSPrototipos',
+      },
+      {
+        title: 'Tendencias',
+        to: 'apps-trends-list',
+        action: 'read',
+        subject: 'VSTendencias',
       },
       {
         title: 'Volumetría',
@@ -69,6 +75,12 @@ export default [
         to: 'apps-ods-list',
         action: 'read',
         subject: 'VSODs',
+      },
+      {
+        title: 'Asign. de Tendencias',
+        to: 'apps-assignment',
+        action: 'read',
+        subject: 'VSAssignment',
       },
     ],
   },

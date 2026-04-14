@@ -1,3 +1,4 @@
+<!-- eslint-disable camelcase -->
 <script setup>
 const props = defineProps({
   quantification: {
@@ -17,8 +18,7 @@ const props = defineProps({
 const emit = defineEmits([
   'update:quantification',
   'update:area',
-  'showSelectColorDrawer',
-  'showChangeAreaDrawer',
+  'deleteMaterial',
 ])
 
 let extendedHeaders = []
@@ -47,6 +47,9 @@ const quantification = computed(() => props.quantification)
 const totalQuantification = computed(() => props.quantification.length)
 const itemsPerPage = ref(10)
 const page = ref(1)
+const isLoading = ref(false)
+const isDeleteMaterialDialogVisible = ref(false)
+const selectedMaterial = ref()
 
 const setCompleteHeaders = data => {
   let keys = new Set()
@@ -64,24 +67,15 @@ const setCompleteHeaders = data => {
   extendedHeaders = [
     ...headers,
     ...result.map(key => ({ title: key, key })),
+    {
+      title: 'Acciones',
+      key: 'actions',
+      sortable: false,
+    },
   ]
 
   selectedRows.value = []
 }
-
-// const selectColor = () => {
-//   emit('showSelectColorDrawer', {
-//     selectedMaterials: selectedRows.value, 
-//     selectedArea: props.area,
-//   })
-// }
-
-// const changeArea = () => {
-//   emit('showChangeAreaDrawer', {
-//     selectedMaterials: selectedRows.value, 
-//     selectedArea: props.area,
-//   })
-// }
 
 const extractTheAreas = oldObj => {
   const excludedKeys = ["material_id", "material", "TOTAL", "id"]
@@ -96,33 +90,22 @@ setCompleteHeaders(props.quantification)
 watch(() => props.updated, newValue => {
   if (newValue) selectedRows.value = []
 })
+
+const viewDeleteMaterialDialog = item => {
+  selectedMaterial.value = { _id: item.material_id, ...item.material }
+  isDeleteMaterialDialogVisible.value = true
+}
+
+const deleteMaterial = async () => {
+  isDeleteMaterialDialogVisible.value = false
+  emit('deleteMaterial', {
+    material_id: selectedMaterial.value._id,
+    area: props.area,
+  })
+}
 </script>
 
 <template>
-  <!--
-    <div
-    class="d-flex flex-wrap gap-4 justify-end"
-    style="padding-block: 30px;padding-inline: 40px;"
-    >
-    <VBtn
-    prepend-icon="tabler-color-picker"
-    variant="outlined"
-    :disabled="selectedRows.length === 0"
-    @click="selectColor"
-    >
-    Asignar color
-    </VBtn>
-    <VBtn
-    v-if="['PRODUCCIÓN SIN COCINA', 'INSTALACIÓN SIN COCINA', 'CARPINTERÍA', 'EQUIPOS'].includes(props.area)"
-    prepend-icon="tabler-replace"
-    variant="outlined"
-    :disabled="selectedRows.length === 0"
-    @click="changeArea"
-    >
-    Mover de área
-    </VBtn>
-    </div> 
-  -->
   <VDataTableServer
     v-model:items-per-page="itemsPerPage"
     v-model:model-value="selectedRows"
@@ -162,6 +145,16 @@ watch(() => props.updated, newValue => {
       </tr>
     </template>
 
+    <!-- Actions -->
+    <template #item.actions="{ item }">
+      <IconBtn>
+        <VIcon
+          icon="tabler-trash"
+          @click="viewDeleteMaterialDialog(item)"
+        />
+      </IconBtn>
+    </template>
+
     <!-- pagination -->
     <template #bottom>
       <TablePagination
@@ -171,6 +164,27 @@ watch(() => props.updated, newValue => {
       />
     </template>
   </VDataTableServer>
+  <LoadingDataDialog v-model:is-dialog-visible="isLoading" />
+  <VDialog
+    v-model="isDeleteMaterialDialogVisible"
+    width="500"
+  >
+    <!-- Dialog close btn -->
+    <DialogCloseBtn @click="isDeleteMaterialDialogVisible = !isDeleteMaterialDialogVisible" />
+
+    <!-- Dialog Content -->
+    <VCard title="Eliminar material">
+      <VCardText>
+        ¿Estás seguro de eliminar el material <b>{{ selectedMaterial.concept }}</b> de la cuantificación?
+      </VCardText>
+
+      <VCardText class="d-flex justify-end">
+        <VBtn @click="deleteMaterial">
+          Eliminar
+        </VBtn>
+      </VCardText>
+    </VCard>
+  </VDialog>
 </template>
 
 <style lang="scss">

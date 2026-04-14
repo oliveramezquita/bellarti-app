@@ -25,13 +25,12 @@ const { data: prototypeCatalog }= await useApi('api/prototypes?itemsPerPage=1000
 const {
   data: materialsData,
   execute: fetchMaterials,
-} = await useApi(createUrl(`api/explosion/${homeProductionData.value._id}`))
+} = await useApi(createUrl(`api/explosion/${homeProductionData.value._id}?status=0`))
 
 const prototypes = prototypeCatalog.value.data.filter(d => d.front === homeProductionData.value.front).map(d => d.name)
 const lots = ref(lotsData.value ? lotsData.value : [])
 const isLoadingDialogVisible = ref(false)
-const isNotificationVisible = ref(false)
-const notificationMessage = ref('')
+const notification = ref({ visible: false, message: '', color: 'info' })
 const isLotStatusDialogVisible = ref(false)
 const currentTab = ref('tab-1')
 const excelFile = ref()
@@ -40,6 +39,9 @@ const warnings = ref([])
 const errors = ref()
 const lotId = ref()
 const progressSelected = ref([])
+const isDeleteLotDialogVisible = ref(false)
+const selectedLot = ref()
+const selectedLotIdx = ref()
 
 const addNewLot = () => {
   lots.value.push({
@@ -51,18 +53,30 @@ const addNewLot = () => {
   })
 }
 
+const viewDeleteLotDialog = (lot, idx) => {
+  selectedLot.value = lot
+  selectedLotIdx.value = idx
+  isDeleteLotDialogVisible.value = true
+}
+
 const removeLot = async idx => {
+  isDeleteLotDialogVisible.value = false
   if(lots.value[idx].hasOwnProperty('_id')) {
     isLoadingDialogVisible.value = true
     try {
       await $api(`api/lot/${lots.value[idx]._id}`, {
         method: 'DELETE',
-        onResponse({ response }) {
+        onResponse: async({ response }) => {
           if (response.status === 200) {
             lots.value.splice(idx, 1)
+            await sleep(2000)
+            await fetchMaterials()
           } else {
-            isNotificationVisible.value = true
-            notificationMessage.value = response._data
+            notification.value = {
+              visible: true,
+              message: response._data,
+              color: getStatusColor(response.status),
+            }
           }
         },
       })
@@ -73,6 +87,8 @@ const removeLot = async idx => {
     lots.value.splice(idx, 1)
   }
 }
+
+const sleep = ms => new Promise(r => setTimeout(r, ms))
 
 const saveLots = async () => {
   if (isValid()) {
@@ -86,15 +102,22 @@ const saveLots = async () => {
         method: 'POST',
         body: {
           lots: filtered,
-        }, onResponse({ response }) {
+        }, onResponse: async({ response }) => {
           if (response.status === 200 && response._data.hasOwnProperty('success')) {
             lots.value = response._data.success
-            isNotificationVisible.value = true
-            notificationMessage.value = "Lotes guardados de manera correcta."
-            fetchMaterials()
+            await sleep(2000)
+            await fetchMaterials()
+            notification.value = {
+              visible: true,
+              message: "Lotes guardados de manera correcta.",
+              color: getStatusColor(response.status),
+            }
           } else {
-            isNotificationVisible.value = true
-            notificationMessage.value = response._data
+            notification.value = {
+              visible: true,
+              message: response._data,
+              color: getStatusColor(response.status),
+            }
           }
         },
       })
@@ -102,8 +125,11 @@ const saveLots = async () => {
       isLoadingDialogVisible.value = false
     }
   } else {
-    isNotificationVisible.value = true
-    notificationMessage.value = "Error: Algunos campos obligatorios están vacíos. Por favor, asegúrese de completar los siguientes valores: Manzana, Lote, Sembrado y Prototipo."
+    notification.value = {
+      visible: true,
+      message: "Error: Algunos campos obligatorios están vacíos. Por favor, asegúrese de completar los siguientes valores: Manzana, Lote, Sembrado y Prototipo.",
+      color: 'error',
+    }
   }
 }
 
@@ -136,8 +162,11 @@ const saveProgress = async data => {
       onResponse({ response }) {
         if (response.status === 200)
           fetchLots()
-        isNotificationVisible.value = true
-        notificationMessage.value = response._data
+        notification.value = {
+          visible: true,
+          message: response._data,
+          color: getStatusColor(response.status),
+        }
       },
     })
   } finally {
@@ -152,18 +181,17 @@ const uploadLots = async () => {
     const formData = new FormData()
 
     formData.append('file', excelFile.value)
-    formData.append('client_id', homeProductionData.value.client_id)
-    formData.append('front', homeProductionData.value.front)
 
     await $api(`api/lots/${homeProductionData.value._id}`, {
       method: 'PATCH',
       body: formData,
-      onResponse({ response }) {
+      onResponse: async({ response }) => {
         if (response.status === 200 && response._data.hasOwnProperty('success')) {
           lots.value = response._data.success
           successful.value = response._data.success
           warnings.value = response._data.errors
-          fetchMaterials()
+          await sleep(2000)
+          await fetchMaterials()
         } else {
           errors.value = response._data
         }
@@ -250,9 +278,9 @@ watch(lotsData, newData => {
         <span>Materiales</span>
       </VTab>
     </VTabs>
-    <VCardText>
-      <VWindow v-model="currentTab">
-        <VWindowItem style="padding-block: 15px;">
+    <VWindow v-model="currentTab">
+      <VWindowItem style="padding-block: 15px;">
+        <VCardText>
           <VRow
             v-for="(_, i) in lots"
             :key="i"
@@ -325,7 +353,7 @@ watch(lotsData, newData => {
               <IconBtn v-if="lots[i].percentage === '0.00'">
                 <VIcon
                   icon="tabler-trash"
-                  @click="removeLot(i)"
+                  @click="viewDeleteLotDialog(lots[i], i)"
                 />
               </IconBtn>
             </VCol>
@@ -353,12 +381,14 @@ watch(lotsData, newData => {
               </div>
             </VCol>
           </VRow>
-        </VWindowItem>
-        <VWindowItem>
+        </VCardText>
+      </VWindowItem>
+      <VWindowItem>
+        <VCardText style="padding-inline: 0;">
           <MaterialTable :materials="materialsData" />
-        </VWindowItem>
-      </VWindow>
-    </VCardText>
+        </VCardText>
+      </VWindowItem>
+    </VWindow>
     <VDivider v-if="homeProductionData.progress < 100" />
     <VCardItem
       v-if="homeProductionData.progress < 100"
@@ -423,7 +453,7 @@ watch(lotsData, newData => {
               v-for="(warning, idx) in warnings"
               :key="idx"
             >
-              <li>Fila: {{ warning.row }} - {{ warning.errors[0] }}</li>
+              <li>Fila: {{ warning.row }} - {{ warning.error }}</li>
             </ul>
           </VAlert>
           <VAlert
@@ -442,8 +472,9 @@ watch(lotsData, newData => {
   </VCard>
   <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
   <Notification
-    v-model:is-notification-visible="isNotificationVisible"
-    :message="notificationMessage"
+    v-model:is-notification-visible="notification.visible"
+    :message="notification.message"
+    :color="notification.color"
   />
   <LotStatusDialog
     v-model:is-dialog-visible="isLotStatusDialogVisible"
@@ -451,6 +482,26 @@ watch(lotsData, newData => {
     v-model:progress-data="progressSelected"
     @save-progress="saveProgress"
   />
+  <VDialog
+    v-model="isDeleteLotDialogVisible"
+    width="500"
+  >
+    <!-- Dialog close btn -->
+    <DialogCloseBtn @click="isDeleteLotDialogVisible = !isDeleteLotDialogVisible" />
+
+    <!-- Dialog Content -->
+    <VCard title="Eliminar Lote">
+      <VCardText>
+        ¿Estás seguro de eliminar el Lote: Manzana(<b>{{ selectedLot.block }}</b>), Lote(<b>{{ selectedLot.lot }}</b>), Sembrado(<b>{{ selectedLot.laid }}</b>) y Prototipo(<b>{{ selectedLot.prototype }}</b>)?
+      </VCardText>
+
+      <VCardText class="d-flex justify-end">
+        <VBtn @click="removeLot(selectedLotIdx)">
+          Eliminar
+        </VBtn>
+      </VCardText>
+    </VCard>
+  </VDialog>
 </template>
 
 <style lang="scss">

@@ -5,9 +5,7 @@ definePage({
     subject: 'VSCuantificacion',
   },
 })
-import ChangeAreaDrawer from '@/views/apps/quantification/ChangeAreaDrawer.vue'
 import DataTable from '@/views/apps/quantification/DataTable.vue'
-import SelectColorDrawer from '@/views/apps/quantification/SelectColorDrawer.vue'
 
 const breadcrumbItems = ref([{ title: 'Vivienda en Serie', class: 'text-primary' }, { title: 'Cuantificación' }])
 const { data: clients } = await useApi('api/clients/VS?itemsPerPage=1000')
@@ -24,10 +22,6 @@ const notificationMessage = ref('')
 const quantificationId = ref()
 const quantification = ref([])
 const currentTab = ref(0)
-const isSelectColorDrawerVisible = ref(false)
-const isChangeAreaDrawerVisible = ref(false)
-const selectedMaterials = ref()
-const selectedArea = ref()
 const updated = ref(false)
 
 const clientChange = async value => {
@@ -74,8 +68,8 @@ const getQuantification = async () => {
 }
 
 const transformData = async data => {
-  areas.value = Object.keys(data).filter(area =>
-    data[area].some(material => material.TOTAL > 0),
+  areas.value = Object.keys(data).filter(
+    area => Array.isArray(data[area]),
   )
   quantification.value = areas.value.map(area => {
     const materialsWithId = data[area]
@@ -91,59 +85,16 @@ const transformData = async data => {
     }
   })
 
-  await nextTick()
-  currentTab.value = areas.value.length > 0 ? 0 : null
+  // await nextTick()
+  // currentTab.value = areas.value.length > 0 ? 0 : null
 }
 
-const showSelectColorDrawer = data => {
-  selectedMaterials.value = data.selectedMaterials
-  selectedArea.value = data.selectedArea
-  isSelectColorDrawerVisible.value = true
-}
-
-const assignColor = async color => {
+const deleteMaterial = async item => {
   isLoadingDialogVisible.value = true
   try {
-    await $api(`api/quantification/${quantificationId.value}/assign_color`, {
+    await $api(`api/quantification/${quantificationId.value}/detele_material`, {
       method: 'PATCH',
-      body: {
-        'area': selectedArea.value,
-        'color': color.value,
-        'materials': selectedMaterials.value,
-      },
-      onResponse({ response }) {
-        if (response.status === 200) {
-          updated.value = true
-          if (response._data.hasOwnProperty('quantification'))
-            transformData(response._data.quantification)
-        } else {
-          updated.value = false
-          isNotificationVisible.value = true
-          notificationMessage.value = response._data
-        }
-      },
-    })
-  } finally {
-    isLoadingDialogVisible.value = false
-  }
-}
-
-const showChangeAreaDrawer = data => {
-  selectedMaterials.value = data.selectedMaterials
-  selectedArea.value = data.selectedArea
-  isChangeAreaDrawerVisible.value = true
-}
-
-const changeArea = async area => {
-  isLoadingDialogVisible.value = true
-  try {
-    await $api(`api/quantification/${quantificationId.value}/change_area`, {
-      method: 'PATCH',
-      body: {
-        'area': selectedArea.value,
-        'destination': area.value,
-        'materials': selectedMaterials.value,
-      },
+      body: item,
       onResponse({ response }) {
         if (response.status === 200) {
           updated.value = true
@@ -243,8 +194,7 @@ const changeArea = async area => {
               :quantification="q.materials"
               :area="q.key"
               :updated="updated"
-              @show-select-color-drawer="showSelectColorDrawer"
-              @show-change-area-drawer="showChangeAreaDrawer"
+              @delete-material="deleteMaterial"
             />
           </VWindowItem>
         </VWindow>
@@ -255,15 +205,6 @@ const changeArea = async area => {
   <Notification
     v-model:is-notification-visible="isNotificationVisible"
     :message="notificationMessage"
-  />
-  <SelectColorDrawer
-    v-model:is-drawer-open="isSelectColorDrawerVisible"
-    @assign-color="assignColor"
-  />
-  <ChangeAreaDrawer
-    v-model:is-drawer-open="isChangeAreaDrawerVisible"
-    v-model:source="selectedArea"
-    @change-area="changeArea"
   />
 </template>
 

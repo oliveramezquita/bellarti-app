@@ -6,9 +6,9 @@ definePage({
     subject: 'VSVolumetria',
   },
 })
-import DataTable from '@/views/apps/volumetry/DataTable.vue'
-import FormData from '@/views/apps/volumetry/FormData.vue'
-import KitchenFormData from '@/views/apps/volumetry/KitchenFormData.vue'
+import { loadState, saveState } from '@/utils/storage'
+import DataForm from '@/views/apps/volumetry/DataForm.vue'
+import FileUpload from '@/views/apps/volumetry/FileUpload.vue'
 
 const breadcrumbItems = ref([{ title: 'Vivienda en Serie', class: 'text-primary' }, { title: 'Volumetría' }])
 const isLoadingDialogVisible = ref(false)
@@ -23,18 +23,14 @@ const fronts = ref([])
 const prototypes = ref([])
 const prototype = ref()
 const volumetry = ref([])
-const volumetryItemDeleted = ref()
 const responseUploadedFile = ref()
-const isKitchen = ref(false)
-const allTendencies = ref({})
-const tendencies = ref([])
+const currentTab = ref('tab-1')
 
 client.value = loadState('volumetry_client')
 front.value = loadState('volumetry_front')
 prototype.value = loadState('volumetry_prototype')
 fronts.value = loadState('volumetry_fronts') || []
 prototypes.value = loadState('volumetry_prototypes') || []
-allTendencies.value = loadState('prototype_tendencies') || {}
 
 const clientChange = async value => {
   // Guardar el cliente seleccionado
@@ -52,7 +48,6 @@ const clientChange = async value => {
   saveState('volumetry_prototype', null)
   saveState('volumetry_fronts', [])
   saveState('volumetry_prototypes', [])
-  saveState('prototype_tendencies', {})
 
   // 🔹 Llamada API
   await $api(`api/prototypes?itemsPerPage=100&client_id=${value}`, {
@@ -78,36 +73,13 @@ const getUniqueValues = (array, key) => {
   return [...new Set(array.map(item => item[key]).filter(Boolean))]
 }
 
-const getTendenciesByPrototype = prototypes => {
-  if (!Array.isArray(prototypes)) return {}
-
-  return prototypes.reduce((acc, proto) => {
-    const tendencies = Array.isArray(proto.tendencies)
-      ? proto.tendencies.map(t => ({
-        id: crypto.randomUUID(),
-        melamine: t.melamine,
-        granite: t.granite,
-        percentage: t.percentage,
-        factory: 0,
-        installation: 0,
-        delivery: 0,
-        total_x: 0,
-      }))
-      : []
-
-    acc[proto.name] = tendencies
-    
-    return acc
-  }, {})
-}
-
-
 const frontChange = async () => {
   saveState('volumetry_front', front.value)
 
   // 🔹 Limpiar dependencias del prototipo
   prototype.value = null
   prototypes.value = []
+
   resetVolumetry()
   saveState('volumetry_prototype', null)
   saveState('volumetry_prototypes', [])
@@ -119,9 +91,7 @@ const frontChange = async () => {
       onResponse({ response }) {
         if (response.status === 200) {
           prototypes.value = getUniqueValues(response._data.data, 'name')
-          allTendencies.value = getTendenciesByPrototype(response._data.data)
           saveState('volumetry_prototypes', prototypes.value)
-          saveState('prototype_tendencies', allTendencies.value)
         }
       },
     })
@@ -134,8 +104,6 @@ const prototypeChange = async () => {
   if (!prototype.value) return
 
   saveState('volumetry_prototype', prototype.value)
-  tendencies.value = allTendencies.value[prototype.value]
-  isKitchen.value = prototype.value.trim().endsWith("Cocina")
   isLoadingDialogVisible.value = true
   try {
     await $api(`api/volumetries?client_id=${client.value}&front=${front.value}&prototype=${prototype.value}`, {
@@ -143,8 +111,11 @@ const prototypeChange = async () => {
       onResponse({ response }) {
         if (response.status === 200) {
           isViewVolumetry.value = true
-          volumetry.value = response._data.volumetry
+          volumetry.value = response._data
         } else {
+          notificationColor.value = 'error'
+          notificationMessage.value = response._data
+          isNotificationVisible.value = true
           resetVolumetry()
         }
       },
@@ -154,24 +125,8 @@ const prototypeChange = async () => {
   }
 }
 
-const resetVolumetry = () => {
-  isViewVolumetry.value = false
-  volumetry.value = []
-}
-
-// ✅ Si hay un prototipo guardado, ejecuta la carga automática
-watch(
-  prototype,
-  async newVal => {
-    if (newVal) {
-      await prototypeChange()
-    }
-  },
-  { immediate: true }, // ✅ ejecuta una vez al montar si prototype ya tiene valor
-)
-
 const addVolumetry  = async volumetryData => {
-  if (!parseFloat(volumetryData.volumetry[0]?.total_x || 0)) {
+  if (volumetryData.every(item => Number(item.total) === 0)) {
     notificationColor.value = 'error'
     notificationMessage.value = 'No se ingresó al menos una cantidad por fábrica, instalación y/o entrega.'
     isNotificationVisible.value = true
@@ -188,9 +143,7 @@ const addVolumetry  = async volumetryData => {
         client_id: client.value,
         front: front.value,
         prototype: prototype.value,
-        material_id: volumetryData.material_id,
-        volumetry: volumetryData.volumetry,
-        tendencies: volumetryData.tendencies,
+        volumetry: volumetryData,
       },
       onResponse({ response }) {
         notificationColor.value = getStatusColor(response.status)
@@ -221,6 +174,7 @@ const uploadVolumetry = async formsData => {
           notificationMessage.value = response._data
           isNotificationVisible.value = true
         } else {
+          console.log(response._data)
           if (response._data.volumetry.length > 0)
             volumetry.value = response._data.volumetry
           responseUploadedFile.value = response._data
@@ -232,21 +186,59 @@ const uploadVolumetry = async formsData => {
   }
 }
 
-const deleteVolumetry = async i => {
-  await $api(`api/volumetry/${i.id}`, { 
-    method: 'DELETE',
-    onResponse({ response }) {
-      notificationColor.value = getStatusColor(response.status)
-      if (response.status === 200) {
-        volumetry.value = volumetry.value.filter(item => item.id !== i.id)
-        volumetryItemDeleted.value = i.material_id
-      } else {
-        isNotificationVisible.value = true
-        notificationMessage.value = response._data 
-      }
-    },
-  })
+const deleteVolumetry = async item => {
+  if (item.hasOwnProperty('_id')) {
+    isLoadingDialogVisible.value = true
+
+    try {
+      await $api(`api/volumetry/${item?._id}`, { 
+        method: 'DELETE',
+        onResponse({ response }) {
+          notificationColor.value = getStatusColor(response.status)
+          if (response.status === 200)
+            notificationMessage.value = `El material: ${item.concept} ha sido eliminado correctamente de la volumetría.`
+          else 
+            notificationMessage.value = response._data 
+          isNotificationVisible.value = true
+        },
+      })
+    } finally {
+      isLoadingDialogVisible.value = false
+    }
+  }
 }
+
+const resetVolumetry = () => {
+  isViewVolumetry.value = false
+  volumetry.value = []
+}
+
+const resetDataVolumetry = () => {
+  client.value = null
+  front.value = null
+  prototype.value = null
+  fronts.value = []
+  prototypes.value = []
+  
+  saveState('volumetry_client', null)
+  saveState('volumetry_front', null)
+  saveState('volumetry_prototype', null)
+  saveState('volumetry_fronts', [])
+  saveState('volumetry_prototypes', [])
+
+  resetVolumetry()
+}
+
+// ✅ Si hay un prototipo guardado, ejecuta la carga automática
+watch(
+  prototype,
+  async newVal => {
+    if (newVal) {
+      await prototypeChange()
+    }
+  },
+  { immediate: true }, // ✅ ejecuta una vez al montar si prototype ya tiene valor
+)
 </script>
 
 <template>
@@ -271,7 +263,6 @@ const deleteVolumetry = async i => {
               :item-title="item => item.name"
               :item-value="item => item._id"
               :items="clients.data"
-              class="font-weight-bold"
               @update:model-value="clientChange"
             />
           </VCol>
@@ -285,14 +276,13 @@ const deleteVolumetry = async i => {
               label="Frente / Fraccionamiento"
               placeholder="Frente / Fraccionamiento"
               :items="fronts"
-              class="font-weight-bold"
               @update:model-value="frontChange"
             />
           </VCol>
           <!-- 👉 Prototypes -->
           <VCol
             cols="12"
-            md="4"
+            md="3"
           >
             <AppSelect
               v-model="prototype"
@@ -303,32 +293,66 @@ const deleteVolumetry = async i => {
               @update:model-value="prototypeChange"
             />
           </VCol>
+          <VCol
+            cols="12"
+            md="1"
+            class="d-flex align-end"
+          >
+            <VBtn
+              icon="tabler-refresh"
+              rounded
+              @click="resetDataVolumetry"
+            />
+          </VCol>
         </VRow>
       </VCardText>
     </VCard>
-    <FormData
-      v-if="isViewVolumetry && !isKitchen"
-      key="form"
-      :volumetry="volumetry"
-      :response-uploaded-file="responseUploadedFile"
-      @volumetry-data="addVolumetry"
-      @file-data="uploadVolumetry"
-    />
-    <KitchenFormData
-      v-if="isViewVolumetry && isKitchen"
-      key="kitchen"
-      :tendencies-data="tendencies"
-      :volumetry-data="volumetry"
-      :response-uploaded-file="responseUploadedFile"
-      @volumetry-data="addVolumetry"
-      @file-data="uploadVolumetry"
-    />
-    <DataTable
-      v-if="isViewVolumetry"
-      :volumetry="volumetry"
-      :is-kitchen="isKitchen"
-      @volumetry-data="deleteVolumetry"
-    />
+    <VCard v-if="isViewVolumetry">
+      <VTabs
+        v-model="currentTab"
+        grow
+        stacked
+      >
+        <VTab>
+          <VIcon
+            icon="tabler-package"
+            class="mb-2"
+          />
+          <span>Subir por material</span>
+        </VTab>
+
+        <VTab>
+          <VIcon
+            icon="tabler-file-plus"
+            class="mb-2"
+          />
+          <span>Subir por archivo</span>
+        </VTab>
+      </VTabs>
+
+      <VWindow v-model="currentTab">
+        <!-- ================================================= -->
+        <!-- ✅ TAB 1: Subir por material -->
+        <!-- ================================================= -->
+        <VWindowItem>
+          <VCardText style="padding-inline: 0;">
+            <DataForm
+              v-model:volumetry="volumetry"
+              @add-volumetry="addVolumetry"
+              @delete-volumetry="deleteVolumetry"
+            />
+          </VCardText>
+        </VWindowItem>
+        <VWindowItem>
+          <VCardText>
+            <FileUpload
+              v-model:response-uploaded-file="responseUploadedFile"
+              @file-data="uploadVolumetry"
+            />
+          </VCardText>
+        </VWindowItem>
+      </vwindow>
+    </VCard>
     <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
     <Notification
       v-model:is-notification-visible="isNotificationVisible"

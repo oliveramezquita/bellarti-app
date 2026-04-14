@@ -25,8 +25,7 @@ const emit = defineEmits([
 
 const isFormValid = ref(false)
 const refForm = ref()
-const { data: suppliers } = await useApi('api/suppliers?itemsPerPage=1000')
-const { data: colors } = await useApi('api/catalogs?name=Colores')
+const { data: suppliers } = await useApi('api/suppliers?itemsPerPage=1000&excludeTrend=true')
 const supplier = ref()
 const materials = ref([])
 const amount = ref()
@@ -43,7 +42,7 @@ const color = ref()
 watch(props, () => {
   if (props.materialData) {
     supplier.value = props.materialData.supplier_id
-    material.value = structuredClone(toRaw(props.materialData))
+    material.value = { ...props.materialData }
     color.value = props.materialData.color
     amount.value = props.materialData.total_quantity
     price.value = props.materialData.inventory_price
@@ -67,6 +66,7 @@ const onSubmit = () => {
         modified: (material.value.total !== total.value) ? 1 : 0,
         reference: reference.value ? reference.value : null,
         required: amount.value,
+        inventory_price: price.value,
         total: total.value,
         total_quantity: amount.value,
       })

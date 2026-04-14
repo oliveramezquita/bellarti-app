@@ -14,17 +14,48 @@ import Qr from '@/views/apps/materials/Qr.vue'
 
 const route = useRoute('apps-materials-view-id')
 const router = useRouter()
-const { data: materialData } = await useApi(`api/material/${ route.params.id }`)
-const { data: suppliers } = await useApi('api/suppliers?itemsPerPage=1000')
-const { data: unitsOfMeasurement }= await useApi('api/catalogs?name=Unidades de medida')
-const { data: divisions } = await useApi('api/catalogs?name=División de materiales')
+const { data: materialData, error: materialError } = await useApi(`api/material/${ route.params.id }`)
+const notification = ref({ visible: false, message: '', color: 'info' })
+
+watch(materialError, e => {
+  if (!e) return
+
+  console.log(e)
+  notification.value = {
+    visible: true, 
+    message: 'Ocurrió un error al intentar obtener los materiales.',
+    color: 'error',
+  }
+}, { immediate: true })
+
+const [
+  { data: suppliers },
+  { data: unitsOfMeasurement },
+  { data: divisions },
+] = await Promise.all([
+  useApi('api/suppliers?itemsPerPage=1000'),
+  useApi('api/catalogs?name=Unidades de medida'),
+  useApi('api/catalogs?name=División de materiales'),
+])
+
 const currentTab = ref('tab-1')
 const isFormValid = ref(false)
 const refForm = ref()
 const isLoadingDialogVisible = ref(false)
-const isNotificationVisible = ref(false)
-const notificationMessage = ref('')
-const material = ref(materialData.value)
+
+const material = ref(materialData.value ?? { _id: null, concept: null, division: null })
+
+const breadcrumbItems = [
+  { title: 'Materiales', class: 'text-primary' }, 
+  { 
+    title: material.value.group === 'EQUIPMENT_GROUP' ? 'Equipamiento y Accesorios' : 'Materiales', 
+    to: { 
+      name: material.value.group === 'EQUIPMENT_GROUP' ? 'apps-equipment-list' : 'apps-materials-list',
+    }, 
+    class: 'text-underline' }, 
+  { title: material.value.concept },
+]
+
 const isDeleteUserDialogVisible = ref(false)
 
 const concept = computed(() => {
@@ -62,8 +93,11 @@ const sku = computed(() => {
 })
 
 if (route.query.new) {
-  notificationMessage.value = `El material ${materialData.value.concept} ha sido agregado con éxito`
-  isNotificationVisible.value = true
+  notification.value = {
+    visible: true, 
+    message: `El material ${material.value.concept} ha sido agregado con éxito`, 
+    color: 'success',
+  }
 }
 
 const onSubmit = () => {
@@ -82,23 +116,33 @@ const editMaterial = async (tab = null) => {
   const { _id, ...filteredObject } = material.value
 
   try {
-    await $api(`api/material/${materialData.value._id}`, {
+    await $api(`api/material/${material.value._id}`, {
       method: 'PATCH',
       body: filteredObject,
       onResponse({ response }) {
-        isNotificationVisible.value = true
         if (response.status === 200) {
-          notificationMessage.value = "Material actualizado correctamente."
+          notification.value = {
+            visible: true, 
+            message: "Material actualizado correctamente.", 
+            color: 'success',
+          }
           material.value = response._data
         } else {
-          notificationMessage.value = response._data
+          notification.value = {
+            visible: true, 
+            message: response._data, 
+            color: 'error',
+          }
         }
       },
     })
   } catch (err) {
     console.error("Error al actualizar material:", err)
-    notificationMessage.value = "Ocurrió un error inesperado"
-    isNotificationVisible.value = true
+    notification.value = {
+      visible: true, 
+      message: "Ocurrió un error inesperado", 
+      color: 'error',
+    }
   } finally {
     if (tab) currentTab.value = tab
     isLoadingDialogVisible.value = false
@@ -142,8 +186,11 @@ const uploadImage = async formData => {
         if (response.status === 200) {
           material.value.images = response._data
         } else {
-          isNotificationVisible.value = true
-          notificationMessage.value = response._data
+          notification.value = {
+            visible: true, 
+            message: response._data, 
+            color: 'error',
+          }
         }
       },
     })
@@ -161,8 +208,11 @@ const deleteImages = async images => {
         if (response.status === 200) {
           material.value.images = response._data
         } else {
-          isNotificationVisible.value = true
-          notificationMessage.value = response._data
+          notification.value = {
+            visible: true, 
+            message: response._data, 
+            color: 'error',
+          }
         }
       },
     })
@@ -174,7 +224,7 @@ const deleteImages = async images => {
 
 <template>
   <Breadcrumb
-    :items="[{ title: 'Materiales', class: 'text-primary' }, { title: 'Materiales', to: { name: 'apps-materials-list' }, class: 'text-underline' }, { title: materialData.concept }]"
+    :items="breadcrumbItems"
     icon="password-user"
   />
   <VCard class="py-3">
@@ -501,18 +551,6 @@ const deleteImages = async images => {
                   label="Redondeo automatizado (Se requiere la presentación del material)"
                 />
               </VCol>
-
-              <VCol
-                cols="12"
-                md="8"
-                style="margin-block-start: -25px;"
-              >
-                <VSwitch
-                  v-model="material.its_trending"
-                  label="Es un producto de tendencia"
-                />
-              </VCol>
-
               <VCol
                 cols="12"
                 class="d-flex gap-4"
@@ -563,8 +601,9 @@ const deleteImages = async images => {
   </VCard>
   <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
   <Notification
-    v-model:is-notification-visible="isNotificationVisible"
-    :message="notificationMessage"
+    v-model:is-notification-visible="notification.visible"
+    :message="notification.message"
+    :color="notification.color"
   />
   <VDialog
     v-model="isDeleteUserDialogVisible"
@@ -576,11 +615,11 @@ const deleteImages = async images => {
     <!-- Dialog Content -->
     <VCard title="Eliminar Material">
       <VCardText>
-        ¿Estás seguro de eliminar el material <b>{{ materialData.concept }}</b>?
+        ¿Estás seguro de eliminar el material <b>{{ material.concept }}</b>?
       </VCardText>
 
       <VCardText class="d-flex justify-end">
-        <VBtn @click="deleteMaterial(materialData._id)">
+        <VBtn @click="deleteMaterial(material._id)">
           Eliminar
         </VBtn>
       </VCardText>

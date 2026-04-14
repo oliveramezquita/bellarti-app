@@ -381,6 +381,7 @@
     "getStatusColor": true,
     "loadState": true,
     "saveState": true,
-    "purchaseOrdersDefaultValues": true
+    "purchaseOrdersDefaultValues": true,
+    "formatCurrency": true
   }
 }
