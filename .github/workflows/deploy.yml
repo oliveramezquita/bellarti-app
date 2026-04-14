@@ -1,9 +1,7 @@
 name: Deploy Bellarti App Dist Folder
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   build:
