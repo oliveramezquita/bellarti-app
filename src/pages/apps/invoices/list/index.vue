@@ -24,6 +24,8 @@ const page = ref(1)
 const sortBy = ref()
 const orderBy = ref()
 const notification = ref({ visible: false, message: '', color: 'info' })
+const isDeleteInvoiceDialogVisible = ref(false)
+const selectedInvoice = ref()
 
 const {
   data: invoicesData,
@@ -73,16 +75,30 @@ const headers = [
 ]
 
 const invoicedStatusList = [
-  { name: 'Pendiente', color: 'secondary', icon: 'tabler-receipt-2', value: false },
-  { name: 'Pagada', color: 'success', icon: 'tabler-receipt-2', value: true },
+  { name: 'Pendiente', color: 'secondary', icon: 'tabler-receipt-2', value: 0 },
+  { name: 'Pagada', color: 'success', icon: 'tabler-receipt-2', value: 1 },
+  { name: 'Eliminada', color: 'error', icon: 'tabler-receipt-2', value: 2 },
 ]
 
 const getStatusValue = (list, value, key) => {
-  console.log(value)
-
   const status = list.find(item => item.value === value)
   
   return status ? status[key] : null
+}
+
+const viewDeleteInvoiceDialog = invoice => {
+  selectedInvoice.value = invoice
+  isDeleteInvoiceDialogVisible.value = true
+}
+
+const deleteInvoice = async id => {
+  await $api(`api/invoice/${id}`, { method: 'DELETE', onResponse({ response }) {
+    notification.value.color = 'success'
+    notification.value.visible = true
+    notification.value.message = response._data
+  } })
+  isDeleteInvoiceDialogVisible.value = false
+  fetchInvoices()
 }
 
 watch(error, e => {
@@ -223,8 +239,11 @@ watch(error, e => {
           <IconBtn :to="{name: 'apps-invoices-view-id', params: {id: item._id}}">
             <VIcon icon="tabler-eye" />
           </IconBtn>
-          <IconBtn>
-            <VIcon icon="tabler-trash" />
+          <IconBtn v-if="item.status === 0">
+            <VIcon
+              icon="tabler-trash"
+              @click="viewDeleteInvoiceDialog(item)"
+            />
           </IconBtn>
         </template>
 
@@ -237,5 +256,30 @@ watch(error, e => {
         </template>
       </VDataTableServer>
     </VCard>
+    <VDialog
+      v-model="isDeleteInvoiceDialogVisible"
+      width="500"
+    >
+      <!-- Dialog close btn -->
+      <DialogCloseBtn @click="isDeleteInvoiceDialogVisible = !isDeleteInvoiceDialogVisible" />
+
+      <!-- Dialog Content -->
+      <VCard title="Eliminar factura">
+        <VCardText>
+          ¿Estás seguro de eliminar la factura: <b>{{ selectedInvoice.folio }}</b>?
+        </VCardText>
+
+        <VCardText class="d-flex justify-end">
+          <VBtn @click="deleteInvoice(selectedInvoice._id)">
+            Eliminar
+          </VBtn>
+        </VCardText>
+      </VCard>
+    </VDialog>
+    <Notification
+      v-model:is-notification-visible="notification.visible"
+      :message="notification.message"
+      :color="notification.color"
+    />
   </section>
 </template>

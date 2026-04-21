@@ -9,7 +9,7 @@ const { data: invoiceData, execute: fetchInvoice, error } = await useApi(`api/in
 const notification = ref({ visible: false, message: '', color: 'info' })
 const isLoadingDialogVisible = ref(false)
 const isUploadInvoiceDrawerVisible = ref(false)
-const invoicePaidStatus = ref(invoiceData.value.status)
+const invoicePaidStatus = ref(invoiceData.value.status === 1)
 
 const update = async () => {
   isLoadingDialogVisible.value = true
