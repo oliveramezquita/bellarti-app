@@ -80,8 +80,8 @@ const invoicedStatusList = [
   { name: 'Eliminada', color: 'error', icon: 'tabler-receipt-2', value: 2 },
 ]
 
-const getStatusValue = (list, value, key) => {
-  const status = list.find(item => item.value === value)
+const getStatusValue = (value, key) => {
+  const status = invoicedStatusList.find(item => item.value === value)
   
   return status ? status[key] : null
 }
@@ -222,8 +222,8 @@ watch(error, e => {
         <template #item.status="{ item }">
           <div class="align-center">
             <VAvatar
-              :color="getStatusValue(invoicedStatusList, item.status, 'color')"
-              :icon="getStatusValue(invoicedStatusList, item.status, 'icon')"
+              :color="getStatusValue(item.status, 'color')"
+              :icon="getStatusValue(item.status, 'icon')"
               size="small"
               variant="text"
             />

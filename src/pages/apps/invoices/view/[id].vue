@@ -11,6 +11,12 @@ const isLoadingDialogVisible = ref(false)
 const isUploadInvoiceDrawerVisible = ref(false)
 const invoicePaidStatus = ref(invoiceData.value.status === 1)
 
+const invoicedStatusList = [
+  { name: 'Pendiente', color: 'secondary', icon: 'tabler-receipt-2', value: 0 },
+  { name: 'Pagada', color: 'success', icon: 'tabler-receipt-2', value: 1 },
+  { name: 'Eliminada', color: 'error', icon: 'tabler-receipt-2', value: 2 },
+]
+
 const update = async () => {
   isLoadingDialogVisible.value = true
 
@@ -55,6 +61,12 @@ const uploadInvoiceFiles = async formsData => {
   } finally {
     isLoadingDialogVisible.value = false
   }
+}
+
+const getStatusValue = (value, key) => {
+  const status = invoicedStatusList.find(item => item.value === value)
+  
+  return status ? status[key] : null
 }
 
 watch(() => invoicePaidStatus.value, update)
@@ -122,12 +134,23 @@ watch(error, e => {
           </VCol>
           <VCol
             cols="12"
-            md="3"
+            class="d-flex align-center justify-space-between"
           >
             <VCheckbox
               v-model="invoicePaidStatus"
               label="Factura pagada"
+              :disabled="invoiceData.status === 2"
             />
+            <VBtn
+              variant="outlined"
+              :color="getStatusValue(invoiceData.status, 'color')"
+              readonly
+            >
+              <VIcon
+                start
+                icon="tabler-receipt-2"
+              />Factura {{ getStatusValue(invoiceData.status, 'name') }}
+            </VBtn>
           </VCol>
         </VRow>
       </VCardText>
