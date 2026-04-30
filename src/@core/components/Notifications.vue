@@ -206,6 +206,7 @@ const toggleReadUnread = (is_seen, Id) => {
           <VBtn
             block
             size="small"
+            to="/pages/notifications"
           >
             Ver todas las notificaciones
           </VBtn>

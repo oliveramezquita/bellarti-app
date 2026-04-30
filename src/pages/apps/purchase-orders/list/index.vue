@@ -395,7 +395,7 @@ const deletePurchaseOrder = async id => {
     <!-- SECTION -->
     <VDialog
       v-model="isDeletePurchaseOrderDialogVisible"
-      width="500"
+      width="600"
     >
       <!-- Dialog close btn -->
       <DialogCloseBtn @click="isDeletePurchaseOrderDialogVisible = !isDeletePurchaseOrderDialogVisible" />
@@ -403,7 +403,7 @@ const deletePurchaseOrder = async id => {
       <!-- Dialog Content -->
       <VCard title="Eliminar orden de compra">
         <VCardText>
-          ¿Estás seguro de eliminar la orden de compra: <b>{{ selectedPurchaseOrder.project }}</b>?
+          ¿Estás seguro de eliminar la orden de compra: <b>{{ selectedPurchaseOrder.project }} - {{ selectedPurchaseOrder.number }}</b>?
         </VCardText>
 
         <VCardText class="d-flex justify-end">

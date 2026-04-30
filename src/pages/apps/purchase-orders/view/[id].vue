@@ -13,9 +13,16 @@ import InputMaterialsDialog from '@/views/apps/purchase-orders/InputMaterialsDia
 
 const userData = useCookie('userData')
 const route = useRoute('apps-purchase-orders-view-id')
+const router = useRouter()
+
+const purchaseOrderRes = await useApi(`api/purchase_order/${route.params.id}`)
+
+const { data: purchaseOrderData, execute: fetchPurchaseOrder, error: purchaseOrderError } = purchaseOrderRes
+
+if (purchaseOrderError?.value)
+  router.push('/apps/purchase-orders/list')
 
 const [
-  purchaseOrderRes,
   projectsRes,
   purchaseOrdersListRes,
   companiesListRes,
@@ -24,7 +31,6 @@ const [
   paymentFormsListRes,
   useOfCFDIListRes,
 ] = await Promise.all([
-  useApi(`api/purchase_order/${route.params.id}`),
   useApi('api/purchase_orders/get_projects'),
   useApi('api/purchase_orders?status=processed&itemsPerPage=100'),
   useApi('api/companies?itemsPerPage=100'),
@@ -34,7 +40,6 @@ const [
   useApi('api/catalogs?name=Uso de CFDI'),
 ])
 
-const { data: purchaseOrderData, execute: fetchPurchaseOrder } = purchaseOrderRes
 const { data: projects } = projectsRes
 const { data: purchaseOrdersList } = purchaseOrdersListRes
 const { data: companiesList } = companiesListRes
