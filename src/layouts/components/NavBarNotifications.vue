@@ -2,6 +2,7 @@
 <script setup>
 import { useWebSocket } from '@core/composable/useWebSocket'
 
+const router = useRouter()
 const notifications = ref(JSON.parse(localStorage.getItem('notifications')))
 
 const handleNewNotification = data => {
@@ -44,6 +45,8 @@ const markUnRead = notificationId => {
 const handleNotificationClick = notification => {
   if (!notification.is_seen)
     markRead([notification._id])
+  if (notification.hasOwnProperty('path'))
+    nextTick(() => router.replace(`/apps/${notification.path}`))
 }
 
 const updateNotifications = (nots, update=true, is_seen=true) => {
