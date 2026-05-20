@@ -26,6 +26,8 @@ declare module 'vue' {
     AppStepper: typeof import('./src/@core/components/AppStepper.vue')['default']
     AppTextarea: typeof import('./src/@core/components/app-form-elements/AppTextarea.vue')['default']
     AppTextField: typeof import('./src/@core/components/app-form-elements/AppTextField.vue')['default']
+    BarcodeDialog: typeof import('./src/components/dialogs/BarcodeDialog.vue')['default']
+    BarcodeScannerDialog: typeof import('./src/components/dialogs/BarcodeScannerDialog.vue')['default']
     Breadcrumb: typeof import('./src/components/Breadcrumb.vue')['default']
     BuyNow: typeof import('./src/@core/components/BuyNow.vue')['default']
     CardAddEditDialog: typeof import('./src/components/dialogs/CardAddEditDialog.vue')['default']

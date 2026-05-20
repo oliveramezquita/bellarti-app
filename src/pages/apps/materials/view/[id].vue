@@ -10,7 +10,6 @@ definePage({
 
 import Image from '@/views/apps/materials/Image.vue'
 import Inventory from '@/views/apps/materials/Inventory.vue'
-import Qr from '@/views/apps/materials/Qr.vue'
 
 const route = useRoute('apps-materials-view-id')
 const router = useRouter()
@@ -136,13 +135,6 @@ const editMaterial = async (tab = null) => {
         }
       },
     })
-  } catch (err) {
-    console.error("Error al actualizar material:", err)
-    notification.value = {
-      visible: true, 
-      message: "Ocurrió un error inesperado", 
-      color: 'error',
-    }
   } finally {
     if (tab) currentTab.value = tab
     isLoadingDialogVisible.value = false
@@ -255,14 +247,6 @@ const deleteImages = async images => {
           class="mb-2"
         />
         <span>Inventario</span>
-      </VTab>
-
-      <VTab value="tab-4">
-        <VIcon
-          icon="tabler-qrcode"
-          class="mb-2"
-        />
-        <span>QR</span>
       </VTab>
     </VTabs>
 
@@ -460,6 +444,39 @@ const deleteImages = async images => {
                 />
               </VCol>
 
+              <!-- 👉 Barcode -->
+              <VCol
+                cols="12"
+                md="5"
+                class="d-flex gap-4"
+              >
+                <AppTextField
+                  v-model="material.new_barcode"
+                  label="Agregar un nuevo código de barras"
+                />
+                <VBtn
+                  icon="tabler-barcode"
+                  rounded
+                  color="secondary"
+                  style="margin-block-start: 22px;"
+                  @click="showScanner = true"
+                />
+              </VCol>
+
+              <VCol
+                cols="12"
+                md="7"
+              >
+                <AppCombobox
+                  v-model="material.barcode"
+                  chips
+                  multiple
+                  closable-chips
+                  clear-icon="tabler-circle-x"
+                  label="Código de barras"
+                />
+              </VCol>
+
               <!-- 👉 Minimum -->
               <VCol
                 cols="12"
@@ -495,6 +512,7 @@ const deleteImages = async images => {
                   label="Precio de presentación"
                   placeholder="0.00"
                   persistent-placeholder
+                  :rules="[requiredValidator]"
                   @blur="differentiatePrices"
                 />
               </VCol>
@@ -590,15 +608,13 @@ const deleteImages = async images => {
         <VWindowItem value="tab-3">
           <Inventory :inventory-id="material.inventory_id" />
         </VWindowItem>
-        <VWindowItem value="tab-4">
-          <Qr
-            :image="material.qr"
-            @update-material="editMaterial('tab-4')"
-          />
-        </VWindowItem>
       </VWindow>
     </VCardText>
   </VCard>
+  <BarcodeScannerDialog
+    v-model:is-dialog-visible="showScanner"
+    @barcode-detected="material.new_barcode = $event"
+  />
   <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
   <Notification
     v-model:is-notification-visible="notification.visible"

@@ -16,17 +16,11 @@ const sortBy = ref()
 const orderBy = ref()
 const isAddNewClientDrawerVisible = ref(false)
 const isEditClientDrawerVisible = ref(false)
-const isNotificationVisible = ref(false)
-const notificationMessage = ref('')
-const notificationColor = ref('info')
+const notification = ref({ visible: false, message: '', color: 'info' })
 const isDeleteClientDialogVisible = ref(false)
 const selectedClient = ref()
 
 const headers = [
-  {
-    title: '',
-    key: 'data-table-expand',
-  },
   {
     title: 'Nombre',
     key: 'name',
@@ -82,9 +76,11 @@ const addNewClient = async clientData => {
     method: 'POST',
     body: filtered,
     onResponse({ response }) {
-      notificationColor.value = getStatusColor(response.status)
-      notificationMessage.value = response._data
-      isNotificationVisible.value = true
+      notification.value = {
+        color: getStatusColor(response.status),
+        message: response._data,
+        visible: true,
+      }
     },
   })
 
@@ -111,9 +107,11 @@ const editClient = async clientData => {
     method: 'PATCH',
     body: filtered,
     onResponse({ response }) {
-      notificationColor.value = getStatusColor(response.status)
-      notificationMessage.value = response._data
-      isNotificationVisible.value = true
+      notification.value = {
+        color: getStatusColor(response.status),
+        message: response._data,
+        visible: true,
+      }
     },
   })
   fetchClients()
@@ -186,7 +184,6 @@ const deleteClient = async id => {
         :items="clients"
         :items-length="totalClients"
         :headers="headers"
-        expand-on-click
         @update:options="updateOptions"
       >
         <!-- Name -->
@@ -207,19 +204,6 @@ const deleteClient = async id => {
             </div>
           </div>
         </template>
-
-        <!-- Expanded Row Data -->
-        <template #expanded-row="slotProps">
-          <tr class="v-data-table__tr">
-            <td :colspan="headers.length">
-              <br>
-              <p>
-                <b>Dirección:</b> {{ slotProps.item.address ? `${slotProps.item.address}` : '' }} 
-              </p>
-            </td>
-          </tr>
-        </template>
-
         <!-- Actions -->
         <template #item.actions="{ item }">
           <IconBtn :to="{ name: 'apps-clients-view-id', params: { id: item._id } }">
@@ -253,9 +237,9 @@ const deleteClient = async id => {
       @client-data="editClient"
     />
     <Notification
-      v-model:is-notification-visible="isNotificationVisible"
-      :message="notificationMessage"
-      :color="notificationColor"
+      v-model:is-notification-visible="notification.visible"
+      :message="notification.message"
+      :color="notification.color"
     />
     <VDialog
       v-model="isDeleteClientDialogVisible"
