@@ -114,11 +114,6 @@
     "vite-svg-loader": "5.1.0",
     "vue-shepherd": "3.0.0"
   },
-  "resolutions": {
-    "postcss": "^8",
-    "@tiptap/core": "^2",
-    "@types/video.js": "^7"
-  },
   "overrides": {
     "postcss": "^8",
     "@tiptap/core": "^2",
