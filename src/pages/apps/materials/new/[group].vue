@@ -12,8 +12,8 @@ const currentTab = ref('tab-1')
 const isFormValid = ref(false)
 const refForm = ref()
 const isLoadingDialogVisible = ref(false)
-const isNotificationVisible = ref(false)
-const notificationMessage = ref('')
+const showScanner = ref(false)
+const notification = ref({ visible: false, message: '', color: 'info' })
 const router = useRouter()
 const route = useRoute('apps-materials-new-group')
 
@@ -44,6 +44,7 @@ const material = ref({
   reference: null,
   supplier_code: null,
   sku: null,
+  barcode: null,
   minimum: null,
   maximum: null,
   unit_price: null,
@@ -123,8 +124,11 @@ const createMaterial = async() => {
             router.replace(`/apps/materials/view/${response._data.id}?new=true`)
           })
         } else {
-          isNotificationVisible.value = true
-          notificationMessage.value = response._data
+          notification.value = {
+            visible: true, 
+            message: response._data, 
+            color: 'error',
+          }
         }
       },
     })
@@ -369,6 +373,34 @@ const differentiatePrices = () => {
                 />
               </VCol>
 
+              <!-- 👉 Barcode -->
+              <VCol
+                cols="12"
+                md="5"
+                class="d-flex gap-4"
+              >
+                <AppTextField
+                  v-model="material.barcode"
+                  label="Código de barras"
+                  placeholder="Código de barras"
+                  :rules="[requiredValidator]"
+                />
+                <VBtn
+                  icon="tabler-barcode"
+                  rounded
+                  color="secondary"
+                  style="margin-block-start: 22px;"
+                  @click="showScanner = true"
+                />
+              </VCol>
+
+              <VCol
+                cols="12"
+                md="6"
+              >
+                &nbsp;
+              </VCol>
+
               <!-- 👉 Minimum -->
               <VCol
                 cols="12"
@@ -404,6 +436,7 @@ const differentiatePrices = () => {
                   label="Precio de presentación"
                   placeholder="0.00"
                   persistent-placeholder
+                  :rules="[requiredValidator]"
                   @blur="differentiatePrices"
                 />
               </VCol>
@@ -483,10 +516,15 @@ const differentiatePrices = () => {
       </VWindow>
     </VCardText>
   </VCard>
+  <BarcodeScannerDialog
+    v-model:is-dialog-visible="showScanner"
+    @barcode-detected="material.barcode = $event"
+  />
   <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
   <Notification
-    v-model:is-notification-visible="isNotificationVisible"
-    :message="notificationMessage"
+    v-model:is-notification-visible="notification.visible"
+    :message="notification.message"
+    :color="notification.color"
   />
 </template>
 

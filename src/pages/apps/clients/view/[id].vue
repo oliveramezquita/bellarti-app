@@ -49,11 +49,13 @@ const updateInformation = async data => {
   isLoadingDialogVisible.value = true
 
   try {
-    if (data.hasOwnProperty('_id'))
-      delete data._id
+    const filtered = Object.fromEntries(
+      Object.entries(data).filter(([key, value]) => !['id', '_id'].includes(key) && value !== null),
+    )
+
     await $api(`api/client/${ route.params.id }`, {
       method: 'PATCH',
-      body: data,
+      body: filtered,
       onResponse({ response }) {
         notificationColor.value = getStatusColor(response.status)
         notificationMessage.value = response._data

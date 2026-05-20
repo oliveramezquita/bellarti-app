@@ -24,10 +24,6 @@ const selectedClient = ref()
 
 const headers = [
   {
-    title: '',
-    key: 'data-table-expand',
-  },
-  {
     title: 'ID',
     key: 'pe_id',
   },
@@ -190,7 +186,6 @@ const deleteClient = async id => {
         :items="clients"
         :items-length="totalClients"
         :headers="headers"
-        expand-on-click
         @update:options="updateOptions"
       >
         <!-- ID -->
@@ -215,19 +210,6 @@ const deleteClient = async id => {
             </div>
           </div>
         </template>
-
-        <!-- Expanded Row Data -->
-        <template #expanded-row="slotProps">
-          <tr class="v-data-table__tr">
-            <td :colspan="headers.length">
-              <br>
-              <p>
-                <b>Dirección:</b> {{ slotProps.item.address ? `${slotProps.item.address}` : '' }} 
-              </p>
-            </td>
-          </tr>
-        </template>
-
         <!-- Actions -->
         <template #item.actions="{ item }">
           <IconBtn :to="{ name: 'apps-clients-view-id', params: { id: item._id } }">

@@ -1,4 +1,9 @@
 <script setup>
+import { ref, watch } from 'vue'
+
+import Inbounds from '@/views/apps/inventory/Inbounds.vue'
+import Outputs from '@/views/apps/inventory/Outputs.vue'
+
 const props = defineProps({
   inventoryId: {
     type: String,
@@ -6,15 +11,30 @@ const props = defineProps({
   },
 })
 
-import Inbounds from '@/views/apps/inventory/Inbounds.vue'
-import Outputs from '@/views/apps/inventory/Outputs.vue'
+const inventoryData = ref(null)
 
-const { data: inventoryData } = await useApi(`api/inventory_item/${ props.inventoryId }`)
 const currentTab = ref('tab-1')
+
+const loadInventory = async () => {
+  if (!props.inventoryId)
+    return
+
+  const { data } = await useApi(`api/inventory_item/${props.inventoryId}`)
+
+  inventoryData.value = data.value
+}
+
+watch(
+  () => props.inventoryId,
+  () => {
+    loadInventory()
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
-  <section>
+  <section v-if="inventoryData">
     <VCard>
       <VRow
         class="mt-1 mb-2"
