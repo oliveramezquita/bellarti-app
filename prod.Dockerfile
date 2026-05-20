@@ -20,6 +20,8 @@ RUN \
 # Copy source
 COPY . .
 
+RUN ls -R /app/src/plugins/iconify
+
 # Build
 RUN \
   if [ -f pnpm-lock.yaml ]; then pnpm run build; \
