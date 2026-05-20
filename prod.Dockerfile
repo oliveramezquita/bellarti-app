@@ -4,7 +4,7 @@ FROM node:22 as builder
 WORKDIR /app
 
 # Enable corepack (maneja pnpm/yarn/npm correctamente)
-RUN corepack enable
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
 # Copy dependency manifests first (better cache)
 COPY package.json pnpm-lock.yaml* yarn.lock* package-lock.json* ./
