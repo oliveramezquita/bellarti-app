@@ -41,6 +41,7 @@ const currentTab = ref('tab-1')
 const isFormValid = ref(false)
 const refForm = ref()
 const isLoadingDialogVisible = ref(false)
+const showScanner = ref(false)
 
 const material = ref(materialData.value ?? { _id: null, concept: null, division: null })
 
