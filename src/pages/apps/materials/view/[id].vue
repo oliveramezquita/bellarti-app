@@ -105,6 +105,8 @@ const onSubmit = () => {
   refForm.value?.validate().then(({ valid }) => {
     if (valid) {
       editMaterial()
+    } else {
+      isLoadingDialogVisible.value = false
     }
   })
 }
