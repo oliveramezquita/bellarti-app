@@ -259,7 +259,6 @@ const deleteImages = async images => {
           <VForm
             ref="refForm"
             v-model="isFormValid"
-            @submit.prevent="onSubmit"
           >
             <VCard class="mb-5">
               <VCardTitle>SKU</VCardTitle>
@@ -576,7 +575,10 @@ const deleteImages = async images => {
                 cols="12"
                 class="d-flex gap-4"
               >
-                <VBtn type="submit">
+                <VBtn
+                  type="button"
+                  @click="onSubmit"
+                >
                   Actualizar
                 </VBtn>
 

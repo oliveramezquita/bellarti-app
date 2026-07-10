@@ -184,7 +184,6 @@ const differentiatePrices = () => {
           <VForm
             ref="refForm"
             v-model="isFormValid"
-            @submit.prevent="onSubmit"
           >
             <VCard class="mb-5">
               <VCardTitle>SKU</VCardTitle>
@@ -497,7 +496,10 @@ const differentiatePrices = () => {
                 cols="12"
                 class="d-flex gap-4 mt-4"
               >
-                <VBtn type="submit">
+                <VBtn
+                  type="button"
+                  @click="onSubmit"
+                >
                   Guardar
                 </VBtn>
 
