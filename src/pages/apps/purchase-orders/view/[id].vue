@@ -395,7 +395,7 @@ getProjectInformation()
               label="Proyecto"
               placeholder="Proyecto"
               :item-title="item => item.name"
-              :item-value="item => item.home_production_id"
+              :item-value="item => item.id"
               :items="projects"
               class="font-weight-bold"
               :disabled="purchaseOrderData.status > 0 || purchaseOrderData.type === 'SP'"
