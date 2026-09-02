@@ -1,16 +1,21 @@
+<!-- eslint-disable camelcase -->
 <script setup>
 definePage({
   meta: {
     action: 'read',
     subject: 'ASClientes',
+    navActiveLink: 'apps-after-sales-clients-list',
   },
 })
 
+import { Spanish } from 'flatpickr/dist/l10n/es.js'
+
 const route = useRoute('apps-after-sales-clients-view-id')
-const { data: clientInfo } = await useApi(`api/after_sales/customer/${ route.params.id }`)
+const { data: clientInfo, execute: fetchClient } = await useApi(`api/after_sales/customer/${ route.params.id }`)
 
 const breadcrumbItems = ref([
   { title: 'Postventa', to: { name: 'apps-after-sales-clients-list' }, class: 'text-underline' },
+  { title: 'Cliente' },
   { title: clientInfo.value.name },
 ])
 
@@ -38,13 +43,75 @@ const getProjectData = async () => {
 
 //Warranties
 const { data: warrantyTypes } = await useApi('api/after_sales/warranties')
-
 const today = new Date()
-const yesterday = new Date(today)
 
-yesterday.setDate(today.getDate() - 1)
+const dateConfig = ref({
+  locale: Spanish,
+  dateFormat: 'Y-m-d', // Customize format if needed
+  //disable: [{ from: `1900-01-01`, to: today.toISOString().split('T')[0] }],
+})
+
+const currentWarranty = ref(structuredClone(clientInfo.value.warranty))
+const warrantyType = ref(clientInfo.value.warranty)
+
+// Loading and notificarions
+const isLoadingDialogVisible = ref(false)
+
+const notification = ref({
+  message: '',
+  color: 'info',
+  isVisible: false,
+})
+
+// Update data
+const updateData = async () => {
+  isLoadingDialogVisible.value = true
+
+  const filtered = Object.fromEntries(
+    Object.entries(clientInfo.value).filter(([key, value]) => !['id', '_id', 'project', 'warranty'].includes(key) && value !== null),
+  )
+
+  let warranty = {
+    id: warrantyType.value.id,
+    start_date: clientInfo.value.warranty.start_date,
+    duration: warrantyTypes.value.find(item => item._id === warrantyType.value.id)?.duration,
+  }
+
+  const normalizeDate = date => date?.split('T')[0]
+
+  if (normalizeDate(warrantyType.value.expiration_date) !== normalizeDate(currentWarranty.value.expiration_date))
+    warranty.expiration_date = warrantyType.value.expiration_date
+
+  filtered.warranty = warranty 
+
+  try {
+    await $api(`api/after_sales/customer/${route.params.id}`, {
+      method: 'PATCH',
+      body: filtered,
+      onResponse({ response }) {
+        if (response.status === 200) {
+          notification.value.color = 'success'
+          fetchClient()
+        } else {
+          notification.value.color = 'error'
+        }
+        notification.value.isVisible = true
+        notification.value.message = response._data
+      },
+    })
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
+
+  warranty = null
+}
 
 getProjectData()
+
+watch(() => clientInfo.value, newVal => {
+  currentWarranty.value = structuredClone(newVal.warranty)
+  warrantyType.value = newVal.warranty
+})
 </script>
 
 <template>
@@ -154,6 +221,7 @@ getProjectData()
             <AppTextField
               v-model="projectName"
               label="&nbsp;"
+              disabled
             />
           </VCol>
         </VRow>
@@ -168,7 +236,7 @@ getProjectData()
             md="5"
           >
             <AppSelect
-              v-model="clientInfo.warranty.id"
+              v-model="warrantyType.id"
               label="Tipo"
               :items="warrantyTypes"
               :item-title="item => item.name"
@@ -180,8 +248,8 @@ getProjectData()
             md="5"
           >
             <AppDateTimePicker
-              v-model="clientInfo.warranty.expiration_date"
-              :config="{ dateFormat: 'Y-m-d', disable: [{ from: `1900-01-01`, to: yesterday.toISOString().split('T')[0] }] }"
+              v-model="warrantyType.expiration_date"
+              :config="dateConfig"
               label="Fecha de vencimiento"
             />
           </VCol>
@@ -194,7 +262,7 @@ getProjectData()
               style="display: block;"
             >Estatus</label>
             <VBtn
-              v-if="clientInfo.warranty.status === 0"
+              v-if="warrantyType.status === 0"
               variant="outlined"
               disabled="disabled"
               color="secondary"
@@ -205,7 +273,7 @@ getProjectData()
               />VENCIDA
             </VBtn>
             <VBtn
-              v-if="clientInfo.warranty.status === 1"
+              v-if="warrantyType.status === 1"
               variant="outlined"
               disabled="disabled"
               color="success"
@@ -223,7 +291,10 @@ getProjectData()
           cols="12"
           class="d-flex gap-4"
         >
-          <VBtn type="button">
+          <VBtn
+            type="button"
+            @click="updateData"
+          >
             <VIcon
               start
               icon="tabler-refresh"
@@ -266,4 +337,10 @@ getProjectData()
       </VCardRow>
     </VCard>
   </section>
+  <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
+  <Notification
+    v-model:is-notification-visible="notification.isVisible"
+    :message="notification.message"
+    :color="notification.color"
+  />
 </template>

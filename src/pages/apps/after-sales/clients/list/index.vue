@@ -48,7 +48,7 @@ const headers = [
 ]
 
 const statusList = [
-  { name: 'Desactivo', color: 'secondary', icon: 'tabler-user-pause', value: 0 },
+  { name: 'Inactivo', color: 'secondary', icon: 'tabler-user-pause', value: 0 },
   { name: 'Activo', color: 'success', icon: 'tabler-user-check', value: 1 },
 ]
 
@@ -304,7 +304,7 @@ const deleteClient = async id => {
       <!-- Dialog Content -->
       <VCard title="Eliminar cliente">
         <VCardText>
-          ¿Estás seguro de eliminar el cliente <b>{{ selectedClient.name }}</b>?, ten en cuenta que al eliminar al cliente ya no podrás ver sus proyectos asignados.
+          ¿Estás seguro de eliminar el cliente: <b>{{ selectedClient.name }}</b>?, ten en cuenta que al eliminar al cliente ya no podrá acceder a la aplicación de BellartiMovil.
         </VCardText>
 
         <VCardText class="d-flex justify-end">

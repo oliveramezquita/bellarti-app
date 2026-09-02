@@ -1,6 +1,5 @@
 <!-- eslint-disable camelcase -->
 <script setup>
-import { Spanish } from 'flatpickr/dist/l10n/es.js'
 import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
 
 const props = defineProps({
@@ -12,30 +11,15 @@ const props = defineProps({
 
 const emit = defineEmits([
   'update:isDrawerOpen',
-  'clientData',
+  'technicianData',
 ])
 
 
 const isFormValid = ref(false)
 const refForm = ref()
 const name = ref('')
-const address = ref()
 const email = ref()
 const phone = ref()
-const warranty = ref()
-const projectList = ref([])
-const project = ref({ id: null, type: null })
-const expiration_date = ref()
-const placeHolder = ref('Seleccionar proyecto')
-const today = new Date()
-
-const dateConfig = ref({
-  locale: Spanish,
-  dateFormat: 'Y-m-d', // Customize format if needed
-  disable: [{ from: `1900-01-01`, to: today.toISOString().split('T')[0] }],
-})
-
-const { data: warrantyTypes } = await useApi('api/after_sales/warranties')
 
 const closeNavigationDrawer = () => {
   emit('update:isDrawerOpen', false)
@@ -48,14 +32,10 @@ const closeNavigationDrawer = () => {
 const onSubmit = () => {
   refForm.value?.validate().then(({ valid }) => {
     if (valid) {
-      emit('clientData', {
+      emit('technicianData', {
         name: name.value,
-        address: address.value,
         email: email.value,
         phone: phone.value,
-        project: project.value,
-        warranty: warranty.value,
-        expiration_date: expiration_date.value,
       })
       emit('update:isDrawerOpen', false)
       nextTick(() => {
@@ -64,16 +44,6 @@ const onSubmit = () => {
       })
     }
   })
-}
-
-const onTypeChange = async value => {
-  try {
-    placeHolder.value = 'Cargando proyectos...'
-    projectList.value = await $api(`api/purchase_orders/get_projects?type=${value}`)
-  }
-  finally {
-    placeHolder.value = 'Seleccionar proyecto'
-  }
 }
 
 const handleDrawerModelValueUpdate = val => {
@@ -93,7 +63,7 @@ const handleDrawerModelValueUpdate = val => {
   >
     <!-- 👉 Title -->
     <AppDrawerHeaderSection
-      title="Agrear Nuevo Cliente"
+      title="Agrear Nuevo Técnico"
       @cancel="closeNavigationDrawer"
     />
 
@@ -119,16 +89,6 @@ const handleDrawerModelValueUpdate = val => {
                 />
               </VCol>
 
-              <!-- 👉 Address -->
-              <VCol cols="12">
-                <AppTextField
-                  v-model="address"
-                  :rules="[requiredValidator]"
-                  label="Dirección"
-                  placeholder="Dirección"
-                />
-              </VCol>
-
               <!-- 👉 Email -->
               <VCol cols="12">
                 <AppTextField
@@ -146,58 +106,6 @@ const handleDrawerModelValueUpdate = val => {
                   :rules="[requiredValidator]"
                   label="Teléfono"
                   placeholder="Teléfono"
-                />
-              </VCol>
-
-              <!-- Project Type -->
-              <VCol cols="12">
-                <VRadioGroup
-                  v-model="project.type"
-                  @update:model-value="onTypeChange"
-                >
-                  <VRadio
-                    label="Vivienda en Serie"
-                    value="VS"
-                  />
-                  <VRadio
-                    label="Proyecto Especial"
-                    value="PE"
-                  />
-                </VRadioGroup>
-              </VCol>
-
-              <!-- Project Id -->
-              <VCol cols="12">
-                <AppSelect
-                  v-model="project.id"
-                  label="Seleccionar proyecto"
-                  :placeholder="placeHolder"
-                  :items="projectList"
-                  :item-title="i=>i.name"
-                  :item-value="i=>i.id"
-                  :rules="[requiredValidator]"
-                />
-              </VCol>
-
-              <!-- Warranty -->
-              <VCol cols="12">
-                <AppSelect
-                  v-model="warranty"
-                  label="Seleccionar garantía"
-                  placeholder="Seleccionar garantía"
-                  :items="warrantyTypes"
-                  :item-title="item => item.name"
-                  :item-value="item => item"
-                  :rules="[requiredValidator]"
-                />
-              </VCol>
-
-              <!-- Expiration Date -->
-              <VCol cols="12">
-                <AppDateTimePicker
-                  v-model="expiration_date"
-                  :config="dateConfig"
-                  label="Fecha de vencimiento"
                 />
               </VCol>
 
