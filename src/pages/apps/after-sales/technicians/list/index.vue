@@ -79,6 +79,9 @@ const getStatusValue = (list, value, key) => {
 //Notification
 const notification = ref({ visible: false, message: '', color: 'info' })
 
+//Loading
+const isLoadingDialogVisible = ref(false)
+
 //Dialog
 const isDeleteTechnicianDialogVisible = ref(false)
 const selectedTechnician = ref()
@@ -92,25 +95,29 @@ const viewDeleteTechnicianDialog = technician => {
 const isAddNewTechnicianDrawerVisible = ref(false)
 
 const addNewTechnician = async technicianData => {
+  isLoadingDialogVisible.value = true
+
   const filtered = {
     ...Object.fromEntries(
       Object.entries(technicianData).filter(([_, value]) => value !== undefined)),
   }
 
-  await $api('api/after_sales/technicians', {
-    method: 'POST',
-    body: filtered,
-    onResponse({ response }) {
-      notification.value = {
-        color: getStatusColor(response.status),
-        message: response._data,
-        visible: true,
-      }
-    },
-  })
-
-  // Refetch Technician
-  fetchTechnicians()
+  try {
+    await $api('api/after_sales/technicians', {
+      method: 'POST',
+      body: filtered,
+      onResponse({ response }) {
+        notification.value = {
+          color: getStatusColor(response.status),
+          message: response._data,
+          visible: true,
+        }
+        fetchTechnicians()
+      },
+    })
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
 }
 
 //Delete technician
@@ -247,6 +254,7 @@ const deleteTechnician = async id => {
         </template>
       </VDataTableServer>
     </VCard>
+    <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
     <AddNewTechnicianDrawer
       v-model:is-drawer-open="isAddNewTechnicianDrawerVisible"
       @technician-data="addNewTechnician"

@@ -34,16 +34,20 @@ const projectsTypes = [
 ]
 
 const getProjectData = async () => {
+  console.log(JSON.stringify(clientInfo.value))
   if (clientInfo.value.project.type === 'VS') {
     const { data: homeProductionData } = await useApi(`api/home-production/${ clientInfo.value.project.id }`)
 
     projectName.value = `${homeProductionData.value.client}, ${homeProductionData.value.front} - ${homeProductionData.value.od}`
+  } else {
+    projectName.value = clientInfo.value.project.name
   }
 }
 
 //Warranties
 const { data: warrantyTypes } = await useApi('api/after_sales/warranties')
-const today = new Date()
+
+//const today = new Date()
 
 const dateConfig = ref({
   locale: Spanish,
@@ -104,6 +108,32 @@ const updateData = async () => {
   }
 
   warranty = null
+}
+
+//Send invitation
+const sendInvitation = async() => {
+  isLoadingDialogVisible.value = true
+
+  const name = clientInfo.value.name
+  const email = clientInfo.value.email
+
+  try {
+    await $api(`api/after_sales/send_invitation?name=${name}&email=${email}`, {
+      method: 'GET',
+      onResponse({ response }) {
+        if (response.status === 200) {
+          notification.value.color = 'success'
+        } else {
+          notification.value.color = 'error'
+        }
+        notification.value.isVisible = true
+        notification.value.message = response._data
+      },
+    })
+
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
 }
 
 getProjectData()
@@ -304,6 +334,7 @@ watch(() => clientInfo.value, newVal => {
           <VBtn
             v-if="clientInfo.status === 0"
             variant="tonal"
+            @click="sendInvitation"
           >
             <VIcon
               start

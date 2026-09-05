@@ -108,29 +108,36 @@ const viewDeleteClientDialog = client => {
   isDeleteClientDialogVisible.value = true
 }
 
+//Loading
+const isLoadingDialogVisible = ref(false)
+
 //New client
 const isAddNewClientDrawerVisible = ref(false)
 
 const addNewClient = async clientData => {
+  isLoadingDialogVisible.value = true
+
   const filtered = {
     ...Object.fromEntries(
       Object.entries(clientData).filter(([_, value]) => value !== undefined)),
   }
 
-  await $api('api/after_sales/customers', {
-    method: 'POST',
-    body: filtered,
-    onResponse({ response }) {
-      notification.value = {
-        color: getStatusColor(response.status),
-        message: response._data,
-        visible: true,
-      }
-    },
-  })
-
-  // Refetch Client
-  fetchClients()
+  try {
+    await $api('api/after_sales/customers', {
+      method: 'POST',
+      body: filtered,
+      onResponse({ response }) {
+        notification.value = {
+          color: getStatusColor(response.status),
+          message: response._data,
+          visible: true,
+        }
+        fetchClients()
+      },
+    })
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
 }
 
 //Delete client
@@ -285,14 +292,15 @@ const deleteClient = async id => {
       </VDataTableServer>
     </VCard>
     <!-- SECTION -->
-    <AddNewClientDrawer
-      v-model:is-drawer-open="isAddNewClientDrawerVisible"
-      @client-data="addNewClient"
-    />
+    <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
     <Notification
       v-model:is-notification-visible="notification.visible"
       :message="notification.message"
       :color="notification.color"
+    />
+    <AddNewClientDrawer
+      v-model:is-drawer-open="isAddNewClientDrawerVisible"
+      @client-data="addNewClient"
     />
     <VDialog
       v-model="isDeleteClientDialogVisible"

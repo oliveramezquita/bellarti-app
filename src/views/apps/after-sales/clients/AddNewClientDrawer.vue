@@ -23,8 +23,9 @@ const address = ref()
 const email = ref()
 const phone = ref()
 const warranty = ref()
-const projectList = ref([])
-const project = ref({ id: null, type: null })
+const projectList = ref([{ id: 1, name: 'Agregar manualmente' }])
+const projectType = ref(null)
+const project = ref({ id: null, type: null, name: null })
 const expiration_date = ref()
 const placeHolder = ref('Seleccionar proyecto')
 const today = new Date()
@@ -47,29 +48,47 @@ const closeNavigationDrawer = () => {
 
 const onSubmit = () => {
   refForm.value?.validate().then(({ valid }) => {
-    if (valid) {
-      emit('clientData', {
-        name: name.value,
-        address: address.value,
-        email: email.value,
-        phone: phone.value,
-        project: project.value,
-        warranty: warranty.value,
-        expiration_date: expiration_date.value,
-      })
-      emit('update:isDrawerOpen', false)
-      nextTick(() => {
-        refForm.value?.reset()
-        refForm.value?.resetValidation()
-      })
+    if (!valid)
+      return
+
+    const clientData = {
+      name: name.value,
+      address: address.value,
+      email: email.value,
+      phone: phone.value,
+      project: {
+        id: project.value.id,
+        type: projectType.value,
+        name: project.value.name,
+      },
+      warranty: warranty.value,
+      expiration_date: expiration_date.value,
     }
+
+    emit('clientData', clientData)
+    emit('update:isDrawerOpen', false)
+    nextTick(() => {
+      refForm.value?.reset()
+      refForm.value?.resetValidation()
+    })
   })
 }
 
 const onTypeChange = async value => {
   try {
     placeHolder.value = 'Cargando proyectos...'
-    projectList.value = await $api(`api/purchase_orders/get_projects?type=${value}`)
+
+    project.value.id = null
+    project.value.name = null
+
+    projectList.value = await $api(
+      `api/purchase_orders/get_projects?type=${value}`,
+    )
+
+    projectList.value.push({
+      id: 1,
+      name: 'Agregar manualmente',
+    })
   }
   finally {
     placeHolder.value = 'Seleccionar proyecto'
@@ -152,7 +171,7 @@ const handleDrawerModelValueUpdate = val => {
               <!-- Project Type -->
               <VCol cols="12">
                 <VRadioGroup
-                  v-model="project.type"
+                  v-model="projectType"
                   @update:model-value="onTypeChange"
                 >
                   <VRadio
@@ -176,6 +195,18 @@ const handleDrawerModelValueUpdate = val => {
                   :item-title="i=>i.name"
                   :item-value="i=>i.id"
                   :rules="[requiredValidator]"
+                />
+              </VCol>
+
+              <!-- Manual Project Name -->
+              <VCol
+                v-if="project.id === 1"
+                cols="12"
+              >
+                <AppTextField
+                  v-model="project.name"
+                  label="Nombre del proyecto"
+                  placeholder="Nombre del proyecto"
                 />
               </VCol>
 

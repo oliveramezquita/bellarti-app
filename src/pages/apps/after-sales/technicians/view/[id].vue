@@ -77,6 +77,32 @@ const updateData = async () => {
     isLoadingDialogVisible.value = false
   }
 }
+
+//Send invitation
+const sendInvitation = async() => {
+  isLoadingDialogVisible.value = true
+
+  const name = technicianInfo.value.name
+  const email = technicianInfo.value.email
+
+  try {
+    await $api(`api/after_sales/send_invitation?name=${name}&email=${email}`, {
+      method: 'GET',
+      onResponse({ response }) {
+        if (response.status === 200) {
+          notification.value.color = 'success'
+        } else {
+          notification.value.color = 'error'
+        }
+        notification.value.isVisible = true
+        notification.value.message = response._data
+      },
+    })
+
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
+}
 </script>
 
 <template>
@@ -330,6 +356,7 @@ const updateData = async () => {
           <VBtn
             v-if="technicianInfo.status === 0"
             variant="tonal"
+            @click="sendInvitation"
           >
             <VIcon
               start
