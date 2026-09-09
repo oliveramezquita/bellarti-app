@@ -50,6 +50,7 @@ const headers = [
 const statusList = [
   { name: 'Inactivo', color: 'secondary', icon: 'tabler-user-pause', value: 0 },
   { name: 'Activo', color: 'success', icon: 'tabler-user-check', value: 1 },
+  { name: 'Deshabilitado', color: 'secondary', icon: 'tabler-user-cancel', value: 3 },
 ]
 
 const warrantyType = ref()
@@ -133,6 +134,29 @@ const addNewClient = async clientData => {
           visible: true,
         }
         fetchClients()
+      },
+    })
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
+}
+
+//Manage status
+const manageUserStatus = async (id, action) => {
+  isLoadingDialogVisible.value = true
+
+  try {
+    await $api(`api/after_sales/customer/${action}/${id}`, {
+      method: 'PATCH',
+      onResponse({ response }) {
+        if (response.status === 200) {
+          notification.value.color = 'success'
+          fetchClients()
+        } else {
+          notification.value.color = 'error'
+        }
+        notification.value.isVisible = true
+        notification.value.message = response._data
       },
     })
   } finally {
@@ -248,8 +272,16 @@ const deleteClient = async id => {
         <template #item.status="{ item }">
           <div class="align-center">
             <VAvatar
+              v-if="!item.is_deleted"
               :color="getStatusValue(statusList, item.status, 'color')"
               :icon="getStatusValue(statusList, item.status, 'icon')"
+              size="small"
+              variant="text"
+            />
+            <VAvatar
+              v-if="item.is_deleted"
+              color="error"
+              icon="tabler-user-x"
               size="small"
               variant="text"
             />
@@ -265,13 +297,46 @@ const deleteClient = async id => {
             <VIcon icon="tabler-dots-vertical" />
             <VMenu activator="parent">
               <VList>
-                <VListItem :to="{ name: 'apps-after-sales-clients-view-id', params: { id: item._id } }">
+                <VListItem
+                  v-if="!item.is_deleted"
+                  :to="{ name: 'apps-after-sales-clients-view-id', params: { id: item._id } }"
+                >
                   <template #prepend>
                     <VIcon icon="tabler-pencil" />
                   </template>
                   <VListItemTitle>Modificar</VListItemTitle>
                 </VListItem>
-                <VListItem @click="viewDeleteClientDialog(item)">
+                <VListItem
+                  v-if="item.is_deleted"
+                  :to="{ name: 'apps-after-sales-clients-view-id', params: { id: item._id } }"
+                >
+                  <template #prepend>
+                    <VIcon icon="tabler-eye" />
+                  </template>
+                  <VListItemTitle>Ver</VListItemTitle>
+                </VListItem>
+                <VListItem
+                  v-if="!item.is_deleted && (item.status > 0 && item.status < 3)"
+                  @click="manageUserStatus(item._id, 'disable')"
+                >
+                  <template #prepend>
+                    <VIcon icon="tabler-user-cancel" />
+                  </template>
+                  <VListItemTitle>Deshabilitar</VListItemTitle>
+                </VListItem>
+                <VListItem
+                  v-if="!item.is_deleted && item.status === 3"
+                  @click="manageUserStatus(item._id, 'enable')"
+                >
+                  <template #prepend>
+                    <VIcon icon="tabler-user-check" />
+                  </template>
+                  <VListItemTitle>Habilitar</VListItemTitle>
+                </VListItem>
+                <VListItem
+                  v-if="!item.is_deleted"
+                  @click="viewDeleteClientDialog(item)"
+                >
                   <template #prepend>
                     <VIcon icon="tabler-trash" />
                   </template>

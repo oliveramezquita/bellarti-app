@@ -33,12 +33,12 @@ const headers = [
   {
     title: 'Correo electrónico',
     key: 'email',
-    ortable: false,
+    sortable: false,
   },
   {
     title: 'Teléfono',
     key: 'phone',
-    ortable: false,
+    sortable: false,
   },
   {
     title: 'Ciente',

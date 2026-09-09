@@ -34,11 +34,14 @@ const projectsTypes = [
 ]
 
 const getProjectData = async () => {
-  console.log(JSON.stringify(clientInfo.value))
   if (clientInfo.value.project.type === 'VS') {
-    const { data: homeProductionData } = await useApi(`api/home-production/${ clientInfo.value.project.id }`)
+    if (clientInfo.value.project.id === 1) {
+      projectName.value = clientInfo.value.project.name ?? ""
+    } else {
+      const { data: homeProductionData } = await useApi(`api/home-production/${ clientInfo.value.project.id }`)
 
-    projectName.value = `${homeProductionData.value.client}, ${homeProductionData.value.front} - ${homeProductionData.value.od}`
+      projectName.value = `${homeProductionData.value.client}, ${homeProductionData.value.front} - ${homeProductionData.value.od}`
+    }
   } else {
     projectName.value = clientInfo.value.project.name
   }
@@ -136,6 +139,52 @@ const sendInvitation = async() => {
   }
 }
 
+//Manage user status
+const manageUserStatus = async action => {
+  isLoadingDialogVisible.value = true
+
+  try {
+    await $api(`api/after_sales/customer/${action}/${route.params.id}`, {
+      method: 'PATCH',
+      onResponse({ response }) {
+        if (response.status === 200) {
+          notification.value.color = 'success'
+          fetchClient()
+        } else {
+          notification.value.color = 'error'
+        }
+        notification.value.isVisible = true
+        notification.value.message = response._data
+      },
+    })
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
+}
+
+//Delete
+const eliminate = async () => {
+  isLoadingDialogVisible.value = true
+
+  try {
+    await $api(`api/after_sales/customer/${route.params.id}`, {
+      method: 'DELETE',
+      onResponse({ response }) {
+        if (response.status === 200) {
+          notification.value.color = 'success'
+          fetchClient()
+        } else {
+          notification.value.color = 'error'
+        }
+        notification.value.isVisible = true
+        notification.value.message = response._data
+      },
+    })
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
+}
+
 getProjectData()
 
 watch(() => clientInfo.value, newVal => {
@@ -202,7 +251,7 @@ watch(() => clientInfo.value, newVal => {
               style="display: block;"
             >Estatus</label>
             <VBtn
-              v-if="clientInfo.status === 0"
+              v-if="!clientInfo.is_deleted && clientInfo.status === 0"
               variant="outlined"
               disabled="disabled"
               color="secondary"
@@ -213,7 +262,7 @@ watch(() => clientInfo.value, newVal => {
               />INACTIVO
             </VBtn>
             <VBtn
-              v-if="clientInfo.status === 1"
+              v-if="!clientInfo.is_deleted && clientInfo.status === 1"
               variant="outlined"
               disabled="disabled"
               color="success"
@@ -222,6 +271,28 @@ watch(() => clientInfo.value, newVal => {
                 start
                 icon="tabler-user-check"
               />ACTIVO
+            </VBtn>
+            <VBtn
+              v-if="!clientInfo.is_deleted && clientInfo.status === 3"
+              variant="outlined"
+              disabled="disabled"
+              color="secondary"
+            >
+              <VIcon
+                start
+                icon="tabler-user-cancel"
+              />DESHABILITADO
+            </VBtn>
+            <VBtn
+              v-if="clientInfo.is_deleted"
+              variant="outlined"
+              disabled="disabled"
+              color="error"
+            >
+              <VIcon
+                start
+                icon="tabler-user-x"
+              />ELIMINADO
             </VBtn>
           </VCol>
         </VRow>
@@ -322,6 +393,7 @@ watch(() => clientInfo.value, newVal => {
           class="d-flex gap-4"
         >
           <VBtn
+            v-if="!clientInfo.is_deleted && clientInfo.status < 3"
             type="button"
             @click="updateData"
           >
@@ -332,7 +404,7 @@ watch(() => clientInfo.value, newVal => {
           </VBtn>
 
           <VBtn
-            v-if="clientInfo.status === 0"
+            v-if="!clientInfo.is_deleted && clientInfo.status === 0"
             variant="tonal"
             @click="sendInvitation"
           >
@@ -343,14 +415,39 @@ watch(() => clientInfo.value, newVal => {
           </VBtn>
 
           <VBtn
-            v-if="clientInfo.status === 1"
-            variant="tonal"
-            color="error"
+            v-if="!clientInfo.is_deleted && (clientInfo.status > 0 && clientInfo.status < 3)"
+            variant="outlined"
+            color="secondary"
+            @click="manageUserStatus('disable')"
           >
             <VIcon
               start
               icon="tabler-user-cancel"
             />Deshabilitar
+          </VBtn>
+
+          <VBtn
+            v-if="!clientInfo.is_deleted && clientInfo.status === 3"
+            variant="outlined"
+            color="info"
+            @click="manageUserStatus('enable')"
+          >
+            <VIcon
+              start
+              icon="tabler-user-check"
+            />Habilitar
+          </VBtn>
+
+          <VBtn
+            v-if="!clientInfo.is_deleted"
+            variant="outlined"
+            color="error"
+            @click="eliminate"
+          >
+            <VIcon
+              start
+              icon="tabler-user-x"
+            />Eliminar
           </VBtn>
 
           <VBtn

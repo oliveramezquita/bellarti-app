@@ -28,7 +28,12 @@ const headers = [
   {
     title: 'Duración (años)',
     key: 'duration',
-    ortable: false,
+    sortable: false,
+  },
+  {
+    title: 'Estatus',
+    key: 'is_available',
+    sortable: false,
   },
   {
     title: 'Acciones',
@@ -104,28 +109,27 @@ const updateWarranty = async warranty => {
   }
 }
 
-//Delete warranty
-const isDeleteWarrantyDialogVisible = ref(false)
+//Unavailable warranty
+const isUnavailableWarrantyDialogVisible = ref(false)
 
-
-const viewDeleteWarrantyDialog = warranty => {
+const viewUnavailableWarrantyDialog = warranty => {
   selectedWarrannty.value = warranty
-  isDeleteWarrantyDialogVisible.value = true
+  isUnavailableWarrantyDialogVisible.value = true
 }
 
-const deleteWarranty = async id => {
+const availabilityWarranty = async (id, action) => {
   isLoadingDialogVisible.value = true
 
   try {
-    await $api(`api/after_sales/warranty/${ id }`, {
-      method: 'DELETE',
+    await $api(`api/after_sales/warranty/${action}/${id}`, {
+      method: 'PATCH',
       onResponse({ response }) {
         notificationColor.value = getStatusColor(response.status)
         notificationMessage.value = response._data
         isNotificationVisible.value = true
         fetchWarranties()
 
-        isDeleteWarrantyDialogVisible.value = false
+        isUnavailableWarrantyDialogVisible.value = false
       },
     })
   } finally {
@@ -170,13 +174,27 @@ const deleteWarranty = async id => {
         :items-per-page="10"
         :search="search"
       >
+        <!-- Status -->
+        <template #item.is_available="{ item }">
+          <span>{{ item.is_available ? "Disponible" : 'No disponible' }}</span>
+        </template>
+        <!-- Actions -->
         <template #item.actions="{ item }">
           <IconBtn @click="viewEditWarrantyDrawer(item)">
             <VIcon icon="tabler-pencil" />
           </IconBtn> 
             
-          <IconBtn @click="viewDeleteWarrantyDialog(item)">
-            <VIcon icon="tabler-trash" />
+          <IconBtn
+            v-if="item.is_available"
+            @click="viewUnavailableWarrantyDialog(item)"
+          >
+            <VIcon icon="tabler-cancel" />
+          </IconBtn>
+          <IconBtn
+            v-if="!item.is_available"
+            @click="availabilityWarranty(item._id, 'available')"
+          >
+            <VIcon icon="tabler-check" />
           </IconBtn>
         </template>
       </VDataTable>
@@ -186,6 +204,7 @@ const deleteWarranty = async id => {
   <Notification
     v-model:is-notification-visible="isNotificationVisible"
     :message="notificationMessage"
+    :color="notificationColor"
   />
   <NewWarrantyFormDrawer
     v-model:is-drawer-open="isAddWarrantyFormDrawerVisible"
@@ -197,21 +216,21 @@ const deleteWarranty = async id => {
     @warranty-data="updateWarranty"
   />
   <VDialog
-    v-model="isDeleteWarrantyDialogVisible"
+    v-model="isUnavailableWarrantyDialogVisible"
     width="500"
   >
     <!-- Dialog close btn -->
-    <DialogCloseBtn @click="isDeleteWarrantyDialogVisible = !isDeleteWarrantyDialogVisible" />
+    <DialogCloseBtn @click="isUnavailableWarrantyDialogVisible = !isUnavailableWarrantyDialogVisible" />
 
     <!-- Dialog Content -->
-    <VCard title="Eliminar garantía">
+    <VCard title="Deshabilitar garantía">
       <VCardText>
-        ¿Estás seguro de eliminar la garantía: <b>{{ selectedWarrannty.name }}</b>?
+        ¿Estás seguro de deshabilitar la garantía: <b>{{ selectedWarrannty.name }}</b>?
       </VCardText>
 
       <VCardText class="d-flex justify-end">
-        <VBtn @click="deleteWarranty(selectedWarrannty._id)">
-          Eliminar
+        <VBtn @click="availabilityWarranty(selectedWarrannty._id, 'unavailable')">
+          Deshabilitar
         </VBtn>
       </VCardText>
     </VCard>

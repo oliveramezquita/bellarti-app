@@ -10,7 +10,7 @@ definePage({
 import { Spanish } from 'flatpickr/dist/l10n/es.js'
 
 const route = useRoute('apps-after-sales-technicians-view-id')
-const { data: technicianInfo } = await useApi(`api/after_sales/technician/${ route.params.id }`)
+const { data: technicianInfo, execute: fetchTechnician } = await useApi(`api/after_sales/technician/${ route.params.id }`)
 const { data: schedulingOptions } = await useApi('api/catalogs?name=Horarios')
 
 const breadcrumbItems = ref([
@@ -66,6 +66,52 @@ const updateData = async () => {
       onResponse({ response }) {
         if (response.status === 200) {
           notification.value.color = 'success'
+        } else {
+          notification.value.color = 'error'
+        }
+        notification.value.isVisible = true
+        notification.value.message = response._data
+      },
+    })
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
+}
+
+//Manage user status
+const manageUserStatus = async action => {
+  isLoadingDialogVisible.value = true
+
+  try {
+    await $api(`api/after_sales/technician/${action}/${route.params.id}`, {
+      method: 'PATCH',
+      onResponse({ response }) {
+        if (response.status === 200) {
+          notification.value.color = 'success'
+          fetchTechnician()
+        } else {
+          notification.value.color = 'error'
+        }
+        notification.value.isVisible = true
+        notification.value.message = response._data
+      },
+    })
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
+}
+
+//Delete
+const eliminate = async () => {
+  isLoadingDialogVisible.value = true
+
+  try {
+    await $api(`api/after_sales/technician/${route.params.id}`, {
+      method: 'DELETE',
+      onResponse({ response }) {
+        if (response.status === 200) {
+          notification.value.color = 'success'
+          fetchTechnician()
         } else {
           notification.value.color = 'error'
         }
@@ -344,6 +390,7 @@ const sendInvitation = async() => {
           class="d-flex gap-4"
         >
           <VBtn
+            v-if="!technicianInfo.is_deleted && technicianInfo.status < 3"
             type="button"
             @click="updateData"
           >
@@ -354,7 +401,7 @@ const sendInvitation = async() => {
           </VBtn>
 
           <VBtn
-            v-if="technicianInfo.status === 0"
+            v-if="!technicianInfo.is_deleted && technicianInfo.status === 0"
             variant="tonal"
             @click="sendInvitation"
           >
@@ -365,9 +412,10 @@ const sendInvitation = async() => {
           </VBtn>
 
           <VBtn
-            v-if="technicianInfo.status === 1"
-            variant="tonal"
-            color="error"
+            v-if="!technicianInfo.is_deleted && (technicianInfo.status > 0 && technicianInfo.status < 3)"
+            variant="outlined"
+            color="secondary"
+            @click="manageUserStatus('disable')"
           >
             <VIcon
               start
@@ -375,6 +423,29 @@ const sendInvitation = async() => {
             />Deshabilitar
           </VBtn>
 
+          <VBtn
+            v-if="!technicianInfo.is_deleted && technicianInfo.status === 3"
+            variant="outlined"
+            color="info"
+            @click="manageUserStatus('enable')"
+          >
+            <VIcon
+              start
+              icon="tabler-user-check"
+            />Habilitar
+          </VBtn>
+
+          <VBtn
+            v-if="!technicianInfo.is_deleted"
+            variant="outlined"
+            color="error"
+            @click="eliminate"
+          >
+            <VIcon
+              start
+              icon="tabler-user-x"
+            />Eliminar
+          </VBtn>
           <VBtn
             type="reset"
             color="secondary"

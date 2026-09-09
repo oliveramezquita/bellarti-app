@@ -36,7 +36,7 @@ const dateConfig = ref({
   disable: [{ from: `1900-01-01`, to: today.toISOString().split('T')[0] }],
 })
 
-const { data: warrantyTypes } = await useApi('api/after_sales/warranties')
+const { data: warrantyTypes } = await useApi('api/after_sales/warranties?is_available=true')
 
 const closeNavigationDrawer = () => {
   emit('update:isDrawerOpen', false)
