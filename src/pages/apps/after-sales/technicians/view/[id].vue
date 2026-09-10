@@ -102,7 +102,10 @@ const manageUserStatus = async action => {
 }
 
 //Delete
+const isDeleteTechnicianDialogVisible = ref(false)
+
 const eliminate = async () => {
+  isDeleteTechnicianDialogVisible.value = false
   isLoadingDialogVisible.value = true
 
   try {
@@ -439,7 +442,7 @@ const sendInvitation = async() => {
             v-if="!technicianInfo.is_deleted"
             variant="outlined"
             color="error"
-            @click="eliminate"
+            @click="isDeleteTechnicianDialogVisible = true"
           >
             <VIcon
               start
@@ -467,4 +470,24 @@ const sendInvitation = async() => {
     :message="notification.message"
     :color="notification.color"
   />
+  <VDialog
+    v-model="isDeleteTechnicianDialogVisible"
+    width="500"
+  >
+    <!-- Dialog close btn -->
+    <DialogCloseBtn @click="isDeleteTechnicianDialogVisible = !isDeleteTechnicianDialogVisible" />
+
+    <!-- Dialog Content -->
+    <VCard title="Eliminar técnico">
+      <VCardText>
+        ¿Estás seguro de eliminar el técnico: <b>{{ technicianInfo.name }}</b>?, ten en cuenta que al eliminar al técnico ya no se podrá agendar para citas de reparación.
+      </VCardText>
+
+      <VCardText class="d-flex justify-end">
+        <VBtn @click="eliminate">
+          Eliminar
+        </VBtn>
+      </VCardText>
+    </VCard>
+  </VDialog>
 </template>

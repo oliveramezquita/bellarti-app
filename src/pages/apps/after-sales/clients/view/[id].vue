@@ -163,7 +163,10 @@ const manageUserStatus = async action => {
 }
 
 //Delete
+const isDeleteClientDialogVisible = ref(false)
+
 const eliminate = async () => {
+  isDeleteClientDialogVisible.value = false
   isLoadingDialogVisible.value = true
 
   try {
@@ -442,7 +445,7 @@ watch(() => clientInfo.value, newVal => {
             v-if="!clientInfo.is_deleted"
             variant="outlined"
             color="error"
-            @click="eliminate"
+            @click="isDeleteClientDialogVisible = true"
           >
             <VIcon
               start
@@ -471,4 +474,24 @@ watch(() => clientInfo.value, newVal => {
     :message="notification.message"
     :color="notification.color"
   />
+  <VDialog
+    v-model="isDeleteClientDialogVisible"
+    width="500"
+  >
+    <!-- Dialog close btn -->
+    <DialogCloseBtn @click="isDeleteClientDialogVisible = !isDeleteClientDialogVisible" />
+
+    <!-- Dialog Content -->
+    <VCard title="Eliminar cliente">
+      <VCardText>
+        ¿Estás seguro de eliminar el cliente: <b>{{ clientInfo.name }}</b>?, ten en cuenta que al eliminar al cliente ya no podrá acceder a la aplicación de BellartiMovil.
+      </VCardText>
+
+      <VCardText class="d-flex justify-end">
+        <VBtn @click="eliminate">
+          Eliminar
+        </VBtn>
+      </VCardText>
+    </VCard>
+  </VDialog>
 </template>
