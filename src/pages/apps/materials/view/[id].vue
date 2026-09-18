@@ -10,10 +10,11 @@ definePage({
 
 import Image from '@/views/apps/materials/Image.vue'
 import Inventory from '@/views/apps/materials/Inventory.vue'
+import Qr from '@/views/apps/materials/Qr.vue'
 
 const route = useRoute('apps-materials-view-id')
 const router = useRouter()
-const { data: materialData, error: materialError } = await useApi(`api/material/${ route.params.id }`)
+const { data: materialData, error: materialError, execute: fetchMaterial } = await useApi(`api/material/${ route.params.id }`)
 const notification = ref({ visible: false, message: '', color: 'info' })
 
 watch(materialError, e => {
@@ -214,6 +215,49 @@ const deleteImages = async images => {
   } finally {
     isLoadingDialogVisible.value = false
   }
+} 
+
+const refreshMaterial = async () => {
+  await fetchMaterial()
+  material.value = materialData.value
+}
+
+const createQrCode = async() => {
+  isLoadingDialogVisible.value = true
+  
+  try {
+    await $api(`api/materials/create_code_qr/${material.value._id}`, {
+      method: 'POST',
+      onResponse({ response }) {
+        notification.value.visible = true
+        notification.value.message = response._data
+        notification.value.color = response.status === 200 ? 'success' : 'info'
+      },
+    })
+
+    await refreshMaterial()
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
+}
+
+const deleteQrCode = async() => {
+  isLoadingDialogVisible.value = true
+  
+  try {
+    await $api(`api/materials/create_code_qr/${material.value._id}`, {
+      method: 'DELETE',
+      onResponse({ response }) {
+        notification.value.visible = true
+        notification.value.message = response._data
+        notification.value.color = response.status === 200 ? 'success' : 'info'
+      },
+    })
+
+    await refreshMaterial()
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
 }
 </script>
 
@@ -250,6 +294,13 @@ const deleteImages = async images => {
           class="mb-2"
         />
         <span>Inventario</span>
+      </VTab>
+      <VTab value="tab-4">
+        <VIcon
+          icon="tabler-qrcode"
+          class="mb-2"
+        />
+        <span>QR</span>
       </VTab>
     </VTabs>
 
@@ -613,13 +664,22 @@ const deleteImages = async images => {
         <VWindowItem value="tab-3">
           <Inventory :inventory-id="material.inventory_id" />
         </VWindowItem>
+        <VWindowItem value="tab-4">
+          <Qr
+            :image="material.qr"
+            @create-qr-code="createQrCode"
+            @delete-qr-code="deleteQrCode"
+          />
+        </VWindowItem>
       </VWindow>
     </VCardText>
   </VCard>
-  <BarcodeScannerDialog
+  <!--
+    <BarcodeScannerDialog
     v-model:is-dialog-visible="showScanner"
     @barcode-detected="material.new_barcode = $event"
-  />
+    /> 
+  -->
   <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
   <Notification
     v-model:is-notification-visible="notification.visible"
