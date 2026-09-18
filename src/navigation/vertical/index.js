@@ -193,6 +193,36 @@ export default [
     subject: 'Catalogos',
   },
   {
+    title: 'Postventa',
+    icon: { icon: 'tabler-device-mobile-message' },
+    children: [
+      {
+        title: 'Garantías',
+        to: 'apps-after-sales-warranties',
+        action: 'read',
+        subject: 'ASGarantias',
+      },
+      {
+        title: 'Clientes',
+        to: 'apps-after-sales-clients-list',
+        action: 'read',
+        subject: 'ASClientes',
+      },
+      {
+        title: 'Técnicos',
+        to: 'apps-after-sales-technicians-list',
+        action: 'read',
+        subject: 'ASTecnicos',
+      },
+      {
+        title: 'Seguimiento',
+        to: 'apps-after-sales-follow-up-list',
+        action: 'read',
+        subject: 'ASSeguimiento',
+      },
+    ],
+  },
+  {
     title: 'Administración',
     icon: { icon: 'tabler-settings' },
     children: [

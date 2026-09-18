@@ -2,14 +2,18 @@
 const props = defineProps({
   image: {
     type: String,
-    required: true,
+    default: '',
   },
 })
 
-const emit = defineEmits(['updateMaterial'])
+const emit = defineEmits(['createQrCode', 'deleteQrCode'])
 
-const updateMaterial = () => {
-  emit('updateMaterial')
+const createQrCode = () => {
+  emit('createQrCode')
+}
+
+const deleteQrCode = () => {
+  emit('deleteQrCode')
 }
 </script>
 
@@ -28,12 +32,19 @@ const updateMaterial = () => {
       <VBtn>
         Imprimir
       </VBtn>
+      <VBtn
+        class="ml-4"
+        variant="outlined"
+        @click="deleteQrCode"
+      >
+        Eliminar
+      </VBtn>
     </div>
   </div>
   <div v-else>
     <div class="d-flex align-center justify-center">
-      <VBtn @click="updateMaterial">
-        Actualizar material
+      <VBtn @click="createQrCode">
+        Crear un código QR
       </VBtn>
     </div>
   </div>

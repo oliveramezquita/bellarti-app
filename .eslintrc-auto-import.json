@@ -382,6 +382,7 @@
     "loadState": true,
     "saveState": true,
     "purchaseOrdersDefaultValues": true,
-    "formatCurrency": true
+    "formatCurrency": true,
+    "warrantyTypes": true
   }
 }
