@@ -3,21 +3,16 @@
 definePage({
   meta: {
     action: 'read',
-    subject: 'Materiales',
-    navActiveLink: 'apps-materials-list',
+    subject: 'MatMelaminas',
   },
 })
 
-const breadcrumbItems = ref([{ title: 'Materiales', class: 'text-primary' }, { title: 'Materiales' }])
+const breadcrumbItems = ref([{ title: 'Materiales', class: 'text-primary' }, { title: 'Melaminas' }])
 
 const [
   { data: supplierList },
-  { data: divisions },
-  { data: equipmentDivisions },
 ] = await Promise.all([
   useApi('api/suppliers?itemsPerPage=100'),
-  useApi('api/catalogs?name=División de materiales'),
-  useApi('api/catalogs?name=Equipos y/o accesorios'),
 ])
 
 const isLoadingDialogVisible = ref(false)
@@ -31,17 +26,11 @@ const orderBy = ref()
 const isDeleteMaterialDialogVisible = ref(false)
 const selectedMaterial = ref()
 const selectedSupplier = ref()
-const selectedDivision = ref()
 
 const headers = [
   {
     title: '',
     key: 'images',
-    sortable: false,
-  },
-  {
-    title: 'División',
-    key: 'division',
     sortable: false,
   },
   {
@@ -83,8 +72,7 @@ const {
   query: {
     q: searchQuery,
     supplier_id: selectedSupplier,
-    division: selectedDivision,
-    group: 'MATERIALS_GROUP',
+    group: 'MELAMINE',
     itemsPerPage,
     page,
     sortBy,
@@ -104,10 +92,6 @@ watch(error, e => {
 
 const materials = computed(() => materialsData.value?.data ?? [])
 const totalMaterials = computed(() => materialsData.value?.total_elements ?? 0)
-
-const materialDivisions = divisions.value.values.filter(
-  division => !equipmentDivisions.value.values.includes(division),
-)
 
 const updateOptions = options => {
   page.value = options.page
@@ -130,7 +114,7 @@ const download = async() => {
   isLoadingDialogVisible.value = true
 
   try {
-    const baseUrl = 'api/export-materials?group=MATERIALS_GROUP'
+    const baseUrl = 'api/export-materials?group=MELAMINE'
     const apiUrl = selectedSupplier.value ? `${baseUrl}&supplier=${selectedSupplier.value}` : baseUrl
     const response = await $api(apiUrl, { method: 'GET' })
 
@@ -181,18 +165,6 @@ const download = async() => {
             cols="12"
             sm="4"
           >
-            <AppSelect
-              v-model="selectedDivision"
-              :items="materialDivisions"
-              placeholder="Seleccionar división"
-              clearable
-              clear-icon="tabler-x"
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            sm="4"
-          >
             <!-- 👉 Search  -->
             <AppTextField
               v-model="searchQuery"
@@ -227,7 +199,7 @@ const download = async() => {
           <!-- 👉 Add material button -->
           <VBtn
             prepend-icon="tabler-plus"
-            :to="{name: 'apps-materials-new-group', params: { group: 'MATERIALS_GROUP' }}"
+            :to="{name: 'apps-materials-new-group', params: { group: 'MELAMINE' }}"
           >
             Agregar
           </VBtn>
@@ -276,7 +248,7 @@ const download = async() => {
             :title="item.concept"
           />
         </template>
-        <!-- Concept -->      
+        <!-- Concept -->
         <template #item.concept="{ item }">
           <div class="d-flex gap-x-4">
             <div class="d-flex flex-column">

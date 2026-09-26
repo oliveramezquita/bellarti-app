@@ -17,14 +17,32 @@ const notification = ref({ visible: false, message: '', color: 'info' })
 const router = useRouter()
 const route = useRoute('apps-materials-new-group')
 
+const groupConfig = {
+  EQUIPMENT_GROUP: {
+    title: 'Equipamiento y Accesorios',
+    route: 'apps-equipment',
+  },
+  MATERIALS_GROUP: {
+    title: 'Materiales',
+    route: 'apps-materials-list',
+  },
+  MELAMINE: {
+    title: 'Melamina',
+    route: 'apps-melamines',
+  },
+}
+
+const currentGroup = groupConfig[route.params.group]
+
 const breadcrumbItems = ref([
   { title: 'Materiales', class: 'text-primary' },
-  { 
-    title: route.params.group === 'EQUIPMENT_GROUP' ? 'Equipamiento y Accesorios' : 'Materiales', 
-    to: { 
-      name: route.params.group === 'EQUIPMENT_GROUP' ? 'apps-equipment-list' : 'apps-materials-list',
-    }, 
-    class: 'text-underline' },
+  {
+    title: currentGroup.title,
+    to: {
+      name: currentGroup.route,
+    },
+    class: 'text-underline',
+  },
   { title: 'Nuevo' },
 ])
 
@@ -92,11 +110,26 @@ const [
   { data: suppliers },
   { data: unitsOfMeasurement },
   { data: divisions },
+  { data: equipmentDivisions },
 ] = await Promise.all([
   useApi('api/suppliers?itemsPerPage=1000'),
   useApi('api/catalogs?name=Unidades de medida'),
   useApi('api/catalogs?name=División de materiales'),
+  useApi('api/catalogs?name=Equipos y/o accesorios'),
 ])
+
+let materialDivisions = []
+if (route.params.group === 'EQUIPMENT_GROUP') {
+  materialDivisions = equipmentDivisions.value.values
+} else if (route.params.group === 'MATERIALS_GROUP') {
+  materialDivisions = divisions.value.values.filter(
+    division => !equipmentDivisions.value.values.includes(division),
+  )
+} else {
+  materialDivisions = ['Tableros']
+  material.value.division = 'Tableros'
+  material.value.name = 'MELAMINA'  
+}
 
 const onSubmit = () => {
   isLoadingDialogVisible.value = true
@@ -197,7 +230,7 @@ const differentiatePrices = () => {
                       v-model="material.division"
                       label="División"
                       :rules="[requiredValidator]"
-                      :items="divisions.values"
+                      :items="materialDivisions"
                       class="font-weight-bold"
                     />
                   </VCol>

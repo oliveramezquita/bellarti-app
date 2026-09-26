@@ -119,8 +119,14 @@ export default [
         subject: 'Materiales',
       },
       {
+        title: 'Melaminas',
+        to: 'apps-melamines',
+        action: 'read',
+        subject: 'MatMelaminas',
+      },
+      {
         title: 'Equipamiento y Accesorios',
-        to: 'apps-equipment-list',
+        to: 'apps-equipment',
         action: 'read',
         subject: 'MatEquipamiento',
       },
