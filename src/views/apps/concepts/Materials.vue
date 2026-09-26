@@ -12,7 +12,16 @@ const emit = defineEmits(['update:tag', 'update:materialsList', 'update:projectS
 
 const tagList = props.tag === 'materials' || props.tag === 'prov.materials' ? 'materiales' : 'equipos y/o accesorios'
 const tagForm = props.tag === 'materials' || props.tag === 'prov.materials' ? 'material' : 'equipo y/o accesorio'
-const group = props.tag === 'materials' || props.tag === 'prov.materials' ? 'MATERIALS_GROUP' : 'EQUIPMENT_GROUP'
+
+
+//const group = props.tag === 'materials' || props.tag === 'prov.materials' ? 'MATERIALS_GROUP' : 'EQUIPMENT_GROUP'
+const group = {
+  materials: 'MATERIALS_GROUP',
+  'prov.materials': 'MATERIALS_GROUP',
+  melamine: 'MELAMINE',
+  equipment: 'EQUIPMENT_GROUP',
+}[props.tag] ?? 'EQUIPMENT_GROUP'
+
 const { data: suppliers } = await useApi('api/suppliers?itemsPerPage=100')
 const { data: colors } = await useApi('api/catalogs?name=Colores')
 

@@ -46,16 +46,34 @@ const showScanner = ref(false)
 
 const material = ref(materialData.value ?? { _id: null, concept: null, division: null })
 
-const breadcrumbItems = [
-  { title: 'Materiales', class: 'text-primary' }, 
-  { 
-    title: material.value.group === 'EQUIPMENT_GROUP' ? 'Equipamiento y Accesorios' : 'Materiales', 
-    to: { 
-      name: material.value.group === 'EQUIPMENT_GROUP' ? 'apps-equipment-list' : 'apps-materials-list',
-    }, 
-    class: 'text-underline' }, 
+const groupConfig = {
+  EQUIPMENT_GROUP: {
+    title: 'Equipamiento y Accesorios',
+    route: 'apps-equipment',
+  },
+  MATERIALS_GROUP: {
+    title: 'Materiales',
+    route: 'apps-materials-list',
+  },
+  MELAMINE: {
+    title: 'Melamina',
+    route: 'apps-melamines',
+  },
+}
+
+const currentGroup = groupConfig[material.value.name.toUpperCase() === 'MELAMINA' ? 'MELAMINE' : material.value.group]
+
+const breadcrumbItems = ref([
+  { title: 'Materiales', class: 'text-primary' },
+  {
+    title: currentGroup.title,
+    to: {
+      name: currentGroup.route,
+    },
+    class: 'text-underline',
+  },
   { title: material.value.concept },
-]
+])
 
 const isDeleteUserDialogVisible = ref(false)
 

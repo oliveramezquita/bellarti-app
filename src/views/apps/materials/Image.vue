@@ -52,7 +52,7 @@ watch(() => props.images, newValue => {
 
 <template>
   <p>
-    Para cargar imagenes deben ser en formato: JPEG o PNG.
+    Para cargar imagenes deben ser en formato: JPEG, PNG o WEBP.
   </p>
   <VRow>
     <VCol
@@ -62,7 +62,7 @@ watch(() => props.images, newValue => {
       <VFileInput
         v-model="image"
         label="Sube tu imagen"
-        accept="image/png, image/jpeg"
+        accept="image/png, image/jpeg, image/webp"
         prepend-icon="tabler-photo-plus"
         outlined
         dense
@@ -86,6 +86,7 @@ watch(() => props.images, newValue => {
         v-model:selected-checkbox="selectedCheckbox"
         :checkbox-content="checkboxContent"
         :grid-column="{ sm: '6', cols: '12' }"
+        class="checkboxes-container"
       />
     </VCol>
     <VCol cols="12">
@@ -99,3 +100,14 @@ watch(() => props.images, newValue => {
     </VCol>
   </VRow>
 </template>
+
+<style>
+.checkboxes-container {
+  img {
+    margin: 10px;
+    max-block-size: 200px;
+    max-inline-size: 450px;
+    object-fit: contain;
+  }
+}
+</style>

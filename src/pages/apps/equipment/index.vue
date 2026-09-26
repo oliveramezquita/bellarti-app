@@ -14,7 +14,7 @@ const [
   { data: divisions },
 ] = await Promise.all([
   useApi('api/suppliers?itemsPerPage=100'),
-  useApi('api/catalogs?name=División de materiales'),
+  useApi('api/catalogs?name=Equipos y/o accesorios'),
 ])
 
 const isLoadingDialogVisible = ref(false)
@@ -31,6 +31,11 @@ const selectedSupplier = ref()
 const selectedDivision = ref()
 
 const headers = [
+  {
+    title: '',
+    key: 'images',
+    sortable: false,
+  },
   {
     title: 'División',
     key: 'division',
@@ -257,6 +262,14 @@ const download = async() => {
         class="text-no-wrap"
         @update:options="updateOptions"
       >
+        <!-- Image -->
+        <template #item.images="{ item }">
+          <ImagePreview
+            :image="item.images?.[0]"
+            :title="item.concept"
+          />
+        </template>
+        <!-- Concept -->
         <template #item.concept="{ item }">
           <div class="d-flex gap-x-4">
             <div class="d-flex flex-column">
