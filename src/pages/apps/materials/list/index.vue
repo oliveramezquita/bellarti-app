@@ -23,15 +23,77 @@ const [
 const isLoadingDialogVisible = ref(false)
 const isLoading = ref(false)
 const notification = ref({ visible: false, message: '', color: 'info' })
-const searchQuery = ref('')
-const itemsPerPage = ref(10)
-const page = ref(1)
-const sortBy = ref()
-const orderBy = ref()
 const isDeleteMaterialDialogVisible = ref(false)
 const selectedMaterial = ref()
-const selectedSupplier = ref()
-const selectedDivision = ref()
+
+// 👉 Filters persisted in URL query params
+const route = useRoute()
+const router = useRouter()
+
+const DEFAULT_ITEMS_PER_PAGE = 10
+const DEFAULT_PAGE = 1
+
+const toInt = (value, fallback) => {
+  const parsed = parseInt(value, 10)
+
+  return Number.isNaN(parsed) ? fallback : parsed
+}
+
+// Merges params into the current query in a single navigation; empty/default values are removed.
+// Multiple changes in the same tick must go through one call, since route.query updates asynchronously.
+const updateQuery = params => {
+  const query = { ...route.query, ...params }
+
+  Object.keys(query).forEach(key => {
+    if (query[key] === undefined || query[key] === null || query[key] === '')
+      delete query[key]
+  })
+
+  if (toInt(query.itemsPerPage, DEFAULT_ITEMS_PER_PAGE) === DEFAULT_ITEMS_PER_PAGE)
+    delete query.itemsPerPage
+  if (toInt(query.page, DEFAULT_PAGE) <= DEFAULT_PAGE)
+    delete query.page
+
+  router.replace({ query })
+}
+
+// Changing a filter resets pagination to the first page
+const searchQuery = computed({
+  get: () => route.query.q ?? '',
+  set: value => updateQuery({ q: value, page: undefined }),
+})
+
+const selectedSupplier = computed({
+  get: () => route.query.supplier_id || undefined,
+  set: value => updateQuery({ supplier_id: value, page: undefined }),
+})
+
+const selectedDivision = computed({
+  get: () => route.query.division || undefined,
+  set: value => updateQuery({ division: value, page: undefined }),
+})
+
+const itemsPerPage = computed({
+  get: () => toInt(route.query.itemsPerPage, DEFAULT_ITEMS_PER_PAGE),
+  set: value => updateQuery({ itemsPerPage: value, page: undefined }),
+})
+
+const page = computed({
+  get: () => Math.max(toInt(route.query.page, DEFAULT_PAGE), DEFAULT_PAGE),
+  set: value => updateQuery({ page: value }),
+})
+
+const sortBy = computed({
+  get: () => route.query.sortBy || undefined,
+  set: value => updateQuery({ sortBy: value }),
+})
+
+const orderBy = computed({
+  get: () => route.query.orderBy || undefined,
+  set: value => updateQuery({ orderBy: value }),
+})
+
+const tableSortBy = computed(() => sortBy.value ? [{ key: sortBy.value, order: orderBy.value ?? 'asc' }] : [])
 
 const headers = [
   {
@@ -110,9 +172,20 @@ const materialDivisions = divisions.value.values.filter(
 )
 
 const updateOptions = options => {
-  page.value = options.page
-  sortBy.value = options.sortBy[0]?.key
-  orderBy.value = options.sortBy[0]?.order
+  const sortKey = options.sortBy[0]?.key
+  const sortOrder = options.sortBy[0]?.order
+
+  // Skip no-op updates (e.g. the initial emit on mount) so URL state isn't overwritten
+  if (options.page === page.value && sortKey === sortBy.value && sortOrder === orderBy.value)
+    return
+
+  const sortChanged = sortKey !== sortBy.value || sortOrder !== orderBy.value
+
+  updateQuery({
+    page: sortChanged ? undefined : options.page,
+    sortBy: sortKey,
+    orderBy: sortKey ? sortOrder : undefined,
+  })
 }
 
 const viewDeleteMaterialDialog = material => {
@@ -257,6 +330,7 @@ const download = async() => {
       <VDataTableServer
         v-model:items-per-page="itemsPerPage"
         v-model:page="page"
+        :sort-by="tableSortBy"
         :items-per-page-options="[
           { value: 10, title: '10' },
           { value: 20, title: '20' },

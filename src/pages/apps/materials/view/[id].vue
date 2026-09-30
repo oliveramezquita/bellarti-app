@@ -663,7 +663,7 @@ const deleteQrCode = async() => {
                   type="reset"
                   color="secondary"
                   variant="tonal"
-                  :to="{name:'apps-materials-list'}"
+                  @click="router.go(-1)"
                 >
                   Regresar
                 </VBtn>

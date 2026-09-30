@@ -540,7 +540,7 @@ const differentiatePrices = () => {
                   type="reset"
                   color="secondary"
                   variant="tonal"
-                  :to="{name:'apps-materials-list'}"
+                  @click="router.go(-1)"
                 >
                   Cancelar
                 </VBtn>
