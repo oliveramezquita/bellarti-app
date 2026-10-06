@@ -52,12 +52,6 @@ export default [
         subject: 'VSPrototipos',
       },
       {
-        title: 'Tendencias',
-        to: 'apps-trends-list',
-        action: 'read',
-        subject: 'VSTendencias',
-      },
-      {
         title: 'Volumetría',
         to: 'apps-volumetry',
         action: 'read',
@@ -74,6 +68,12 @@ export default [
         to: 'apps-ods-list',
         action: 'read',
         subject: 'VSODs',
+      },
+      {
+        title: 'Tendencias',
+        to: 'apps-trends-list',
+        action: 'read',
+        subject: 'VSTendencias',
       },
       {
         title: 'Asign. de Tendencias',
