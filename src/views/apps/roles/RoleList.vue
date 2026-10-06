@@ -214,7 +214,17 @@ const viewDeleteRoleDialog = role => {
             />
 
             <div class="text-capitalize text-high-emphasis text-body-1">
-              {{ item.name }}
+              <h6
+                class="text-base"
+                style="font-weight: normal;"
+              >
+                <RouterLink
+                  :to="{ name: 'apps-roles-view-id', params: { id: item._id } }"
+                  class="font-weight-medium text-underline"
+                >
+                  {{ item.name }}
+                </RouterLink>
+              </h6>
             </div>
           </div>
         </template>
