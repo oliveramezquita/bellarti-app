@@ -194,9 +194,37 @@ const viewDeleteMaterialDialog = material => {
 }
 
 const deleteMaterial = async id => {
-  await $api(`api/material/${id}`, { method: 'DELETE' })
-  isDeleteMaterialDialogVisible.value = false
-  fetchMaterials()
+  isLoadingDialogVisible.value = true
+
+  try {
+    const response = await $api(`api/material/${id}`, {
+      method: 'DELETE',
+    })
+
+    isDeleteMaterialDialogVisible.value = false
+
+    notification.value = {
+      message: response,
+      color: 'success',
+      visible: true,
+    }
+
+    fetchMaterials()
+
+  } catch (error) {
+    console.error('Error al eliminar material:', error)
+
+    isDeleteMaterialDialogVisible.value = false
+
+    notification.value = {
+      message: error?.data?.message || error?.data || 'Error al eliminar el material',
+      color: 'error',
+      visible: true,
+    }
+
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
 }
 
 const download = async() => {
