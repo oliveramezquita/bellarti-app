@@ -7,7 +7,7 @@ definePage({
     navActiveLink: 'apps-purchase-orders-list',
   },
 })
-import { getStatusColor } from '@/utils/setColor'
+
 import AddMaterialDrawer from '@/views/apps/purchase-orders/AddMaterialDrawer.vue'
 import EditMaterialDrawer from '@/views/apps/purchase-orders/EditMaterialDrawer.vue'
 import InputMaterialsDialog from '@/views/apps/purchase-orders/InputMaterialsDialog.vue'
