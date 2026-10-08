@@ -7,6 +7,7 @@ definePage({
     navActiveLink: 'apps-purchase-orders-list',
   },
 })
+
 import AddMaterialDrawer from '@/views/apps/purchase-orders/AddMaterialDrawer.vue'
 import EditMaterialDrawer from '@/views/apps/purchase-orders/EditMaterialDrawer.vue'
 import InputMaterialsDialog from '@/views/apps/purchase-orders/InputMaterialsDialog.vue'
@@ -166,6 +167,7 @@ const updatePurchaseOrder = async status => {
         body: {
           'supplier_id': supplier.value,
           'home_production_id': project.value,
+          'number': purchaseOrderNumber.value,
           'request_by': userData.value._id,
           'created': created.value,
           'estimated_delivery': estimatedDelivery.value,
@@ -181,9 +183,12 @@ const updatePurchaseOrder = async status => {
           if (response.status === 200) {
             fetchPurchaseOrder()
             notification.value.color = 'success'
+            
+          } else {
+            notification.value.color = getStatusColor(response.status)
           }
-          isNotificationVisible.value = true
           notification.value.message = response._data
+          isNotificationVisible.value = true
         },
       })
     } finally {
