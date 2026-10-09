@@ -10,6 +10,8 @@ const breadcrumbItems = ref([{ title: 'Órdenes de Compra', class: 'text-primary
 const searchQuery = ref('')
 const itemsPerPage = ref(10)
 const page = ref(1)
+const sortBy = ref()
+const orderBy = ref()
 const isDeletePurchaseOrderDialogVisible = ref(false)
 const selectedPurchaseOrder = ref()
 const { data: supplierList } = await useApi('api/suppliers?itemsPerPage=100')
@@ -89,11 +91,18 @@ const {
     status: selectedStatus,
     itemsPerPage,
     page,
+    sortBy,
+    orderBy,
   },
 }))
 
 const purchaseOrders = computed(() => purchaseOrdersData.value.data)
 const totalPurchaseOrders = computed(() => purchaseOrdersData.value.total_elements)
+
+const updateOptions = options => {
+  sortBy.value = options.sortBy[0]?.key
+  orderBy.value = options.sortBy[0]?.order
+}
 
 const viewDeletePurchaseOrderDialog = purchaseOrder => {
   selectedPurchaseOrder.value = purchaseOrder
@@ -216,7 +225,7 @@ const deletePurchaseOrder = async id => {
           <tr class="v-data-table__tr">
             <td :colspan="headers.length">
               <div class="inner-table">
-                <div class="row header">
+                <div class="inner-row header">
                   <div class="cell">
                     Solicita
                   </div>
@@ -239,19 +248,24 @@ const deletePurchaseOrder = async id => {
                     Entrega
                   </div>
                 </div>
-                <div class="row">
+
+                <div class="inner-row">
                   <div class="cell">
                     {{ slotProps.item.request_by_name }}
                   </div>
+
                   <div class="cell">
-                    {{ formatDate(slotProps.item.created) }}
+                    {{ customFormatDate(slotProps.item.created) }}
                   </div>
+
                   <div class="cell">
                     {{ slotProps.item.approved_by_name }}
                   </div>
+
                   <div class="cell">
-                    {{ formatDate(slotProps.item.approved_date) }}
+                    {{ customFormatDate(slotProps.item.approved_date) }}
                   </div>
+
                   <div class="cell">
                     <VChip :color="getStatusValue(statusList, slotProps.item.status, 'color')">
                       <VIcon
@@ -261,13 +275,33 @@ const deletePurchaseOrder = async id => {
                       {{ getStatusValue(statusList, slotProps.item.status, 'name') }}
                     </VChip>
                   </div>
+
                   <div class="cell">
-                    <VChip :color="getStatusValue(deliveredStatusList, slotProps.item.delivered_status, 'color')">
+                    <!-- Campo correspondiente a la factura -->
+                    —
+                  </div>
+
+                  <div class="cell">
+                    <VChip
+                      :color="getStatusValue(
+                        deliveredStatusList,
+                        slotProps.item.delivered_status,
+                        'color'
+                      )"
+                    >
                       <VIcon
                         start
-                        :icon="getStatusValue(deliveredStatusList, slotProps.item.delivered_status, 'icon')"
+                        :icon="getStatusValue(
+                          deliveredStatusList,
+                          slotProps.item.delivered_status,
+                          'icon'
+                        )"
                       />
-                      {{ getStatusValue(deliveredStatusList, slotProps.item.delivered_status, 'name') }}
+                      {{ getStatusValue(
+                        deliveredStatusList,
+                        slotProps.item.delivered_status,
+                        'name'
+                      ) }}
                     </VChip>
                   </div>
                 </div>
@@ -275,6 +309,7 @@ const deletePurchaseOrder = async id => {
             </td>
           </tr>
         </template>
+        
         <template #item.number="{ item }">
           <div class="d-flex gap-x-4">
             <div class="d-flex flex-column">
@@ -329,6 +364,7 @@ const deletePurchaseOrder = async id => {
             />
           </div>
         </template>
+        
         <template #item.delivered_status="{ item }">
           <div class="align-center">
             <VAvatar
@@ -431,24 +467,29 @@ const deletePurchaseOrder = async id => {
   margin-block: 20px;
   margin-inline: auto;
 
-  .row {
-    display: flex;
+  .inner-row {
+    display: grid;
     border-block-end: 1px solid #ccc;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+
+    &:last-child {
+      border-block-end: none;
+    }
   }
 
   .cell {
-    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     padding: 10px;
     border-inline-end: 1px solid #ccc;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
     text-align: center;
-  }
 
-  .row:last-child {
-    border-block-end: none;
-  }
-
-  .cell:last-child {
-    border-inline-end: none;
+    &:last-child {
+      border-inline-end: none;
+    }
   }
 
   .header {

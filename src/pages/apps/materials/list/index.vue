@@ -21,7 +21,6 @@ const [
 ])
 
 const isLoadingDialogVisible = ref(false)
-const isLoading = ref(false)
 const notification = ref({ visible: false, message: '', color: 'info' })
 const isDeleteMaterialDialogVisible = ref(false)
 const selectedMaterial = ref()
@@ -437,7 +436,7 @@ const download = async() => {
         </VCardText>
       </VCard>
     </VDialog>
-    <LoadingDataDialog v-model:is-dialog-visible="isLoading" />
+    <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
     <Notification
       v-model:is-notification-visible="notification.visible"
       :message="notification.message"

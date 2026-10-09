@@ -1,4 +1,4 @@
-export const formatDate = fechaISO => {
+export const customFormatDate = fechaISO => {
   if (fechaISO) {
     const date = new Date(fechaISO)
   
