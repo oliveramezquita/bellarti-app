@@ -597,7 +597,7 @@ const headers = [
             prepend-icon="tabler-arrow-left"
             color="secondary"
             variant="outlined"
-            :to="{name:'apps-purchase-orders-list'}"
+            @click="router.go(-1)"
           >
             Regresar
           </VBtn>
