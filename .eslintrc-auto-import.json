@@ -383,6 +383,7 @@
     "saveState": true,
     "purchaseOrdersDefaultValues": true,
     "formatCurrency": true,
-    "warrantyTypes": true
+    "warrantyTypes": true,
+    "customFormatDate": true
   }
 }

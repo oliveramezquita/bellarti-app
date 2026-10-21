@@ -13,16 +13,7 @@ const emit = defineEmits(['update:tag', 'update:materialsList', 'update:projectS
 const tagList = props.tag === 'materials' || props.tag === 'prov.materials' ? 'materiales' : 'equipos y/o accesorios'
 const tagForm = props.tag === 'materials' || props.tag === 'prov.materials' ? 'material' : 'equipo y/o accesorio'
 
-
-//const group = props.tag === 'materials' || props.tag === 'prov.materials' ? 'MATERIALS_GROUP' : 'EQUIPMENT_GROUP'
-const group = {
-  materials: 'MATERIALS_GROUP',
-  'prov.materials': 'MATERIALS_GROUP',
-  melamine: 'MELAMINE',
-  equipment: 'EQUIPMENT_GROUP',
-}[props.tag] ?? 'EQUIPMENT_GROUP'
-
-const { data: suppliers } = await useApi('api/suppliers?itemsPerPage=100')
+const { data: suppliers } = await useApi('api/suppliers?itemsPerPage=100&excludeTrend=true')
 const { data: colors } = await useApi('api/catalogs?name=Colores')
 
 // Estado principal
@@ -70,7 +61,7 @@ const clearFields = () => {
 const getMaterials = async supplierId => {
   try {
     material.value = 'Cargando materiales...'
-    materials.value = await $api(`api/materials?supplier_id=${supplierId}&group=${group}&itemsPerPage=1000`, { method: 'GET' })
+    materials.value = await $api(`api/materials?supplier_id=${supplierId}&itemsPerPage=1000`, { method: 'GET' })
   } finally {
     clearFields()
   }

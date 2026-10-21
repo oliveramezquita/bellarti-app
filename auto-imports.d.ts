@@ -47,6 +47,7 @@ declare global {
   const createTemplatePromise: typeof import('@vueuse/core')['createTemplatePromise']
   const createUnrefFn: typeof import('@vueuse/core')['createUnrefFn']
   const createUrl: typeof import('./src/@core/composable/createUrl.js')['createUrl']
+  const customFormatDate: typeof import('./src/utils/formatDate.js')['customFormatDate']
   const customRef: typeof import('vue')['customRef']
   const debouncedRef: typeof import('@vueuse/core')['debouncedRef']
   const debouncedWatch: typeof import('@vueuse/core')['debouncedWatch']
@@ -60,7 +61,7 @@ declare global {
   const extendRef: typeof import('@vueuse/core')['extendRef']
   const extractStoragePermissions: typeof import('./src/@core/composable/useCookie.js')['extractStoragePermissions']
   const formatCurrency: typeof import('./src/utils/formatCurrency.js')['formatCurrency']
-  const formatDate: typeof import('./src/utils/formatDate.js')['formatDate']
+  const formatDate: typeof import('./src/@core/utils/formatters.js')['formatDate']
   const formatDateToMonthShort: typeof import('./src/@core/utils/formatters.js')['formatDateToMonthShort']
   const formatNumber: typeof import('./src/utils/formatNumber.js')['formatNumber']
   const getActivePinia: typeof import('pinia')['getActivePinia']
@@ -422,6 +423,7 @@ declare module 'vue' {
     readonly createTemplatePromise: UnwrapRef<typeof import('@vueuse/core')['createTemplatePromise']>
     readonly createUnrefFn: UnwrapRef<typeof import('@vueuse/core')['createUnrefFn']>
     readonly createUrl: UnwrapRef<typeof import('./src/@core/composable/createUrl.js')['createUrl']>
+    readonly customFormatDate: UnwrapRef<typeof import('./src/utils/formatDate.js')['customFormatDate']>
     readonly customRef: UnwrapRef<typeof import('vue')['customRef']>
     readonly debouncedRef: UnwrapRef<typeof import('@vueuse/core')['debouncedRef']>
     readonly debouncedWatch: UnwrapRef<typeof import('@vueuse/core')['debouncedWatch']>
@@ -436,7 +438,6 @@ declare module 'vue' {
     readonly extractStoragePermissions: UnwrapRef<typeof import('./src/@core/composable/useCookie.js')['extractStoragePermissions']>
     readonly formatCurrency: UnwrapRef<typeof import('./src/utils/formatCurrency.js')['formatCurrency']>
     readonly formatDate: UnwrapRef<typeof import('./src/@core/utils/formatters.js')['formatDate']>
-    readonly formatDate: UnwrapRef<typeof import('./src/utils/formatDate.js')['formatDate']>
     readonly formatDateToMonthShort: UnwrapRef<typeof import('./src/@core/utils/formatters.js')['formatDateToMonthShort']>
     readonly formatNumber: UnwrapRef<typeof import('./src/utils/formatNumber.js')['formatNumber']>
     readonly getActivePinia: UnwrapRef<typeof import('pinia')['getActivePinia']>
@@ -459,6 +460,7 @@ declare module 'vue' {
     readonly isReadonly: UnwrapRef<typeof import('vue')['isReadonly']>
     readonly isRef: UnwrapRef<typeof import('vue')['isRef']>
     readonly isToday: UnwrapRef<typeof import('./src/@core/utils/helpers.js')['isToday']>
+    readonly kFormatter: UnwrapRef<typeof import('./src/@core/utils/formatters.js')['kFormatter']>
     readonly lengthValidator: UnwrapRef<typeof import('./src/@core/utils/validators.js')['lengthValidator']>
     readonly loadState: UnwrapRef<typeof import('./src/utils/storage.js')['loadState']>
     readonly logicAnd: UnwrapRef<typeof import('@vueuse/math')['logicAnd']>
