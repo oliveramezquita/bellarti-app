@@ -19,6 +19,7 @@ const isEditClientDrawerVisible = ref(false)
 const isNotificationVisible = ref(false)
 const notificationMessage = ref('')
 const notificationColor = ref('info')
+const isLoadingDialogVisible = ref(false)
 const isDeleteClientDialogVisible = ref(false)
 const selectedClient = ref()
 
@@ -120,9 +121,33 @@ const editClient = async clientData => {
 }
 
 const deleteClient = async id => {
-  await $api(`api/client/${id}`, { method: 'DELETE' })
-  isDeleteClientDialogVisible.value = false
-  fetchClients()
+  isLoadingDialogVisible.value = true
+
+  try {
+    const response = await $api(`api/client/${id}`, {
+      method: 'DELETE',
+    })
+
+    isDeleteClientDialogVisible.value = false
+
+    notificationColor.value = 'success'
+    notificationMessage.value = response
+    isNotificationVisible.value = true
+
+    fetchClients()
+
+  } catch (error) {
+    console.error('Error al eliminar material:', error)
+
+    isDeleteClientDialogVisible.value = false
+
+    notificationColor.value = 'error'
+    notificationMessage.value = response._data
+    isNotificationVisible.value = true
+
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
 }
 </script>
 
@@ -247,6 +272,7 @@ const deleteClient = async id => {
       :message="notificationMessage"
       :color="notificationColor"
     />
+    <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
     <VDialog
       v-model="isDeleteClientDialogVisible"
       width="500"
