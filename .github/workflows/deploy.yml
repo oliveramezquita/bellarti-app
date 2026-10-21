@@ -3,32 +3,54 @@ name: Deploy Bellarti App
 on:
   workflow_dispatch:
 
+concurrency:
+  group: bellarti-frontend-production
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Deploy frontend to server
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.REMOTE_HOST }}
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.REMOTE_KEY }}
+          command_timeout: 15m
           script: |
             set -e
 
             cd /home/deploy/bellarti_app
 
-            echo "🔄 Pull latest code..."
-            git pull
+            echo "Pulling latest code..."
+            git pull --ff-only
 
-            echo "🐳 Rebuilding frontend container..."
-            docker compose -f docker-compose.prod.yml up -d --build
+            echo "Checking available memory..."
+            free -h
 
-            echo "⏳ Waiting for frontend..."
-            sleep 5
+            echo "Building frontend image..."
+            docker compose -f docker-compose.prod.yml build
 
-            echo "🩺 Frontend health check..."
-            curl -f http://127.0.0.1:8080/ || exit 1
+            echo "Deploying frontend..."
+            docker compose -f docker-compose.prod.yml up -d --no-deps --no-build
 
-            echo "✅ Frontend deploy successful"
+            echo "Checking frontend health..."
+
+            for i in $(seq 1 12); do
+              if curl --fail --silent --show-error \
+                http://127.0.0.1:8080/ > /dev/null; then
+                echo "Frontend is responding successfully"
+                docker ps --filter name=vue-project_prod
+                exit 0
+              fi
+
+              echo "Waiting for frontend ($i/12)..."
+              sleep 5
+            done
+
+            echo "Frontend health check failed"
+            docker logs --tail 50 vue-project_prod
+            exit 1
