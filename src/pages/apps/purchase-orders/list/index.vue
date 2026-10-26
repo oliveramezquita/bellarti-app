@@ -92,7 +92,7 @@ const headers = [
   },
   {
     title: 'Proyecto',
-    key: 'project',
+    key: 'project_name',
   },
   {
     title: 'Proveedor',
@@ -515,7 +515,7 @@ const deletePurchaseOrder = async id => {
       <!-- Dialog Content -->
       <VCard title="Eliminar orden de compra">
         <VCardText>
-          ¿Estás seguro de eliminar la orden de compra: <b>{{ selectedPurchaseOrder.project }} - {{ selectedPurchaseOrder.number }}</b>?
+          ¿Estás seguro de eliminar la orden de compra: <b>{{ selectedPurchaseOrder.project_name }} - {{ selectedPurchaseOrder.number }}</b>?
         </VCardText>
 
         <VCardText class="d-flex justify-end">
