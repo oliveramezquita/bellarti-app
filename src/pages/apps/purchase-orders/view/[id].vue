@@ -169,7 +169,7 @@ const updatePurchaseOrder = async status => {
         body: {
           'supplier_id': supplier.value,
           'project_id': project_id.value,
-          'project_name': project.value.name,
+          'project_name': project.value?.name || 'Sin proyecto',
           'number': purchaseOrderNumber.value,
           'request_by': userData.value._id,
           'created': created.value,
