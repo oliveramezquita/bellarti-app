@@ -32,7 +32,7 @@ const [
   paymentFormsListRes,
   useOfCFDIListRes,
 ] = await Promise.all([
-  useApi('api/purchase_orders/get_projects'),
+  useApi(`api/purchase_orders/get_projects?type=${purchaseOrderData.value.type}`),
   useApi('api/purchase_orders?status=processed&itemsPerPage=100'),
   useApi('api/companies?itemsPerPage=100'),
   useApi('api/catalogs?name=División de materiales'),
@@ -61,7 +61,8 @@ const notification = ref({
   color: 'info',
 })
 
-const project = ref(purchaseOrderData.value.home_production_id)
+const project = ref()
+const project_id = ref(purchaseOrderData.value.project_id)
 const typeProject = ref(purchaseOrderData.value.type)
 const purchaseOrderLinked = ref(purchaseOrderData.value.linked_id)
 const purchaseOrderNumber = ref(purchaseOrderData.value.number)
@@ -130,17 +131,18 @@ const headers = [
 ]
 
 const extractData = () => {
-  const match = purchaseOrderData.value.project.match(/^(.*) - OD (\d+)$/)
-  if (match) {
-    od.value = match[2]
-    front.value = match[1].trim()
-  }
+  project.value = projects.value.find(
+    item => item.id === purchaseOrderData.value.project_id,
+  ) ?? null
+
+  od.value = project.value?.od
+  front.value = project.value?.front
   
   return ''
 }
 
 const getProjectInformation = async () => {
-  const response = await $api(`api/purchase_orders/get_suppliers?project_id=${purchaseOrderData.value.home_production_id}&type=${purchaseOrderData.value.type}`, { method: 'GET' })
+  const response = await $api(`api/purchase_orders/get_suppliers?project_id=${purchaseOrderData.value.project_id}&type=${purchaseOrderData.value.type}`, { method: 'GET' })
 
   suppliers.value = response.suppliers_list
   items.value = purchaseOrderData.value.items
@@ -166,7 +168,8 @@ const updatePurchaseOrder = async status => {
         method: 'PUT',
         body: {
           'supplier_id': supplier.value,
-          'home_production_id': project.value,
+          'project_id': project_id.value,
+          'project_name': project.value.name,
           'number': purchaseOrderNumber.value,
           'request_by': userData.value._id,
           'created': created.value,
@@ -177,7 +180,7 @@ const updatePurchaseOrder = async status => {
           'iva': costs.value.iva,
           'total': costs.value.total,
           'status': status,
-          'type': purchaseOrderData.value.project === 'Sin proyecto' ? 'SP' : 'OD',
+          'type': purchaseOrderData.value.type,
         },
         onResponse({ response }) {
           if (response.status === 200) {
@@ -218,6 +221,8 @@ const approve = async () => {
         if (response.status === 200) {
           fetchPurchaseOrder()
           notification.value.color = 'success'
+        } else {
+          notification.value.color = 'error'
         }
         isNotificationVisible.value = true
         notification.value.message = response._data
@@ -403,7 +408,7 @@ getProjectInformation()
               :item-value="item => item.id"
               :items="projects"
               class="font-weight-bold"
-              :disabled="purchaseOrderData.status > 0 || purchaseOrderData.type === 'SP'"
+              disabled
               @update:model-value="getProjectInformation"
             />
           </VCol>
@@ -515,8 +520,8 @@ getProjectInformation()
           </VCol>
         </VRow>
       </VCardText>
-      <VDivider v-if="project || typeProject === 'SP'" />
-      <VCardText v-if="project || typeProject === 'SP'">
+      <VDivider v-if="project_id || typeProject === 'SP'" />
+      <VCardText v-if="project_id || typeProject === 'SP'">
         <VRow>
           <VCol
             cols="12"

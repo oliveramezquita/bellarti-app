@@ -96,13 +96,17 @@ const getSuppliers = async () => {
   if (!form.value.project) return
   ui.isLoading = true
   try {
-    const res = await $api(`api/purchase_orders/get_suppliers?project_id=${form.value.project.home_production_id}&type=${type.value}`)
+    const res = await $api(`api/purchase_orders/get_suppliers?project_id=${form.value.project.id}&type=${type.value}`)
 
     lists.suppliers = res.suppliers_list
 
-    const od = form.value.project?.od ? `OD${form.value.project.od}` : 'SP'
+    const key = type.value === 'PE'
+      ? 'PE'
+      : form.value.project?.od
+        ? `OD${form.value.project.od}`
+        : 'SP'
 
-    form.value.purchaseOrderNumber = `${res.last_consecutive}-${od}-${month}-${year}`
+    form.value.purchaseOrderNumber = `${res.last_consecutive}-${key}-${month}-${year}`
   } catch (e) {
     ui.notificationColor = 'error'
     ui.notificationMessage = 'Error al obtener proveedores'
@@ -118,7 +122,7 @@ const getMaterials = async () => {
   ui.isLoading = true
   try {
     const filter = form.value.selectedDivisions.length ? `division=${form.value.selectedDivisions.join(',')}` : ''
-    const res = await $api(`api/purchase_orders/get_materials/${form.value.supplier}?project_id=${form.value.project.home_production_id}&${filter}`)
+    const res = await $api(`api/purchase_orders/get_materials/${form.value.supplier}?project_id=${form.value.project.id}&type=${type.value}&${filter}`)
 
     table.value.items = res.items
     table.value.totalItems = res.items.length
@@ -206,11 +210,12 @@ const addPurchaseOrder = async status => {
   ui.isLoading = true
   try {
     const body = {
+      project_name: form.value.project?.name || 'Sin proyecto',
       supplier_id: form.value.supplier,
       linked_id: form.value.linkedOrder,
       number: form.value.purchaseOrderNumber,
       company_id: form.value.company,
-      home_production_id: form.value.project?.home_production_id,
+      project_id: form.value.project?.id,
       division: form.value.selectedDivisions,
       request_by: userData.value._id,
       created: form.value.created,
@@ -225,7 +230,7 @@ const addPurchaseOrder = async status => {
       payment_form: form.value.paymentForm,
       cfdi: form.value.cfdi,
       invoice_email: form.value.invoiceEmail,
-      type: form.value.project?.od ? 'OD' : 'SP',
+      type: type.value,
     }
 
     await $api('api/purchase_orders', {
@@ -612,8 +617,11 @@ const headers = [
         >
           No existen materiales dados de alta en el proyecto <b>{{ form.project?.name }}</b>, posibles causas:
           <ul>
-            <li>
+            <li v-show="(type && type === 'VS')">
               - Verifica que se hayan registrado lotes en las OD's. 
+            </li>
+            <li v-show="(type && type === 'PE')">
+              - Verifica que se hayan agregado materiales a alguno de los conceptos del proyecto.
             </li>
           </ul>
         </VAlert>
