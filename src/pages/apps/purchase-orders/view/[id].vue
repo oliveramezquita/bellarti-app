@@ -55,6 +55,7 @@ const isDeleteMaterialDialogVisible = ref(false)
 const isInputMaterialDialogVisible = ref(false)
 const isLoadingDialogVisible = ref(false)
 const isNotificationVisible = ref(false)
+const isCancelReasonDialogVisible = ref(false)
 
 const notification = ref({
   message: '',
@@ -82,6 +83,7 @@ const paymentMethod = ref(purchaseOrderData.value.payment_method)
 const paymentForm = ref(purchaseOrderData.value.payment_form)
 const cfdi = ref(purchaseOrderData.value.cfdi)
 const invoiceEmail = ref(purchaseOrderData.value.invoice_email)
+const cancelReason = ref(purchaseOrderData.value?.cancel_reason || null)
 
 const costs = ref({
   subtotal: purchaseOrderData.value.subtotal,
@@ -233,7 +235,13 @@ const approve = async () => {
   }
 }
 
-const decline = async () => {
+const onCancelReset = () => {
+  isCancelReasonDialogVisible.value = false
+  cancelReason.value = null
+}
+
+const onCancelSubmit = async () => {
+  isCancelReasonDialogVisible.value = false
   isLoadingDialogVisible.value = true
 
   try {
@@ -241,6 +249,7 @@ const decline = async () => {
       method: 'PATCH',
       body: {
         'approved_by': userData.value._id,
+        'cancel_reason': cancelReason.value,
         'status': 3,
       },
       onResponse({ response }) {
@@ -818,6 +827,15 @@ getProjectInformation()
           />
         </template>
       </VDataTableServer>
+      <VDivider v-if="cancelReason" />
+      <VCardText v-if="cancelReason">
+        <VCol cols="12">
+          <AppTextarea
+            v-model="cancelReason"
+            label="Motivo de cancelación"
+          />
+        </VCol>
+      </VCardText>
       <VDivider v-if="costs && items" />
       <VCardText v-if="costs && items">
         <div v-if="purchaseOrderData.status === 0">
@@ -872,7 +890,7 @@ getProjectInformation()
             <VBtn
               prepend-icon="tabler-eye-cancel"
               color="error"
-              @click="decline"
+              @click="isCancelReasonDialogVisible = true"
             >
               CANCELAR
             </VBtn>
@@ -974,6 +992,59 @@ getProjectInformation()
           <VBtn @click="deleteMaterial(selectedMaterial.id)">
             Eliminar
           </VBtn>
+        </VCardText>
+      </VCard>
+    </VDialog>
+    <VDialog
+      v-model="isCancelReasonDialogVisible"
+      :width="$vuetify.display.smAndDown ? 'auto' : 600"
+    >
+      <!-- Dialog close btn -->
+      <DialogCloseBtn @click="isCancelReasonDialogVisible = !isCancelReasonDialogVisible" />
+
+      <VCard class="pa-sm-10 pa-2">
+        <VCardText>
+          <!-- 👉 Title -->
+          <h4 class="text-h4 text-center mb-2">
+            Cancelar orden de compra
+          </h4>
+          <p class="text-body-1 text-center mb-6">
+            Es necesario proporcionar el motivo de cancelación de la orden de compra para poder continuar con el proceso.
+          </p>
+
+          <!-- 👉 Form -->
+          <VForm
+            class="mt-6"
+            @submit.prevent="onCancelSubmit"
+          >
+            <VRow>
+              <!-- 👉 Reason -->
+              <VCol cols="12">
+                <AppTextarea
+                  v-model="cancelReason"
+                  label="Motivo de cancelación"
+                />
+              </VCol>
+
+              <!-- 👉 Submit and Cancel -->
+              <VCol
+                cols="12"
+                class="d-flex flex-wrap justify-center gap-4"
+              >
+                <VBtn type="submit">
+                  Cancelar
+                </VBtn>
+
+                <VBtn
+                  color="secondary"
+                  variant="tonal"
+                  @click="onCancelReset"
+                >
+                  No Cancelar
+                </VBtn>
+              </VCol>
+            </VRow>
+          </VForm>
         </VCardText>
       </VCard>
     </VDialog>
