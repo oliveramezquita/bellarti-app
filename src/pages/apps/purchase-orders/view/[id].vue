@@ -84,6 +84,7 @@ const paymentForm = ref(purchaseOrderData.value.payment_form)
 const cfdi = ref(purchaseOrderData.value.cfdi)
 const invoiceEmail = ref(purchaseOrderData.value.invoice_email)
 const cancelReason = ref(purchaseOrderData.value?.cancel_reason || null)
+const cancelReasonInForm = ref(purchaseOrderData.value?.cancel_reason || null)
 
 const costs = ref({
   subtotal: purchaseOrderData.value.subtotal,
@@ -264,6 +265,11 @@ const onCancelSubmit = async () => {
   } finally {
     isLoadingDialogVisible.value = false
   }
+}
+
+const setCancelReasonInForm = () => {
+  cancelReason.value = cancelReasonInForm.value
+  onCancelSubmit()
 }
 
 const recalcCosts = useDebounceFn(() => {
@@ -827,13 +833,22 @@ getProjectInformation()
           />
         </template>
       </VDataTableServer>
-      <VDivider v-if="cancelReason" />
-      <VCardText v-if="cancelReason">
+      <VDivider v-if="cancelReason || purchaseOrderData.status === 3" />
+      <VCardText v-if="cancelReason || purchaseOrderData.status === 3">
         <VCol cols="12">
           <AppTextarea
-            v-model="cancelReason"
+            v-model="cancelReasonInForm"
             label="Motivo de cancelación"
+            :disabled="cancelReason"
           />
+        </VCol>
+        <VCol cols="12">
+          <VBtn
+            v-show="!cancelReason"
+            @click="setCancelReasonInForm"
+          >
+            Guardar cancelación
+          </VBtn>
         </VCol>
       </VCardText>
       <VDivider v-if="costs && items" />
