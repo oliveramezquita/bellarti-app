@@ -49,6 +49,7 @@ const presentation = ref()
 const amount = ref()
 const price = ref()
 const reference = ref()
+const observation = ref()
 const total = ref()
 
 const getMaterials = async () => {
@@ -100,6 +101,7 @@ const onSubmit = () => {
         supplier_id: supplier.value,
         supplier_name: suppliers.value.data.find(item => item._id === supplier.value)?.name || '',
         supplier_code: material.value.hasOwnProperty('supplier_code') ? material.value.supplier_code : null,
+        observation: observation.value,
         total: total.value,
         total_quantity: amount.value,
         unit_price: material.value.unit_price,
@@ -290,6 +292,14 @@ watch(price, val => {
                 />
                 </VCol> 
               -->
+              <!-- 👉 Observation -->
+              <VCol cols="12">
+                <AppTextarea
+                  v-model="observation"
+                  rows="2"
+                  label="Observación"
+                />
+              </VCol>
               <!-- 👉 Total -->
               <VCol cols="12">
                 <AppTextField

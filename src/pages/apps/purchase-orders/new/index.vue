@@ -470,7 +470,7 @@ const headers = [
           <VCol cols="12">
             <AppTextField
               v-model="form.subject"
-              label="Asunto / Nota"
+              label="Asunto / Nota / Comentario"
             />
           </VCol>
         </VRow>
@@ -540,6 +540,7 @@ const headers = [
         :items="table.items"
         show-select
         :items-length="table.totalItems"
+        class="text-no-wrap"
       >
         <template #item.total="{item}">
           <div class="align-right">
