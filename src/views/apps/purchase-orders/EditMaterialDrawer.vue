@@ -32,6 +32,7 @@ const amount = ref()
 const price = ref()
 const total = ref()
 const reference = ref()
+const observation = ref()
 
 const material = ref({
   name: null,
@@ -48,6 +49,7 @@ watch(props, () => {
     price.value = props.materialData.inventory_price
     total.value = props.materialData.total
     reference.value = props.materialData.reference
+    observation.value = props.materialData.observation
   }
 })
 
@@ -69,6 +71,7 @@ const onSubmit = () => {
         inventory_price: price.value,
         total: total.value,
         total_quantity: amount.value,
+        observation: observation.value,
       })
       emit('update:isDrawerOpen', false)
       nextTick(() => {
@@ -231,6 +234,14 @@ watch(price, val => {
                 />
                 </VCol> 
               -->
+              <!-- 👉 Observation -->
+              <VCol cols="12">
+                <AppTextarea
+                  v-model="observation"
+                  rows="2"
+                  label="Observación"
+                />
+              </VCol>
               <!-- 👉 Total -->
               <VCol cols="12">
                 <AppTextField

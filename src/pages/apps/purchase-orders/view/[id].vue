@@ -11,6 +11,8 @@ definePage({
 import AddMaterialDrawer from '@/views/apps/purchase-orders/AddMaterialDrawer.vue'
 import EditMaterialDrawer from '@/views/apps/purchase-orders/EditMaterialDrawer.vue'
 import InputMaterialsDialog from '@/views/apps/purchase-orders/InputMaterialsDialog.vue'
+import ObservationMaterialDrawer from '@/views/apps/purchase-orders/ObservationMaterialDrawer.vue'
+import { watch } from 'vue'
 
 const userData = useCookie('userData')
 const route = useRoute('apps-purchase-orders-view-id')
@@ -51,6 +53,7 @@ const { data: useOfCFDIList } = useOfCFDIListRes
 
 const isAddNewMaterialDrawerVisible = ref(false)
 const isEditMaterialDrawerVisible = ref(false)
+const isObservationMaterialDrawerVisible = ref(false)
 const isDeleteMaterialDialogVisible = ref(false)
 const isInputMaterialDialogVisible = ref(false)
 const isLoadingDialogVisible = ref(false)
@@ -131,6 +134,11 @@ const headers = [
     title: 'TOTAL',
     key: 'total',
   },
+  {
+    title: 'Acciones',
+    key: 'actions',
+    sortable: false,
+  },
 ]
 
 const extractData = () => {
@@ -151,8 +159,8 @@ const getProjectInformation = async () => {
   items.value = purchaseOrderData.value.items
   selectedRows.value = purchaseOrderData.value.selected_rows
 
-  if (purchaseOrderData.value.status === 0)
-    headers.push({ title: 'Acciones', key: 'actions', sortable: false })
+  // if (purchaseOrderData.value.status === 0)
+  //   headers.push({ title: 'Acciones', key: 'actions', sortable: false })
 }
 
 const getItemsByIds = ids => {
@@ -283,6 +291,13 @@ const recalcCosts = useDebounceFn(() => {
 
 watch(() => selectedRows.value, recalcCosts)
 
+watch(
+  () => purchaseOrderData.value.cancel_reason,
+  newCancelReasonValue => {
+    cancelReasonInForm.value = newCancelReasonValue
+  },
+)
+
 const viewAddMaterial = () => {
   supplierId.value = supplier.value
   materialsList.value = items.value.map(item => item.material_id)
@@ -329,6 +344,12 @@ const updateMaterial = m => {
   recalcCosts()
 }
 
+const updateObservation = m => {
+  const i = items.value.findIndex(it => it.id === m.id)
+  if (i >= 0) items.value[i] = { ...items.value[i], ...m }
+  updatePurchaseOrder(purchaseOrderData.value.status)
+}
+
 const viewEditMaterialDrawer = material => {
   selectedMaterial.value = material
   isEditMaterialDrawerVisible.value = true
@@ -337,6 +358,11 @@ const viewEditMaterialDrawer = material => {
 const viewDeleteMaterialDialog = material => {
   selectedMaterial.value = material
   isDeleteMaterialDialogVisible.value = true
+}
+
+const viewObservationMaterialDialog = material => {
+  selectedMaterial.value = material
+  isObservationMaterialDrawerVisible.value = true
 }
 
 const deleteMaterial = id => {
@@ -824,6 +850,13 @@ getProjectInformation()
           </div>
         </template>
 
+        <!-- Actions -->
+        <template #item.actions="{ item }">
+          <IconBtn @click="viewObservationMaterialDialog(item)">
+            <VIcon icon="tabler-message-2" />
+          </IconBtn>
+        </template>
+
         <!-- pagination -->
         <template #bottom>
           <TablePagination
@@ -833,8 +866,8 @@ getProjectInformation()
           />
         </template>
       </VDataTableServer>
-      <VDivider v-if="cancelReason || purchaseOrderData.status === 3" />
-      <VCardText v-if="cancelReason || purchaseOrderData.status === 3">
+      <VDivider v-if="cancelReason && purchaseOrderData.status === 3" />
+      <VCardText v-if="cancelReason && purchaseOrderData.status === 3">
         <VCol cols="12">
           <AppTextarea
             v-model="cancelReasonInForm"
@@ -990,6 +1023,12 @@ getProjectInformation()
       v-model:material-data="selectedMaterial"
       @update-material="updateMaterial"
     />
+    <ObservationMaterialDrawer 
+      v-model:is-drawer-open="isObservationMaterialDrawerVisible"
+      v-model:material-data="selectedMaterial"
+      v-model:purchase-order-status="purchaseOrderData.status"
+      @update-material="updateObservation"
+    />
     <VDialog
       v-model="isDeleteMaterialDialogVisible"
       width="500"
@@ -1015,7 +1054,7 @@ getProjectInformation()
       :width="$vuetify.display.smAndDown ? 'auto' : 600"
     >
       <!-- Dialog close btn -->
-      <DialogCloseBtn @click="isCancelReasonDialogVisible = !isCancelReasonDialogVisible" />
+      <DialogCloseBtn @click="onCancelReset" />
 
       <VCard class="pa-sm-10 pa-2">
         <VCardText>
