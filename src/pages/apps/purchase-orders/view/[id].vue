@@ -334,7 +334,7 @@ const addMaterial = m => {
     })
   }
 
-  totalItems.value = items.value.lexngth
+  totalItems.value = items.value.length
   recalcCosts()
 }
 
