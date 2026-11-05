@@ -127,7 +127,7 @@ const saveLots = async () => {
   } else {
     notification.value = {
       visible: true,
-      message: "Error: Algunos campos obligatorios están vacíos. Por favor, asegúrese de completar los siguientes valores: Manzana, Lote, Sembrado y Prototipo.",
+      message: "Error: Algunos campos obligatorios están vacíos. Por favor, asegúrese de completar los siguientes valores: Manzana, Lote y Prototipo.",
       color: 'error',
     }
   }
@@ -138,7 +138,7 @@ const isValid = () => {
   lots.value.forEach((obj, _) => {
     const rawObj = toRaw(obj)
 
-    const check = ['block', 'lot', 'laid', 'prototype'].every(
+    const check = ['block', 'lot', 'prototype'].every(
       key => rawObj[key] !== null && rawObj[key] !== '',
     )
 
