@@ -178,14 +178,20 @@ const updatePurchaseOrder = async status => {
       await $api(`api/purchase_order/${route.params.id}`, {
         method: 'PUT',
         body: {
-          'supplier_id': supplier.value,
+          'request_by': userData.value._id,
           'project_id': project_id.value,
           'project_name': project.value?.name || 'Sin proyecto',
-          'number': purchaseOrderNumber.value,
-          'request_by': userData.value._id,
           'created': created.value,
           'estimated_delivery': estimatedDelivery.value,
+          'linked_id': purchaseOrderLinked.value,
+          'number': purchaseOrderNumber.value,
+          'company_id': company.value,
+          'supplier_id': supplier.value,
           'subject': subject.value,
+          'payment_method': paymentMethod.value,
+          'payment_form': paymentForm.value,
+          'cfdi': cfdi.value,
+          'invoice_email': invoiceEmail.value,
           'items': Object.values(itemsSelected),
           'subtotal': costs.value.subtotal,
           'iva': costs.value.iva,
@@ -211,23 +217,32 @@ const updatePurchaseOrder = async status => {
   }
 }
 
-const approve = async () => {
+const saveChanges = async status => {
   isLoadingDialogVisible.value = true
+
+  const data = {
+    'created': created.value,
+    'estimated_delivery': estimatedDelivery.value,
+    'linked_id': purchaseOrderLinked.value,
+    'number': purchaseOrderNumber.value,
+    'company_id': company.value,
+    'subject': subject.value,
+    'payment_method': paymentMethod.value,
+    'payment_form': paymentForm.value,
+    'cfdi': cfdi.value,
+    'invoice_email': invoiceEmail.value,
+    'items': Object.values(items.value),
+    'status': status,
+  }
+
+  if (status === 2) {
+    data.approved_by = userData.value._id
+  }
 
   try {
     await $api(`api/purchase_order/${route.params.id}`, {
       method: 'PATCH',
-      body: {
-        'approved_by': userData.value._id,
-        'created': created.value,
-        'estimated_delivery': estimatedDelivery.value,
-        'subject': subject.value,
-        'status': 2,
-        'payment_method': paymentMethod.value,
-        'payment_form': paymentForm.value,
-        'cfdi': cfdi.value,
-        'invoice_email': invoiceEmail.value,
-      },
+      body: data,
       onResponse({ response }) {
         if (response.status === 200) {
           fetchPurchaseOrder()
@@ -655,7 +670,7 @@ getProjectInformation()
             <AppTextField
               v-model="subject"
               label="Asunto / Nota / Comentario"
-              :disabled="purchaseOrderData.status > 0"
+              :disabled="purchaseOrderData.status > 2"
             />
           </VCol>
         </VRow>
@@ -852,6 +867,9 @@ getProjectInformation()
 
         <!-- Actions -->
         <template #item.actions="{ item }">
+          <IconBtn @click="viewEditMaterialDrawer(item)">
+            <VIcon icon="tabler-pencil" />
+          </IconBtn>
           <IconBtn @click="viewObservationMaterialDialog(item)">
             <VIcon icon="tabler-message-2" />
           </IconBtn>
@@ -908,7 +926,7 @@ getProjectInformation()
             <!-- 👉 Add material -->
             <VBtn
               prepend-icon="tabler-package-export"
-              variant="outlined"
+              color="info"
               @click="viewAddMaterial"
             >
               Añadir material
@@ -930,9 +948,9 @@ getProjectInformation()
             <VBtn
               prepend-icon="tabler-eye-check"
               color="success"
-              @click="approve"
+              @click="saveChanges(2)"
             >
-              APROBAR
+              Aprobar Orden
             </VBtn>
             <!-- 👉 Decline -->
             <VBtn
@@ -940,7 +958,23 @@ getProjectInformation()
               color="error"
               @click="isCancelReasonDialogVisible = true"
             >
-              CANCELAR
+              Cancelar Orden 
+            </VBtn>
+            <!-- 👉 Add material -->
+            <VBtn
+              prepend-icon="tabler-package-export"
+              color="info"
+              @click="viewAddMaterial"
+            >
+              Añadir material
+            </VBtn>
+            <!-- 👉 Save changes -->
+            <VBtn
+              prepend-icon="tabler-device-floppy"
+              variant="outlined"
+              @click="saveChanges(1)"
+            >
+              Guardar Cambios
             </VBtn>
             <!-- 👉 Return -->
             <VBtn
@@ -958,10 +992,11 @@ getProjectInformation()
             <!-- 👉 INPUT OF MATERIALS -->
             <VBtn
               v-if="purchaseOrderData.delivered_status < 2"
+              color="info"
               prepend-icon="tabler-package-export"
               @click="isInputMaterialDialogVisible = true"
             >
-              ENTRADA DE MATERIALES
+              Entrada de Materiales
             </VBtn>
             <!-- 👉 EXCEL -->
             <VBtn
@@ -969,7 +1004,7 @@ getProjectInformation()
               variant="outlined"
               @click="downloadExcel"
             >
-              EXCEL
+              Excel
             </VBtn>
             <!-- 👉 PDF -->
             <VBtn
@@ -978,6 +1013,21 @@ getProjectInformation()
               @click="viewPDFfile"
             >
               PDF
+            </VBtn>
+            <!-- 👉 Save changes -->
+            <VBtn
+              prepend-icon="tabler-device-floppy"
+              @click="saveChanges(2)"
+            >
+              Guardar Cambios
+            </VBtn>
+            <!-- 👉 Decline -->
+            <VBtn
+              prepend-icon="tabler-eye-cancel"
+              color="error"
+              @click="isCancelReasonDialogVisible = true"
+            >
+              Cancelar Orden
             </VBtn>
             <!-- 👉 Return -->
             <VBtn

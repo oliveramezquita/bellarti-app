@@ -594,7 +594,7 @@ const headers = [
           </VBtn>
           <VBtn
             prepend-icon="tabler-package-export"
-            variant="outlined"
+            color="info"
             @click="ui.isAddNewMaterialDrawerVisible=true"
           >
             Añadir material
