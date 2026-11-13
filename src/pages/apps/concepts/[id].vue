@@ -571,11 +571,13 @@ watch(selectedRows, async newValue => {
         </VWindowItem>
         <VWindowItem value="tab-2">
           <Materials
+            :concept-id="conceptData._id"
             tag="materials"
             :materials-list="conceptData.materials?.items || []"
             :project-status="conceptData.project.status"
             @materials-data="addNewElement"
             @delete-material="deleteElement"
+            @update-materials="fetchConcepts"
           />
         </VWindowItem>
         <VWindowItem value="tab-3">
@@ -598,11 +600,13 @@ watch(selectedRows, async newValue => {
         </VWindowItem>
         <VWindowItem value="tab-5">
           <Equipment
+            :concept-id="conceptData._id"
             tag="equipment"
             :materials-list="conceptData.equipment?.items || []"
             :project-status="conceptData.project.status"
             @materials-data="addNewElement"
             @delete-material="deleteElement"
+            @update-materials="fetchConcepts"
           />
         </VWindowItem>
         <VWindowItem
@@ -619,6 +623,7 @@ watch(selectedRows, async newValue => {
               </VExpansionPanelTitle>
               <VExpansionPanelText>
                 <ProvMaterials
+                  :concept-id="conceptData._id"
                   tag="prov.materials"
                   :materials-list="conceptData.prov?.materials?.items || []"
                   :project-status="conceptData.project.status"
@@ -633,6 +638,7 @@ watch(selectedRows, async newValue => {
               </VExpansionPanelTitle>
               <VExpansionPanelText>
                 <ProvEquipment
+                  :concept-id="conceptData._id"
                   tag="prov.equipment"
                   :materials-list="conceptData.prov?.equipment?.items || []"
                   :project-status="conceptData.project.status"

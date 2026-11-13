@@ -1,20 +1,24 @@
 <!-- eslint-disable camelcase -->
 <script setup>
+import FileUpload from '@/views/apps/concepts/FileUpload.vue'
 import { onMounted, ref, watch } from 'vue'
 
 const props = defineProps({
+  conceptId: { type: String, required: true },
   tag: { type: String, required: true },
   materialsList: { type: Array, default: () => [] },
   projectStatus: { type: Number, required: true },
 })
 
-const emit = defineEmits(['update:tag', 'update:materialsList', 'update:projectStatus', 'materialsData', 'deleteMaterial'])
+const emit = defineEmits(['update:tag', 'update:materialsList', 'update:projectStatus', 'materialsData', 'deleteMaterial', 'updateMaterials'])
 
 const tagList = props.tag === 'materials' || props.tag === 'prov.materials' ? 'materiales' : 'equipos y/o accesorios'
 const tagForm = props.tag === 'materials' || props.tag === 'prov.materials' ? 'material' : 'equipo y/o accesorio'
 
 const { data: suppliers } = await useApi('api/suppliers?itemsPerPage=100&excludeTrend=true')
 const { data: colors } = await useApi('api/catalogs?name=Colores')
+
+const currentTab = ref('tab-1')
 
 // Estado principal
 const supplier = ref(null)
@@ -31,9 +35,15 @@ const presentation = ref('')
 const inventoryPrice = ref(0)
 const color = ref()
 
+// Loading and notification
+const isLoadingDialogVisible = ref(false)
+const isNotificationVisible = ref(false)
+const notificationMessage = ref('')
+const notificationColor = ref('info')
+
 // Columnas de tabla
 const headers = [
-  { title: '', key: 'data-table-expand' },
+  //{ title: '', key: 'data-table-expand' },
   { title: 'Concepto', key: 'concept' },
   { title: 'SKU', key: 'sku' },
   { title: 'Unidad', key: 'measurement' },
@@ -120,6 +130,35 @@ watch(
 )
 
 onMounted(() => (materialsTable.value = structuredClone(props.materialsList)))
+
+// Upload materials via a file
+const responseUploadedFile = ref()
+
+const uploadVolumetry = async formsData => {
+  isLoadingDialogVisible.value = true
+
+  try {
+    await $api(`api/concept/${props.conceptId}/upload_materials?path=${props.tag}`, {
+      method: 'POST',
+      body: formsData,
+      onResponse({ response }) {
+        notificationColor.value = getStatusColor(response.status)
+        if (response.status === 200) {
+          const data = response._data
+
+          responseUploadedFile.value = data
+          notificationMessage.value = `Materiales nuevos: ${data?.num_inserted}, actualizados: ${data?.num_updated}`
+          emit('updateMaterials')
+        } else {
+          notificationMessage.value = `Ocurrió un error al momento de actualizar los materiales: ${response._data}`
+        }
+        isNotificationVisible.value = true
+      },
+    })
+  } finally {
+    isLoadingDialogVisible.value = false
+  }
+}
 </script>
 
 <template>
@@ -132,33 +171,34 @@ onMounted(() => (materialsTable.value = structuredClone(props.materialsList)))
     :headers="headers"
     :items="materialsTable"
     :items-per-page="10"
-    expand-on-click
   >
     <!-- Expanded Row Data -->
-    <template #expanded-row="slotProps">
+    <!--
+      <template #expanded-row="slotProps">
       <tr class="v-data-table__tr">
-        <td :colspan="headers.length">
-          <div class="inner-table">
-            <div class="row header">
-              <div class="cell">
-                Presentación
-              </div>
-              <div class="cell">
-                Color
-              </div>
-            </div>
-            <div class="row">
-              <div class="cell">
-                {{ slotProps.item.presentation }}
-              </div>
-              <div class="cell">
-                {{ slotProps.item.color }}
-              </div>
-            </div>
-          </div>
-        </td>
+      <td :colspan="headers.length">
+      <div class="inner-table">
+      <div class="row header">
+      <div class="cell">
+      Presentación
+      </div>
+      <div class="cell">
+      Color
+      </div>
+      </div>
+      <div class="row">
+      <div class="cell">
+      {{ slotProps.item.presentation }}
+      </div>
+      <div class="cell">
+      {{ slotProps.item.color }}
+      </div>
+      </div>
+      </div>
+      </td>
       </tr>
-    </template>
+      </template> 
+    -->
     <template #item.inventory_price="{ item }">
       {{ formatNumber(item.inventory_price) }}
     </template>
@@ -174,117 +214,163 @@ onMounted(() => (materialsTable.value = structuredClone(props.materialsList)))
   </VDataTable>
   <div v-if="props.projectStatus < 2">
     <VDivider />
-
-    <h3 class="mt-10 ps-6">
+    <h3 class="mt-10 mb-4 ps-6">
       {{ `Añadir ${tagForm}` }}
     </h3>
-
-    <VForm
-      class="pa-6"
-      @submit.prevent="addMaterial"
+    <VTabs
+      v-model="currentTab"
+      grow
+      stacked
     >
-      <VRow class="mb-1">
-        <VCol
-          cols="12"
-          md="5"
-        >
-          <AppAutocomplete
-            v-model="supplier"
-            v-select-all-on-focus
-            label="Proveedor"
-            placeholder="Seleccionar proveedor"
-            :items="suppliers.data"
-            :item-title="i => i.name"
-            :item-value="i => i._id"
-            @update:model-value="getMaterials"
-          />
-        </VCol>
+      <VTab>
+        <VIcon
+          icon="tabler-package"
+          class="mb-2"
+        />
+        <span>Subir por material</span>
+      </VTab>
 
-        <VCol
-          cols="12"
-          md="7"
-        >
-          <AppAutocomplete
-            v-model="material"
-            v-select-all-on-focus
-            label="Material"
-            placeholder="Seleccionar material"
-            :items="materials.data"
-            :item-title="i => i.concept"
-            :item-value="i => i"
-            :rules="[requiredValidator]"
-            @update:model-value="materialChange"
-          />
-        </VCol>
-        <VCol
-          cols="12"
-          md="3"
-        >
-          <AppTextField
-            v-model="measurement"
-            label="Unidad de medida"
-            readonly
-          />
-        </VCol>
-        <VCol
-          cols="12"
-          md="5"
-        >
-          <AppTextField
-            v-model="sku"
-            label="SKU"
-            readonly
-          />
-        </VCol>
-        <VCol
-          cols="12"
-          md="4"
-        >
-          <AppTextField
-            v-model="presentation"
-            label="Presentación"
-            readonly
-          />
-        </VCol>
-        <VCol
-          cols="12"
-          md="3"
-        >
-          <AppTextField
-            :model-value="formatNumber(inventoryPrice)"
-            label="Precio"
-            readonly
-          />
-        </VCol>
-        <VCol
-          cols="12"
-          md="5"
-        >
-          <AppSelect
-            v-model="color"
-            label="Color"
-            :items="colors.values"
-            clearable
-          />
-        </VCol>
-        <VCol
-          cols="12"
-          md="4"
-        >
-          <AppTextField
-            v-model="amount"
-            label="Cantidad"
-          />
-        </VCol>
-      </VRow>
+      <VTab v-if="['materials', 'equipment'].includes(props.tag)">
+        <VIcon
+          icon="tabler-file-plus"
+          class="mb-2"
+        />
+        <span>Subir por archivo</span>
+      </VTab>
+    </VTabs>
 
-      <VBtn
-        class="mt-3"
-        :disabled="!amount"
-        @click="addMaterial"
-      >
-        {{ `Añadir / actualizar ${tagForm}` }}
-      </VBtn>
-    </VForm>
+    <VWindow v-model="currentTab">
+      <!-- ================================================= -->
+      <!-- ✅ TAB 1: Subir por material -->
+      <!-- ================================================= -->
+      <VWindowItem>
+        <VCardText style="padding-inline: 0;">
+          <VForm
+            class="pa-6"
+            @submit.prevent="addMaterial"
+          >
+            <VRow class="mb-1">
+              <VCol
+                cols="12"
+                md="5"
+              >
+                <AppAutocomplete
+                  v-model="supplier"
+                  v-select-all-on-focus
+                  label="Proveedor"
+                  placeholder="Seleccionar proveedor"
+                  :items="suppliers.data"
+                  :item-title="i => i.name"
+                  :item-value="i => i._id"
+                  @update:model-value="getMaterials"
+                />
+              </VCol>
+
+              <VCol
+                cols="12"
+                md="7"
+              >
+                <AppAutocomplete
+                  v-model="material"
+                  v-select-all-on-focus
+                  label="Material"
+                  placeholder="Seleccionar material"
+                  :items="materials.data"
+                  :item-title="i => i.concept"
+                  :item-value="i => i"
+                  :rules="[requiredValidator]"
+                  @update:model-value="materialChange"
+                />
+              </VCol>
+              <VCol
+                cols="12"
+                md="3"
+              >
+                <AppTextField
+                  v-model="measurement"
+                  label="Unidad de medida"
+                  readonly
+                />
+              </VCol>
+              <VCol
+                cols="12"
+                md="5"
+              >
+                <AppTextField
+                  v-model="sku"
+                  label="SKU"
+                  readonly
+                />
+              </VCol>
+              <VCol
+                cols="12"
+                md="4"
+              >
+                <AppTextField
+                  v-model="presentation"
+                  label="Presentación"
+                  readonly
+                />
+              </VCol>
+              <VCol
+                cols="12"
+                md="3"
+              >
+                <AppTextField
+                  :model-value="formatNumber(inventoryPrice)"
+                  label="Precio"
+                  readonly
+                />
+              </VCol>
+              <VCol
+                cols="12"
+                md="5"
+              >
+                <AppSelect
+                  v-model="color"
+                  label="Color"
+                  :items="colors.values"
+                  clearable
+                />
+              </VCol>
+              <VCol
+                cols="12"
+                md="4"
+              >
+                <AppTextField
+                  v-model="amount"
+                  label="Cantidad"
+                />
+              </VCol>
+            </VRow>
+
+            <VBtn
+              class="mt-3"
+              :disabled="!amount"
+              @click="addMaterial"
+            >
+              {{ `Añadir / actualizar ${tagForm}` }}
+            </VBtn>
+          </VForm>
+        </VCardText>
+      </VWindowItem>
+      <!-- ================================================= -->
+      <!-- ✅ TAB 2: Subir por archivo -->
+      <!-- ================================================= -->
+      <VWindowItem v-if="['materials', 'equipment'].includes(props.tag)">
+        <VCardText>
+          <FileUpload
+            v-model:response-uploaded-file="responseUploadedFile"
+            @file-data="uploadVolumetry"
+          />
+        </VCardText>
+      </VWindowItem>
+    </VWindow>
   </div>
+  <LoadingDataDialog v-model:is-dialog-visible="isLoadingDialogVisible" />
+  <Notification
+    v-model:is-notification-visible="isNotificationVisible"
+    :message="notificationMessage"
+    :color="notificationColor"
+  />
 </template>
