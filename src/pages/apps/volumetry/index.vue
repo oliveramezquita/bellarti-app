@@ -174,7 +174,6 @@ const uploadVolumetry = async formsData => {
           notificationMessage.value = response._data
           isNotificationVisible.value = true
         } else {
-          console.log(response._data)
           if (response._data.volumetry.length > 0)
             volumetry.value = response._data.volumetry
           responseUploadedFile.value = response._data
